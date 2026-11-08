@@ -1,0 +1,26 @@
+{
+  "coupon_discount": 190,
+  "lines": [
+    {
+      "line_discount": 899,
+      "line_total": 2697,
+      "name": "Bag of Coffee Beans",
+      "quantity": 3,
+      "sku": "COFFEE",
+      "unit_price": 899
+    },
+    {
+      "line_discount": 0,
+      "line_total": 100,
+      "name": "Apple",
+      "quantity": 2,
+      "sku": "APPLE",
+      "unit_price": 50
+    }
+  ],
+  "promotion_discount": 899,
+  "shipping": 499,
+  "subtotal": 2797,
+  "tax": 137,
+  "total": 2344
+}

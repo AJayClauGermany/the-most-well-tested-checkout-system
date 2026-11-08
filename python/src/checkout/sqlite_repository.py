@@ -2,34 +2,74 @@
 
 from __future__ import annotations
 
+import json
+import sqlite3
 from pathlib import Path
 from types import TracebackType
 
 from checkout.models import Receipt
-from checkout.orders import Clock, Order
+from checkout.orders import Clock, Order, format_timestamp, order_id, order_number, system_clock
 
 
 class SqliteOrderRepository:
     """Keeps orders in one table of an SQLite database file (or ``":memory:"``).
 
-    Not implemented yet - see tests/integration/test_sqlite_repository.py.
+    The database row number becomes the order number, so ids are sequential and survive
+    closing and reopening the file. The receipt is stored as JSON text in one column.
+
+    Use it in a ``with`` block to make sure the file is closed afterwards::
+
+        with SqliteOrderRepository(path) as repository:
+            repository.save(receipt)
     """
 
     def __init__(self, path: str | Path, clock: Clock | None = None) -> None:
-        raise NotImplementedError("SqliteOrderRepository is not implemented yet")
+        self._connection = sqlite3.connect(str(path))
+        self._clock: Clock = clock if clock is not None else system_clock
+        self._connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS orders (
+                number     INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                receipt    TEXT NOT NULL
+            )
+            """
+        )
+        self._connection.commit()
 
     def save(self, receipt: Receipt) -> str:
-        raise NotImplementedError("SqliteOrderRepository.save() is not implemented yet")
+        # "?" placeholders keep the values apart from the SQL, so a receipt can never be
+        # mistaken for a command (no SQL injection).
+        cursor = self._connection.execute(
+            "INSERT INTO orders (created_at, receipt) VALUES (?, ?)",
+            (format_timestamp(self._clock()), json.dumps(receipt.to_dict())),
+        )
+        self._connection.commit()
+        assert cursor.lastrowid is not None  # an INSERT always has a row id
+        return order_id(cursor.lastrowid)
 
     def find(self, identifier: str) -> Order | None:
-        raise NotImplementedError("SqliteOrderRepository.find() is not implemented yet")
+        number = order_number(identifier)
+        if number is None:
+            return None
+        row = self._connection.execute(
+            "SELECT number, created_at, receipt FROM orders WHERE number = ?", (number,)
+        ).fetchone()
+        if row is None:
+            return None
+        found_number, created_at, receipt_json = row
+        return Order(
+            id=order_id(found_number),
+            created_at=created_at,
+            receipt=Receipt.from_dict(json.loads(receipt_json)),
+        )
 
     def close(self) -> None:
         """Closes the database file. Call it when you are done (or use a ``with`` block)."""
-        raise NotImplementedError("SqliteOrderRepository.close() is not implemented yet")
+        self._connection.close()
 
     def __enter__(self) -> SqliteOrderRepository:
-        raise NotImplementedError("SqliteOrderRepository.__enter__() is not implemented yet")
+        return self
 
     def __exit__(
         self,
@@ -37,4 +77,4 @@ class SqliteOrderRepository:
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        raise NotImplementedError("SqliteOrderRepository.__exit__() is not implemented yet")
+        self.close()

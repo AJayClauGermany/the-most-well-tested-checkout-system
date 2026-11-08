@@ -1,0 +1,10 @@
+# serializer version: 1
+# name: test_an_error_as_the_command_prints_it
+  dict({
+    'exit_code': 1,
+    'output': '{"error":"EMPTY_BASKET"}',
+  })
+# ---
+# name: test_the_example_receipt_is_printed_by_the_command_exactly_like_this
+  '{"lines":[{"sku":"COFFEE","name":"Bag of Coffee Beans","quantity":3,"unit_price":899,"line_total":2697,"line_discount":899},{"sku":"APPLE","name":"Apple","quantity":2,"unit_price":50,"line_total":100,"line_discount":0}],"subtotal":2797,"promotion_discount":899,"coupon_discount":190,"shipping":499,"tax":137,"total":2344}'
+# ---

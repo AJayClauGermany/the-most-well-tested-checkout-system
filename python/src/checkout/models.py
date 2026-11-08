@@ -163,4 +163,12 @@ class Receipt:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Receipt:
         """Reads a receipt back from its JSON form (the inverse of ``to_dict``)."""
-        raise NotImplementedError("Receipt.from_dict() is not implemented yet")
+        return cls(
+            lines=[ReceiptLine(**line) for line in data["lines"]],
+            subtotal=data["subtotal"],
+            promotion_discount=data["promotion_discount"],
+            coupon_discount=data["coupon_discount"],
+            shipping=data["shipping"],
+            tax=data["tax"],
+            total=data["total"],
+        )

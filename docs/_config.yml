@@ -17,6 +17,7 @@ header_pages:
   - getting-started.md
   - checkout-rules.md
   - kinds-of-tests.md
+  - testing-matrix.md
   - languages.md
   - contributing.md
 

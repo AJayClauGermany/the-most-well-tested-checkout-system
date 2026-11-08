@@ -139,25 +139,52 @@ unit tests too.
 
 ## Testing ideas we'd love contributions for
 
-Each of these shows off a different kind of testing. Pick one, open a pull request!
+This list mirrors the Java column of the [testing matrix](../docs/testing-matrix.md) – the
+project's single list of goals – and adds the practical hints. Tick the matrix when you add
+one. We target **JUnit 6** (one version for platform and Jupiter) with Surefire/Failsafe 3.5+.
 
+**Tier 1 – every language does these**
+
+* **Implement `Checkout.checkout`** test-first, with unit tests for each step.
+* **Parameterised tests** with `@ParameterizedTest` + `@MethodSource` / `@CsvSource` – the
+  native table style, shown next to the shared spec cases.
 * **Nicer assertions** – [AssertJ](https://assertj.github.io/doc/): `assertThat(receipt.total()).isEqualTo(2441)`.
-* **BDD** – run `../spec/features/*.feature` with [Cucumber-JVM](https://cucumber.io/docs/installation/java/)
-  (`cucumber-java` + `cucumber-junit-platform-engine`); step definitions go in `checkout.bdd`.
-* **Property-based testing** – [jqwik](https://jqwik.net/): e.g. "the total is never negative",
-  "merging lines never changes the subtotal", "`roundHalfUp` matches `BigDecimal`'s `HALF_UP`".
-* **Mocks and fakes** – [Mockito](https://site.mockito.org/) for the order repository (rules §6),
-  or a hand-written in-memory fake to compare with.
-* **Integration tests with a real database** – a JDBC order repository tested against
-  [Testcontainers](https://java.testcontainers.org/) or an H2 in-memory database (`*IT.java`).
-* **End-to-end tests** – a `main` method implementing the CLI of rules §8, then `*IT` tests in
-  `checkout.e2e` that start it with `ProcessBuilder` and feed it every spec basket.
+* **BDD** – [Cucumber-JVM](https://cucumber.io/docs/installation/java/) via `cucumber-java` +
+  `cucumber-junit-platform-engine` (the old `cucumber-junit` module is deprecated); step
+  definitions in `checkout.bdd`.
+* **Test doubles** for the order repository and the clock (rules §6) – a hand-written fake
+  first, then [Mockito](https://site.mockito.org/) to check a failed checkout never calls
+  `save`, and `java.time.Clock.fixed(...)` for `created_at`. On Java 21+ Mockito's inline
+  mock maker should be loaded as a `-javaagent` in Surefire's `argLine` – a good lesson in
+  reading warnings.
+* **Integration tests** – a JSON-file repository and a JDBC repository against
+  [H2](https://h2database.com/) (embedded, no server), as `*IT.java` run by Failsafe. Check
+  stored orders against [`spec/schema/order.schema.json`](../spec/schema/order.schema.json).
+* **Property-based testing** – [jqwik](https://jqwik.net/) **pinned to 1.9.x**: 1.10 added an
+  unusual "anti-AI usage" licence clause and the project is in maintenance mode, and Java has
+  no other mainstream option. One test per property in [`spec/properties.md`](../spec/properties.md).
+* **Contract tests** – [networknt json-schema-validator](https://github.com/networknt/json-schema-validator):
+  every receipt must satisfy [`spec/schema/receipt.schema.json`](../spec/schema/receipt.schema.json).
 * **Snapshot / approval testing** – [ApprovalTests.Java](https://github.com/approvals/ApprovalTests.Java)
   for whole receipts as JSON.
-* **Code coverage** – [JaCoCo](https://www.jacoco.org/jacoco/) Maven plugin, with a report in CI.
-* **Mutation testing** – [PIT (pitest)](https://pitest.org/): do our tests notice when the code is subtly broken?
-* **Architecture tests** – [ArchUnit](https://www.archunit.org/): e.g. "the domain does not depend on the CLI".
-* **More static checks** – [Error Prone](https://errorprone.info/), [Checkstyle](https://checkstyle.org/),
-  or formatting with [Spotless](https://github.com/diffplug/spotless) + google-java-format.
-* **JSON Schema validation** – check `Receipt` JSON output against a schema with
-  [networknt json-schema-validator](https://github.com/networknt/json-schema-validator).
+* **End-to-end tests** – a `main` method implementing the CLI of rules §8, `*IT` tests in
+  `checkout.e2e` that start it with `ProcessBuilder`, then the shared runner:
+  `e2e/run.sh java -jar java/target/checkout.jar`.
+* **Code coverage** – the [JaCoCo](https://www.jacoco.org/jacoco/) Maven plugin, with a report in CI.
+* **Mutation testing** – [PIT](https://pitest.org/) with `pitest-junit5-plugin` (check it against
+  the JUnit Platform version you pin).
+* **More static checks** – [Error Prone](https://errorprone.info/), plus one of
+  [Checkstyle](https://checkstyle.org/) or [Spotless](https://github.com/diffplug/spotless) (not both).
+
+**Tier 2 – idiomatic extras**
+
+* **Fuzzing** – [Jazzer](https://github.com/CodeIntelligenceTesting/jazzer)'s `@FuzzTest` runs
+  inside JUnit: property P10, random JSON must never throw anything but `CheckoutException`.
+* **Architecture tests** – [ArchUnit](https://www.archunit.org/): "the domain does not depend on the CLI".
+* **Benchmarks** – one [JMH](https://github.com/openjdk/jmh) benchmark of `checkout`, optional.
+
+**Tier 3 – plumbing**
+
+* Surefire already writes JUnit XML to `target/surefire-reports` – publish it in CI;
+  `@Tag` + Surefire `groups` for filtering; `junit.jupiter.execution.parallel.enabled=true`
+  in `junit-platform.properties` to prove tests are independent.

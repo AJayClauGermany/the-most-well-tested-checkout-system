@@ -41,6 +41,7 @@ whole chain can be tested together (**integration** and **end-to-end tests**).
 | Shipping   | Standard $4.99 (free from $50). Express $9.99 (never free). |
 | Tax        | 8% of the price after discounts. Shipping is not taxed. |
 | Rounding   | Half a cent rounds **up** (22.5 → 23). |
+| Saving     | Optional. Orders get ids `ORDER-1`, `ORDER-2`, … and a `created_at` time from a **clock** that tests can fix. |
 
 ## A worked example
 
@@ -67,6 +68,10 @@ The same rules are written down as tests in two shared, language-agnostic forms:
   a basket goes in, totals (or an error code) come out. Sixty of them, focused on edge cases.
 * **[Gherkin features]({{ site.repository_files }}/spec/features/)** – readable
   *Given / When / Then* scenarios for behaviour-driven development (BDD).
+* **[Properties]({{ site.repository_files }}/spec/properties.md)** – rules that hold for
+  *every* basket, for property-based testing.
+* **[JSON Schemas]({{ site.repository_files }}/spec/schema/)** – the exact shape of a basket,
+  a receipt and a saved order, for contract tests.
 
 Every language loads these files directly, so all six implementations are held to
 exactly the same examples.

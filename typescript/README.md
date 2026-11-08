@@ -119,31 +119,52 @@ Want to add a case for *every* language instead? Add it to
 
 ## Testing ideas we'd love contributions for
 
-Each of these shows off a different kind of testing. Pick one and open a pull request!
+This list mirrors the TypeScript column of the
+[testing matrix](../docs/testing-matrix.md) – the project's single list of goals – and adds
+the practical hints. Tick the matrix when you add one. Note which Vitest major you are on:
+Stryker and vitest-cucumber both track it.
 
-* **BDD with Gherkin** – run the scenarios in [`spec/features/`](../spec/features/) with
-  [`@cucumber/cucumber`](https://github.com/cucumber/cucumber-js) (or
-  [`@amiceli/vitest-cucumber`](https://github.com/amiceli/vitest-cucumber) to stay inside Vitest),
-  e.g. step definitions in `tests/bdd/`.
-* **Property-based testing** – generate thousands of random baskets with
-  [fast-check](https://fast-check.dev/) and check rules that must *always* hold
-  (e.g. `total = subtotal − promotion_discount − coupon_discount + shipping + tax`,
-  discounts never exceed the subtotal, rounding matches rules §7).
-* **Unit tests for each calculation step** – rounding, promotions, coupons, shipping, tax.
-* **Mocks and fakes** – an in-memory order repository (rules §6) and tests that use
-  Vitest's built-in [`vi.fn()`](https://vitest.dev/api/mock.html) to check a failed
-  checkout never calls `save()`.
-* **Integration tests** – a JSON-file order repository tested against a real temporary folder
-  (`node:fs` + `os.tmpdir()`).
-* **Snapshot testing** – Vitest's [`toMatchSnapshot()` / `toMatchInlineSnapshot()`](https://vitest.dev/guide/snapshot.html)
+**Tier 1 – every language does these**
+
+* **Implement `checkout()`** test-first, with unit tests for each calculation step
+  (rounding, merging, promotions, coupons, shipping, tax).
+* **Parameterised tests** with `test.each` / `it.each` – the native table style, separate
+  from the shared spec cases.
+* **BDD** with [`@cucumber/cucumber`](https://github.com/cucumber/cucumber-js) on
+  [`spec/features/`](../spec/features/), step definitions in `tests/bdd/`.
+  [`@amiceli/vitest-cucumber`](https://github.com/amiceli/vitest-cucumber) stays inside Vitest
+  but is a one-maintainer project that bumps a major with every Vitest major.
+* **Test doubles** for the order repository and the clock (rules §6): a hand-written
+  in-memory fake, then [`vi.fn()`](https://vitest.dev/api/mock.html) to check a failed
+  checkout never calls `save()`, and a fixed clock for `created_at`.
+* **Integration tests** for a JSON-file repository (`node:fs` + `os.tmpdir()`) and an SQLite
+  one ([`node:sqlite`](https://nodejs.org/api/sqlite.html), or
+  [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)). Check stored orders against
+  [`spec/schema/order.schema.json`](../spec/schema/order.schema.json).
+* **Property-based testing** with [fast-check](https://fast-check.dev/): one test per property
+  in [`spec/properties.md`](../spec/properties.md), named after its id.
+* **Contract tests** with [ajv](https://ajv.js.org/): every receipt must satisfy
+  [`spec/schema/receipt.schema.json`](../spec/schema/receipt.schema.json).
+* **Snapshot testing** with [`toMatchSnapshot()` / `toMatchInlineSnapshot()`](https://vitest.dev/guide/snapshot.html)
   for whole receipts.
-* **End-to-end tests** – the command line program from rules §8 (`src/cli.ts`), driven with
-  `node:child_process` (see [`tests/e2e/README.md`](tests/e2e/README.md)).
-* **Coverage** – [`@vitest/coverage-v8`](https://vitest.dev/guide/coverage.html) and `vitest run --coverage`.
-* **Mutation testing** – [StrykerJS](https://stryker-mutator.io/) with its Vitest runner,
-  to find tests that pass even when the code is broken.
-* **Type tests** – Vitest's [`expectTypeOf`](https://vitest.dev/guide/testing-types.html)
-  to check that, for example, a `Promotion` must have a valid `type`.
-* **Linting and formatting** – [ESLint](https://eslint.org/) with
-  [typescript-eslint](https://typescript-eslint.io/) and [Prettier](https://prettier.io/),
-  added to CI.
+* **End-to-end tests** of the CLI (`src/cli.ts`, rules §8) with `node:child_process`
+  ([execa](https://github.com/sindresorhus/execa) is a friendlier wrapper) – see
+  [`tests/e2e/README.md`](tests/e2e/README.md) – and then the shared runner in [`e2e/`](../e2e/).
+* **Coverage** with [`@vitest/coverage-v8`](https://vitest.dev/guide/coverage.html) and
+  thresholds in `vitest.config.ts`.
+* **Mutation testing** with [StrykerJS](https://stryker-mutator.io/docs/stryker-js/vitest-runner/)
+  and its Vitest runner.
+* **Linting and formatting** with [ESLint](https://eslint.org/) + [typescript-eslint](https://typescript-eslint.io/)
+  and [Prettier](https://prettier.io/), added to CI ([Biome](https://biomejs.dev/) is the one-binary alternative).
+
+**Tier 2 – idiomatic extras**
+
+* **Type tests** with [`expectTypeOf`](https://vitest.dev/guide/testing-types.html) and
+  `vitest --typecheck`, e.g. a `Promotion` must have a valid `type`.
+* **Benchmarks** with [`vitest bench`](https://vitest.dev/guide/features.html#benchmarking) – one
+  benchmark of `checkout()` is plenty.
+
+**Tier 3 – plumbing**
+
+* `vitest run --reporter=junit --outputFile=report.xml` for a CI test report; Vitest already
+  runs files in parallel, so shared state between tests shows up quickly.

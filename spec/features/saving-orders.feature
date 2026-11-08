@@ -27,5 +27,13 @@ Feature: Saving orders
     Then checkout fails with the error "EMPTY_BASKET"
     And the order repository is empty
 
+  Scenario: A saved order remembers when it was saved
+    Given the clock is fixed at "2026-01-15T10:30:00Z"
+    And a basket containing:
+      | sku   | quantity |
+      | APPLE | 1        |
+    When the customer checks out and saves the order
+    Then the saved order "ORDER-1" was created at "2026-01-15T10:30:00Z"
+
   Scenario: Looking up an order that does not exist
     Then the order "ORDER-99" cannot be found

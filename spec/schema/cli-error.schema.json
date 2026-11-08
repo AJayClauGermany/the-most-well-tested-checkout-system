@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Command line error output",
+  "description": "What the command line program prints (with exit code 1) when checkout fails (rules §8).",
+  "type": "object",
+  "required": ["error"],
+  "additionalProperties": false,
+  "properties": {
+    "error": {
+      "enum": [
+        "EMPTY_BASKET",
+        "UNKNOWN_PRODUCT",
+        "INVALID_QUANTITY",
+        "UNKNOWN_SHIPPING_METHOD",
+        "UNKNOWN_COUPON",
+        "COUPON_MINIMUM_NOT_MET"
+      ]
+    }
+  }
+}

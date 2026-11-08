@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Saved order",
+  "description": "An order as stored by an order repository (rules §6): the id it was given, when it was saved, and the receipt. Used by integration tests of file-based repositories.",
+  "type": "object",
+  "required": ["id", "created_at", "receipt"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^ORDER-[1-9][0-9]*$" },
+    "created_at": {
+      "type": "string",
+      "description": "UTC, ISO 8601, whole seconds, always ending in Z",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "receipt": { "$ref": "receipt.schema.json" }
+  }
+}

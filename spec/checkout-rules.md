@@ -208,18 +208,54 @@ total = discounted_subtotal + shipping + tax
 
 Lines appear in the order of first appearance in the basket (after merging).
 
+The exact shape of a receipt is written down as a JSON Schema in
+[`schema/receipt.schema.json`](schema/receipt.schema.json). It is the **contract** every
+language's output must honour, and tests can check real receipts against it.
+
 ## 6. Saving an order (optional)
 
 After a successful checkout the caller may choose to **save** the receipt as an order.
 
 * Saving is done through an **order repository** with two operations:
-  * `save(receipt)` → returns a new order id
+  * `save(receipt)` → returns the id of the new order
   * `find(order_id)` → returns the saved order, or "not found"
 * Order ids are strings. The first saved order is `"ORDER-1"`, the next `"ORDER-2"`, and so on
   (per repository).
+* A saved order remembers **when** it was saved, as `created_at`: the current time in UTC,
+  written as ISO 8601 with whole seconds and a trailing `Z`, e.g. `"2026-01-15T10:30:00Z"`.
 * A failed checkout never saves anything.
-* Every language starts with an **in-memory** repository. Other repositories
-  (a JSON file, a database, …) can be added later to show integration testing.
+
+A saved order therefore looks like this (full shape in
+[`schema/order.schema.json`](schema/order.schema.json)):
+
+```json
+{ "id": "ORDER-1", "created_at": "2026-01-15T10:30:00Z", "receipt": { "...": "..." } }
+```
+
+### The clock
+
+The repository gets the time from a **clock** that is handed to it when it is created
+(an argument, a constructor parameter, an interface – whatever is natural in the language).
+The real program passes the system clock. Tests pass a **fixed clock** that always answers
+the same time, so `created_at` is predictable.
+
+The clock is the only part of the checkout whose answer changes from one run to the next.
+That makes it the textbook reason to use a *test double*: a test that compares `created_at`
+against the real time would be flaky, so we replace the clock instead.
+
+### Kinds of repository
+
+Every language starts with an **in-memory** repository (a fake that is also useful in
+production code for demos). To show **integration testing**, two more are planned, each
+storing orders in the shape above:
+
+* a **JSON file** repository (one file per repository or per order – your choice), tested
+  against a real temporary folder;
+* an **SQLite** repository, using the language's usual SQLite library, tested against a
+  temporary database file.
+
+A real database server behind Docker is deliberately **not** a goal: everything here must
+run on a learner's laptop with nothing but the language's own tools installed.
 
 ## 7. Rounding
 
@@ -249,6 +285,13 @@ will eventually ship a small command line program that:
 3. on failure prints `{ "error": "<ERROR_CODE>" }` to standard output and exits with code `1`.
 
 The program uses the standard catalog ([`catalog.json`](catalog.json)).
+
+On failure the printed JSON follows [`schema/cli-error.schema.json`](schema/cli-error.schema.json);
+on success it follows [`schema/receipt.schema.json`](schema/receipt.schema.json).
+
+The [`e2e/`](../e2e/) folder at the root of the repository holds a **shared end-to-end
+runner** that feeds every shared test case to any such program and compares the answers,
+so one script can check all six languages.
 
 ## 9. Error codes
 

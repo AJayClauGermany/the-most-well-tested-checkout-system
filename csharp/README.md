@@ -185,17 +185,29 @@ automatically; only the case count in `SpecLoaderTests` needs updating.
 
 ## Testing ideas we'd love contributions for
 
-| Idea | Tools to try |
-|------|--------------|
-| BDD: run the Gherkin scenarios in `../spec/features/` | [Reqnroll](https://reqnroll.net/) (the open-source successor of SpecFlow) in a new `tests/Checkout.Specs` project |
-| Property-based tests (e.g. "the total is never negative", "merging lines never changes the subtotal") | [FsCheck](https://fscheck.github.io/FsCheck/) (`FsCheck.Xunit.v3`) or [CsCheck](https://github.com/AnthonyLloyd/CsCheck) |
-| Mocks and fakes for the order repository (rules §6) | A hand-written `InMemoryOrderRepository` fake first; then [NSubstitute](https://nsubstitute.github.io/) or [Moq](https://github.com/devlooped/moq) |
-| Snapshot / approval tests of whole receipts | [Verify](https://github.com/VerifyTests/Verify) (`Verify.XunitV3`) |
-| Nicer assertions | [Shouldly](https://docs.shouldly.org/) or [AwesomeAssertions](https://awesomeassertions.org/) |
-| Code coverage | [`Microsoft.Testing.Extensions.CodeCoverage`](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-code-coverage) (`dotnet test --coverage`) and [ReportGenerator](https://reportgenerator.io/) for HTML reports |
-| Mutation testing: do the tests notice when the code is changed on purpose? | [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) |
-| Integration tests: save orders to a JSON file or a database | `System.IO` with a temp folder, [Microsoft.Data.Sqlite](https://learn.microsoft.com/dotnet/standard/data/sqlite/), [Testcontainers for .NET](https://dotnet.testcontainers.org/) |
-| End-to-end tests of the command line program (rules §8) | A `Checkout.Cli` console project, tested with `System.Diagnostics.Process` or [CliWrap](https://github.com/Tyrrrz/CliWrap) |
-| Architecture tests (e.g. "the domain does not depend on System.IO") | [NetArchTest](https://github.com/BenMorris/NetArchTest) or [ArchUnitNET](https://github.com/TNG/ArchUnitNET) |
-| Stricter static analysis | `<AnalysisLevel>latest-recommended</AnalysisLevel>` and `<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>` in `Directory.Build.props` |
-| Performance benchmarks | [BenchmarkDotNet](https://benchmarkdotnet.org/) |
+This list mirrors the C# column of the [testing matrix](../docs/testing-matrix.md) – the
+project's single list of goals – and adds the practical hints. Tick the matrix when you add
+one. We are on **xUnit v3** with **Microsoft.Testing.Platform v2**; pin companion packages
+(coverage, Verify) to versions that say they support it.
+
+| Tier | Idea | Tools to try |
+|------|------|--------------|
+| 1 | Implement `Checkout.Calculate` test-first, with unit tests for each step | xUnit `[Fact]` |
+| 1 | Parameterised tests – the native table style | `[Theory]` + `[InlineData]` / `[MemberData]` |
+| 1 | BDD: run the Gherkin scenarios in `../spec/features/` | [Reqnroll](https://reqnroll.net/) (`Reqnroll.xunit.v3`) in a new `tests/Checkout.Specs` project |
+| 1 | Test doubles for the order repository and the clock (rules §6) | A hand-written `InMemoryOrderRepository` and a fixed `TimeProvider` first; then [NSubstitute](https://nsubstitute.github.io/) to check a failed checkout never calls `Save` |
+| 1 | Integration tests: a JSON-file and an SQLite repository against a temp folder; stored orders match [`order.schema.json`](../spec/schema/order.schema.json) | `System.IO` + `Path.GetTempPath()`, [Microsoft.Data.Sqlite](https://learn.microsoft.com/dotnet/standard/data/sqlite/) |
+| 1 | Property-based tests – one per property in [`spec/properties.md`](../spec/properties.md) | [FsCheck](https://fscheck.github.io/FsCheck/) (`FsCheck.Xunit.v3`), or [CsCheck](https://github.com/AnthonyLloyd/CsCheck) |
+| 1 | Contract tests: every receipt satisfies [`receipt.schema.json`](../spec/schema/receipt.schema.json) | [JsonSchema.Net](https://docs.json-everything.net/schema/basics/) |
+| 1 | Snapshot / approval tests of whole receipts | [Verify](https://github.com/VerifyTests/Verify) (`Verify.XunitV3`) |
+| 1 | Nicer assertions | [AwesomeAssertions](https://awesomeassertions.org/) (the open-source fork of FluentAssertions, which went commercial in v8) or [Shouldly](https://docs.shouldly.org/) |
+| 1 | End-to-end tests of the CLI (rules §8), then the shared runner `e2e/run.sh dotnet run --project csharp/src/Checkout.Cli` | A `Checkout.Cli` console project, tested with `System.Diagnostics.Process` or [CliWrap](https://github.com/Tyrrzz/CliWrap) |
+| 1 | Code coverage | [`Microsoft.Testing.Extensions.CodeCoverage`](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-code-coverage) (`dotnet test --coverage`) + [ReportGenerator](https://reportgenerator.io/) |
+| 1 | Mutation testing | [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) with its Microsoft.Testing.Platform runner (still marked preview) |
+| 1 | Stricter static analysis | `<AnalysisLevel>latest-recommended</AnalysisLevel>` and `<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>` in `Directory.Build.props` |
+| 2 | Architecture tests ("the domain does not depend on `System.IO`") | [ArchUnitNET](https://github.com/TNG/ArchUnitNET) |
+| 2 | One micro-benchmark of `Calculate` | [BenchmarkDotNet](https://benchmarkdotnet.org/) |
+| 3 | Test report for CI; filtering; parallel collections | `dotnet test --report-junit` (or `--report-xunit-trx`), `[Trait]` + `--filter`, `[Collection]` |
+
+We deliberately skip Moq (see its 2023 SponsorLink episode) in favour of NSubstitute, and
+SharpFuzz (needs external fuzzer binaries) in favour of FsCheck for random input.

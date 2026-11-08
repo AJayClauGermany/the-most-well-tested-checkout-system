@@ -41,26 +41,8 @@ the checkout exists. Each one does it differently:
 | C#         | `[MemberData(..., Skip = "...")]`                       |
 | Rust       | `#[ignore = "..."]` (run anyway with `cargo test -- --ignored`) |
 
-## Testing showcase tracker
+## Which kinds of tests exist in which language?
 
-What each language demonstrates today. ✅ = done, ⏸️ = written but skipped until the
-checkout is implemented, blank = waiting for a contributor. Update this table in your
-pull request when you add something!
-
-| Kind of test                         | Python | TypeScript | Go | Java | C# | Rust |
-|--------------------------------------|:------:|:----------:|:--:|:----:|:--:|:----:|
-| Unit tests                           | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Loading the shared spec files        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Shared spec cases (data-driven)      | ⏸️ | ⏸️ | ⏸️ | ⏸️ | ⏸️ | ⏸️ |
-| BDD with `spec/features`             |    |    |    |    |    |    |
-| Integration (e.g. saving orders to a file) |    |    |    | ✅¹ |    |    |
-| Test doubles (fakes / mocks)         |    |    |    |    |    |    |
-| Property-based                       |    |    |    |    |    |    |
-| Snapshot / approval                  |    |    |    |    |    |    |
-| End-to-end via the CLI               |    |    |    |    |    |    |
-| Code coverage                        |    |    |    |    |    |    |
-| Mutation testing                     |    |    |    |    |    |    |
-
-¹ A single example `*IT` test that proves the Failsafe wiring works.
-
-Each language's `README.md` lists concrete tools we would love to see added.
+That is tracked in one place, [the testing matrix](testing-matrix.html): every kind of
+test we want to show, the tool chosen for it in each language, and whether it is done yet.
+Each language's `README.md` mirrors its own column with practical hints.

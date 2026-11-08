@@ -153,26 +153,50 @@ need the spec loader.
 
 ## Testing ideas we'd love contributions for
 
+This list mirrors the Rust column of the [testing matrix](../docs/testing-matrix.md) – the
+project's single list of goals – and adds the practical hints. Tick the matrix when you add
+one.
+
+**Tier 1 – every language does these**
+
+* **Implement `checkout`** test-first, with `#[cfg(test)] mod tests` unit tests for each step.
+* **Parameterised tests** with [`rstest`](https://crates.io/crates/rstest) `#[case]` (and its
+  fixtures) – the native table style; it can also give every shared spec case its own test name.
 * **BDD:** run `../spec/features/*.feature` with the [`cucumber`](https://crates.io/crates/cucumber) crate.
-* **One test per spec case:** [`rstest`](https://crates.io/crates/rstest) (parameterized tests),
-  [`libtest-mimic`](https://crates.io/crates/libtest-mimic) or
-  [`datatest-stable`](https://crates.io/crates/datatest-stable), so every case id shows up
-  as its own test.
-* **Property-based testing:** [`proptest`](https://crates.io/crates/proptest) or
-  [`quickcheck`](https://crates.io/crates/quickcheck) – e.g. "the total is never negative",
-  "merging lines never changes the subtotal", "shuffling the basket gives the same totals".
-* **Mocking / fakes:** an in-memory order repository (rules §6) behind a trait, with
-  [`mockall`](https://crates.io/crates/mockall) to check how it is called.
-* **Snapshot testing:** [`insta`](https://crates.io/crates/insta) for whole receipts.
+* **Test doubles** for an `OrderRepository` trait and a `Clock` trait (rules §6): a hand-written
+  in-memory fake first, then [`mockall`](https://crates.io/crates/mockall) to check a failed
+  checkout never calls `save`, and a fixed clock for `created_at`.
+* **Integration tests** in `tests/` for a JSON-file and an SQLite
+  ([`rusqlite`](https://crates.io/crates/rusqlite) with the `bundled` feature) repository
+  using [`tempfile`](https://crates.io/crates/tempfile). Check stored orders against
+  [`spec/schema/order.schema.json`](../spec/schema/order.schema.json).
+* **Property-based testing** with [`proptest`](https://crates.io/crates/proptest): one test per
+  property in [`spec/properties.md`](../spec/properties.md), named after its id.
+* **Contract tests** with the [`jsonschema`](https://crates.io/crates/jsonschema) crate: every
+  receipt must satisfy [`spec/schema/receipt.schema.json`](../spec/schema/receipt.schema.json).
+* **Snapshot testing** with [`insta`](https://crates.io/crates/insta) (`assert_json_snapshot!`)
+  for whole receipts.
 * **Better assertion messages:** [`pretty_assertions`](https://crates.io/crates/pretty_assertions)
   shows a coloured diff when `assert_eq!` fails.
-* **Coverage:** [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) or
-  [`cargo-tarpaulin`](https://github.com/xd009642/tarpaulin).
-* **Mutation testing:** [`cargo-mutants`](https://mutants.rs/) – do our tests notice when
-  the code is changed on purpose?
-* **End-to-end:** the command line program from rules §8 in `src/bin/checkout.rs`, tested
-  with [`assert_cmd`](https://crates.io/crates/assert_cmd) in `tests/cli.rs`.
-* **Fuzzing:** [`cargo-fuzz`](https://github.com/rust-fuzz/cargo-fuzz) on the basket JSON parser.
-* **Benchmarks:** [`criterion`](https://crates.io/crates/criterion) or
-  [`divan`](https://crates.io/crates/divan).
-* **A faster test runner:** [`cargo-nextest`](https://nexte.st/).
+* **End-to-end:** the CLI from rules §8 in `src/bin/checkout.rs`, tested with
+  [`assert_cmd`](https://crates.io/crates/assert_cmd) in `tests/cli.rs`, then the shared runner:
+  `e2e/run.sh rust/target/debug/checkout` after `cargo build`.
+* **Coverage:** [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) (source-based,
+  works on stable with `rustup component add llvm-tools-preview`).
+* **Mutation testing:** [`cargo-mutants`](https://mutants.rs/) – do our tests notice when the
+  code is changed on purpose?
+* **Static checks:** already in CI (`rustfmt`, Clippy with `-D warnings`).
+
+**Tier 2 – idiomatic extras**
+
+* **Doctests:** code examples in `///` comments (e.g. on `round_half_up`) run with
+  `cargo test --doc` – free, and the most Rust-flavoured kind of test there is.
+* **Fuzzing:** [`cargo-fuzz`](https://github.com/rust-fuzz/cargo-fuzz) on the basket JSON parser
+  (property P10). Needs nightly, so keep it optional / CI-only.
+* **Benchmarks:** [`criterion`](https://crates.io/crates/criterion) (or the smaller
+  [`divan`](https://crates.io/crates/divan)) – one benchmark of `checkout` is enough.
+
+**Tier 3 – plumbing**
+
+* [`cargo-nextest`](https://nexte.st/): each test in its own process, and
+  `cargo nextest run --profile ci` writes JUnit XML for CI.

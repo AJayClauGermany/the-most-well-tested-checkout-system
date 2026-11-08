@@ -6,7 +6,8 @@ title: Kinds of tests
 There is no single "right" way to test. Different kinds of tests answer different
 questions, cost different amounts of time, and catch different bugs. This page
 describes the kinds of tests this project wants to show. The
-[languages page](languages.html) tracks which ones exist so far.
+[testing matrix](testing-matrix.html) says which tool each language uses for each kind,
+and which ones exist so far.
 
 ## The testing pyramid
 
@@ -79,10 +80,40 @@ also records how it was called so the test can check it.
 
 Instead of choosing examples yourself, you describe a property and the tool invents
 hundreds of random inputs to try to break it – then shrinks any failure down to the
-smallest example.
+smallest example. The properties this project checks are listed once, for all languages,
+in [`spec/properties.md`]({{ site.repository_files }}/spec/properties.md).
 
-> *Example:* for **any** valid basket, `total = subtotal − discounts + shipping + tax`,
-> and no amount is ever negative.
+> *Example:* property P1 – for **any** valid basket,
+> `total = subtotal − discounts + shipping + tax`.
+
+## Contract (schema) tests
+
+**Question:** *Is the output even the right shape?*
+
+A contract says what a piece of data must look like: which fields, which types, which
+values are allowed. Here the contract is a JSON Schema,
+[`receipt.schema.json`]({{ site.repository_files }}/spec/schema/receipt.schema.json), and a
+contract test checks a real receipt against it. Because all six languages share the same
+schema, they are held to the same contract – which is what lets one e2e runner test them all.
+
+> *Example:* `shipping` must be exactly `0`, `499` or `999`.
+
+## Fuzzing
+
+**Question:** *Can random garbage crash it?*
+
+A fuzzer throws random (often malformed) input at the program, mutating whatever
+made it misbehave last time. It does not know the right answer; it only looks for crashes,
+hangs and panics. Property P10 says the checkout must *never* crash: for any input it
+returns a receipt or one of six error codes.
+
+## Documentation tests
+
+**Question:** *Do the examples in the documentation still work?*
+
+Some languages let an example in a doc comment run as a test (Python's `doctest`, Go's
+`Example` functions, Rust's doctests). The documentation can then never drift away from
+the code.
 
 ## Snapshot (approval) tests
 
@@ -116,9 +147,31 @@ Coverage tools report which lines (and branches) ran during the tests. High cove
 does not prove the tests are good – mutation testing is better at that – but
 low coverage definitely shows untested code.
 
+## Benchmarks
+
+**Question:** *How fast is it, and did that change?*
+
+A benchmark runs a piece of code many times and reports the time. The checkout is tiny, so
+one benchmark is enough to show the tool; this is not a performance project.
+
+## Architecture tests
+
+**Question:** *Does the code keep to the structure we agreed?*
+
+Rules like "the checkout logic never imports file or console code" can be tested, in
+languages with tools for it (ArchUnit for Java, ArchUnitNET for C#). With only a couple of
+modules that is nearly overkill – which is why it is only a Tier 2 item in the matrix.
+
 ## Static checks
 
 **Question:** *Can we catch mistakes without running anything?*
 
 Type checkers, linters and formatters are not tests, but they catch whole groups of bugs
 before any test runs. Every language here runs at least one in CI.
+
+## What we leave out, and why
+
+Browser tests, load tests, security scans, contract tests between services and flaky-test
+retries all exist for good reasons – in programs that have screens, traffic, attackers,
+other services or non-determinism. The checkout has none of those, so we leave them out
+rather than invent a reason. The [testing matrix](testing-matrix.html) keeps the full list.

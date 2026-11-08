@@ -24,6 +24,7 @@ export type { Clock, Order, OrderRepository } from "./orders.ts";
 export { JsonFileOrderRepository } from "./json-file-repository.ts";
 export { SqliteOrderRepository } from "./sqlite-repository.ts";
 export { loadStandardCatalog, runCheckoutCommand, STANDARD_CATALOG_PATH } from "./command.ts";
+export { findSpecFolder } from "./spec-folder.ts";
 export type { CommandResult } from "./command.ts";
 export type {
   Basket,

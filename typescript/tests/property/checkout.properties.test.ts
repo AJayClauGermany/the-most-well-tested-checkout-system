@@ -334,7 +334,12 @@ describe("properties of saving orders", () => {
     fc.assert(
       fc.property(
         validBasket,
-        fc.date({ min: new Date("2000-01-01T00:00:00Z"), max: new Date("2099-12-31T23:59:59Z") }),
+        // Any real moment this century. (fast-check can also make an "Invalid Date"; a clock never does.)
+        fc.date({
+          min: new Date("2000-01-01T00:00:00Z"),
+          max: new Date("2099-12-31T23:59:59Z"),
+          noInvalidDate: true,
+        }),
         (b, when) => {
           const repository = new InMemoryOrderRepository(() => when);
           const receipt = checkout(b, catalog);

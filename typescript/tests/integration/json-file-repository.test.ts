@@ -125,6 +125,8 @@ describe("JsonFileOrderRepository", () => {
   it("ignores files in the folder that are not orders", () => {
     writeFileSync(join(folder, "README.txt"), "not an order");
     writeFileSync(join(folder, "ORDER-9.json.bak"), "not an order either");
+    writeFileSync(join(folder, "ORDER-9"), "no .json extension, so not an order");
+    writeFileSync(join(folder, "ORDER-09.json"), "a leading zero is not an order id");
     const repository = new JsonFileOrderRepository(folder, fixedClock);
 
     expect(repository.save(oneAppleReceipt)).toBe("ORDER-1");

@@ -27,6 +27,12 @@ function openRepository(clock = fixedClock): SqliteOrderRepository {
   return repository;
 }
 
+/** Closes a repository early, inside a test (and forgets it, so afterEach does not close it twice). */
+function closeNow(repository: SqliteOrderRepository): void {
+  open.splice(open.indexOf(repository), 1);
+  repository.close();
+}
+
 beforeEach(() => {
   folder = mkdtempSync(join(tmpdir(), "checkout-sqlite-"));
   path = join(folder, "orders.db");
@@ -80,7 +86,7 @@ describe("SqliteOrderRepository", () => {
     const first = openRepository();
     first.save(oneAppleReceipt);
     first.save(oneAppleReceipt);
-    first.close();
+    closeNow(first);
 
     const second = openRepository();
 
@@ -91,13 +97,21 @@ describe("SqliteOrderRepository", () => {
   it("really writes to the database file (checked with a separate connection)", () => {
     const repository = openRepository();
     repository.save(oneAppleReceipt);
-    repository.close();
+    closeNow(repository);
 
     const db = new DatabaseSync(path);
     const row = db.prepare("SELECT COUNT(*) AS n FROM orders").get() as { n: number };
     db.close();
 
     expect(row.n).toBe(1);
+  });
+
+  it("refuses to save or find once it is closed, instead of silently doing nothing", () => {
+    const repository = openRepository();
+    closeNow(repository);
+
+    expect(() => repository.save(oneAppleReceipt)).toThrow("database is not open");
+    expect(() => repository.find("ORDER-1")).toThrow("database is not open");
   });
 
   it("works in memory too (':memory:' is SQLite's name for a throw-away database)", () => {

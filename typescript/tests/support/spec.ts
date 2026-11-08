@@ -6,17 +6,18 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { findSpecFolder } from "../../src/index.ts";
 import type { Basket, Catalog, ErrorCode } from "../../src/index.ts";
 
 /**
- * The absolute path of the spec/ folder.
+ * The absolute path of the spec/ folder, with a trailing slash.
  *
- * We find it relative to *this file* (`import.meta.url`), not relative to the
- * current working directory. So it works no matter which folder you run the
- * tests from. This file is typescript/tests/support/spec.ts, so spec/ is three
- * folders up.
+ * We find it relative to *this file* (`import.meta.url`), not relative to the current
+ * working directory, so it works no matter which folder you run the tests from. The
+ * search itself (walk up until a folder holds spec/catalog.json) is shared with the
+ * command line program, see src/spec-folder.ts.
  */
-export const SPEC_DIR = fileURLToPath(new URL("../../../spec/", import.meta.url));
+export const SPEC_DIR = `${findSpecFolder(fileURLToPath(new URL(".", import.meta.url)))}/`;
 
 /** The six totals a shared test case expects (all in cents). */
 export interface ExpectedTotals {

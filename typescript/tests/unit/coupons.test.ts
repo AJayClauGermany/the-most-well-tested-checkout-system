@@ -71,6 +71,13 @@ describe("couponDiscount", () => {
     );
   });
 
+  it("explains what went wrong in the error message", () => {
+    expect(() => couponDiscount("freestuff", 10000)).toThrow("Unknown coupon: FREESTUFF");
+    expect(() => couponDiscount("WELCOME5", 2499)).toThrow(
+      "WELCOME5 needs a spend of at least 2500 cents, got 2499",
+    );
+  });
+
   it("does not accept a code that merely starts or ends with a real code", () => {
     expect(() => couponDiscount("SAVE100", 10000)).toThrow(
       expect.objectContaining({ code: "UNKNOWN_COUPON" }),

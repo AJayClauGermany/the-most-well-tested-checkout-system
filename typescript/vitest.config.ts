@@ -15,7 +15,14 @@ export default defineConfig({
     // Benchmarks (tests/bench/*.bench.ts) run with `npm run bench`.
     benchmark: {
       include: ["tests/bench/**/*.bench.ts"],
+      // checkout() calls into other modules on every run, and Vitest's module loader wraps
+      // every import in a getter. Vitest warns that this adds overhead; for our purposes
+      // (showing the tool, not measuring nanoseconds) that is fine.
+      suppressExportGetterWarnings: true,
     },
+
+    // node:sqlite still prints "ExperimentalWarning" on Node 22; keep the test output clean.
+    execArgv: ["--disable-warning=ExperimentalWarning"],
 
     // Two reports: the usual terminal output, and a JUnit XML file for CI dashboards.
     reporters: ["default", ["junit", { outputFile: "reports/junit.xml" }]],

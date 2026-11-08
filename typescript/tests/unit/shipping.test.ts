@@ -25,6 +25,12 @@ describe("parseShippingMethod", () => {
   );
 });
 
+describe("parseShippingMethod error message", () => {
+  it("names the method it did not recognise", () => {
+    expect(() => parseShippingMethod("overnight")).toThrow("Unknown shipping method: overnight");
+  });
+});
+
 describe("shippingCost", () => {
   describe("standard", () => {
     it("costs $4.99 below $50.00", () => {

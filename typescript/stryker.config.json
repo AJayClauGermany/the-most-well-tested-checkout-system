@@ -7,7 +7,9 @@
   },
   "mutate": ["src/**/*.ts", "!src/cli.ts"],
   "coverageAnalysis": "perTest",
-  "reporters": ["clear-text", "progress", "html"],
+  "ignorePatterns_comment": "Stryker normally rewrites tsconfig.json for its sandbox with the TypeScript compiler API. TypeScript 7 (the native compiler) has no such API, so tsconfig.json is kept out of the sandbox; Vitest does not need it to run the tests.",
+  "ignorePatterns": ["tsconfig.json", "reports"],
+  "reporters": ["clear-text", "progress", "html", "json"],
   "htmlReporter": {
     "fileName": "reports/mutation/index.html"
   },
@@ -17,5 +19,9 @@
     "break": 95
   },
   "tempDirName": ".stryker-tmp",
-  "incremental": false
+  "incremental": false,
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
+  },
+  "cleanTempDir": "always"
 }

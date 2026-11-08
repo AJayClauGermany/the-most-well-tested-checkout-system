@@ -26,6 +26,17 @@ describe("CheckoutError", () => {
     expect(error.code).toBe("UNKNOWN_COUPON");
   });
 
+  it("uses the code as the message when no message is given", () => {
+    expect(new CheckoutError("UNKNOWN_COUPON").message).toBe("UNKNOWN_COUPON");
+  });
+
+  it("is named after its class, so stack traces and logs read well", () => {
+    const error = new CheckoutError("EMPTY_BASKET", "The basket has no items");
+
+    expect(error.name).toBe("CheckoutError");
+    expect(String(error)).toBe("CheckoutError: The basket has no items");
+  });
+
   it("is a normal Error, so it can be thrown and caught", () => {
     const error = new CheckoutError("EMPTY_BASKET", "The basket has no items");
 

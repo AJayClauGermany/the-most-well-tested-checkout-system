@@ -129,6 +129,30 @@ describe("validateItems", () => {
     expect(() => validateItems(basket, tinyCatalog)).not.toThrow();
   });
 
+  describe("error messages", () => {
+    // The code is what programs look at; the message is for the human reading a log.
+    it("explain the problem", () => {
+      expect(() => validateItems({ items: [] }, tinyCatalog)).toThrow("The basket has no items");
+      expect(() => validateItems({ items: [{ sku: "BANANA", quantity: 1 }] }, tinyCatalog)).toThrow(
+        "Unknown product: BANANA",
+      );
+      expect(() => validateItems({ items: [{ sku: "APPLE", quantity: 0 }] }, tinyCatalog)).toThrow(
+        "Invalid quantity for APPLE: 0",
+      );
+      expect(() =>
+        validateItems(
+          {
+            items: [
+              { sku: "APPLE", quantity: 60 },
+              { sku: "APPLE", quantity: 40 },
+            ],
+          },
+          tinyCatalog,
+        ),
+      ).toThrow("Too many APPLE in total: 100");
+    });
+  });
+
   describe("check order", () => {
     it("an unknown product beats a bad quantity, even on a later line", () => {
       expectError(

@@ -8,7 +8,10 @@
       "*.json",
       "!**/*.md",
       "!package-lock.json",
-      "!tests/snapshot/__snapshots__"
+      "!tests/snapshot/__snapshots__",
+      "!.stryker-tmp",
+      "!reports",
+      "!node_modules"
     ]
   },
   "formatter": {
@@ -26,7 +29,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "style": {
         "noNonNullAssertion": "off"
       }

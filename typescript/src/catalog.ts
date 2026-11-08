@@ -17,6 +17,9 @@ export function findProduct(catalog: Catalog, sku: string): Product | undefined 
  * @throws {CheckoutError} UNKNOWN_PRODUCT (rules §4.1 row 2).
  */
 export function requireProduct(catalog: Catalog, sku: string): Product {
-  void CheckoutError;
-  throw new Error(`requireProduct(${catalog.products.length}, ${sku}) is not implemented yet`);
+  const product = findProduct(catalog, sku);
+  if (product === undefined) {
+    throw new CheckoutError("UNKNOWN_PRODUCT", `Unknown product: ${sku}`);
+  }
+  return product;
 }

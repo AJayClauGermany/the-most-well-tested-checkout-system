@@ -1,0 +1,7 @@
+# Only needed to preview the website on your own computer:
+#   cd docs && bundle install && bundle exec jekyll serve
+# GitHub Pages builds the real site by itself.
+source "https://rubygems.org"
+
+gem "github-pages", group: :jekyll_plugins
+gem "webrick" # needed by `jekyll serve` on Ruby 3+

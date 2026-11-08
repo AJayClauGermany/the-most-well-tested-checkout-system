@@ -1,0 +1,93 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the biggest shared case, full-everything > matches the saved snapshot (every product, both promotions, WELCOME5, express) 1`] = `
+{
+  "coupon_discount": 500,
+  "lines": [
+    {
+      "line_discount": 0,
+      "line_total": 5999,
+      "name": "Wireless Headphones",
+      "quantity": 1,
+      "sku": "HEADPHONES",
+      "unit_price": 5999,
+    },
+    {
+      "line_discount": 1798,
+      "line_total": 5394,
+      "name": "Bag of Coffee Beans",
+      "quantity": 6,
+      "sku": "COFFEE",
+      "unit_price": 899,
+    },
+    {
+      "line_discount": 419,
+      "line_total": 4188,
+      "name": "Notebook",
+      "quantity": 12,
+      "sku": "NOTEBOOK",
+      "unit_price": 349,
+    },
+    {
+      "line_discount": 0,
+      "line_total": 600,
+      "name": "Pen",
+      "quantity": 5,
+      "sku": "PEN",
+      "unit_price": 120,
+    },
+    {
+      "line_discount": 0,
+      "line_total": 225,
+      "name": "Loaf of Bread",
+      "quantity": 1,
+      "sku": "BREAD",
+      "unit_price": 225,
+    },
+    {
+      "line_discount": 0,
+      "line_total": 150,
+      "name": "Apple",
+      "quantity": 3,
+      "sku": "APPLE",
+      "unit_price": 50,
+    },
+  ],
+  "promotion_discount": 2217,
+  "shipping": 999,
+  "subtotal": 16556,
+  "tax": 1107,
+  "total": 15945,
+}
+`;
+
+exports[`the example receipt from the rules > is printed by the command exactly like this 1`] = `"{"lines":[{"sku":"COFFEE","name":"Bag of Coffee Beans","quantity":3,"unit_price":899,"line_total":2697,"line_discount":899},{"sku":"APPLE","name":"Apple","quantity":2,"unit_price":50,"line_total":100,"line_discount":0}],"subtotal":2797,"promotion_discount":899,"coupon_discount":190,"shipping":499,"tax":137,"total":2344}"`;
+
+exports[`the example receipt from the rules > matches the saved snapshot 1`] = `
+{
+  "coupon_discount": 190,
+  "lines": [
+    {
+      "line_discount": 899,
+      "line_total": 2697,
+      "name": "Bag of Coffee Beans",
+      "quantity": 3,
+      "sku": "COFFEE",
+      "unit_price": 899,
+    },
+    {
+      "line_discount": 0,
+      "line_total": 100,
+      "name": "Apple",
+      "quantity": 2,
+      "sku": "APPLE",
+      "unit_price": 50,
+    },
+  ],
+  "promotion_discount": 899,
+  "shipping": 499,
+  "subtotal": 2797,
+  "tax": 137,
+  "total": 2344,
+}
+`;

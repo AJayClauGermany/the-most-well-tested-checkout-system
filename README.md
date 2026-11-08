@@ -16,10 +16,11 @@ production-ready.
 
 ## Status: tests first
 
-The rules and the shared tests exist. **The checkout itself is not implemented yet.**
-That is on purpose: the project starts test-first (TDD / BDD). Each language already has
-its project set up, its tests running in CI, and a skipped suite of 60 shared test cases
-waiting to go from red to green.
+The rules and the shared tests exist, and the project is built test-first (TDD / BDD).
+**TypeScript is the first language with a finished checkout**: every row of the testing
+matrix is ticked for it, so it is the point of comparison for the other five. In Python,
+Go, Java, C# and Rust the project is set up and the tests run in CI, but the 60 shared
+test cases are still skipped, waiting to go from red to green.
 
 ## What's in here
 
@@ -44,14 +45,14 @@ waiting to go from red to green.
    | Language   | Needs            | Run the tests                                   |
    |------------|------------------|-------------------------------------------------|
    | Python     | Python 3.10+     | `pip install -e ".[dev]"` then `pytest`         |
-   | TypeScript | Node.js 22.12+   | `npm install` then `npm test`                   |
+   | TypeScript | Node.js 22.18+   | `npm install` then `npm test`                   |
    | Go         | Go 1.24+         | `go test ./...`                                 |
    | Java       | JDK 21 + Maven   | `mvn verify`                                    |
    | C#         | .NET 10 SDK      | `dotnet test`                                   |
    | Rust       | Rust (rustup)    | `cargo test`                                    |
 
-3. Expect to see passing tests **and** skipped tests. The skipped ones are the shared
-   spec cases, waiting for an implementation.
+3. In TypeScript every test passes. In the other languages expect passing tests **and**
+   skipped tests: the skipped ones are the shared spec cases, waiting for an implementation.
 
 ## How the shared spec works
 

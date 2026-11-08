@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { findProduct } from "../../src/index.ts";
+import { CheckoutError, findProduct, requireProduct } from "../../src/index.ts";
 import type { Catalog } from "../../src/index.ts";
 
 // A tiny catalog made up just for these tests. Small, hand-made test data makes
@@ -48,5 +48,22 @@ describe("findProduct", () => {
   it("matches skus exactly, so lower case 'apple' is not found", () => {
     // rules §4: "SKUs are matched exactly - they are case sensitive".
     expect(findProduct(catalog, "apple")).toBeUndefined();
+  });
+});
+
+describe("requireProduct", () => {
+  it("returns the product when it exists", () => {
+    expect(requireProduct(catalog, "APPLE")).toBe(catalog.products[0]);
+  });
+
+  it("throws UNKNOWN_PRODUCT when it does not", () => {
+    expect(() => requireProduct(catalog, "BANANA")).toThrow(CheckoutError);
+    expect(() => requireProduct(catalog, "BANANA")).toThrow(
+      expect.objectContaining({ code: "UNKNOWN_PRODUCT" }),
+    );
+  });
+
+  it("mentions the sku in the error message, so the message is useful to a human", () => {
+    expect(() => requireProduct(catalog, "BANANA")).toThrow("BANANA");
   });
 });

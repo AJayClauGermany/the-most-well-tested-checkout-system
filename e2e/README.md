@@ -20,13 +20,14 @@ It needs only `bash` and [`jq`](https://jqlang.github.io/jq/).
 | Language   | Once its CLI exists, run (from the repository root)                          |
 |------------|------------------------------------------------------------------------------|
 | Python     | `(cd python && ../e2e/run.sh python -m checkout)`                            |
-| TypeScript | `(cd typescript && ../e2e/run.sh npx tsx src/cli.ts)`                        |
+| TypeScript | `(cd typescript && ../e2e/run.sh node src/cli.ts)` – or `npm run test:e2e:shared` |
 | Go         | `e2e/run.sh go run ./go/cmd/checkout`                                        |
 | Java       | `e2e/run.sh java -jar java/target/checkout.jar`                              |
 | C#         | `e2e/run.sh dotnet run --project csharp/src/Checkout.Cli`                    |
 | Rust       | `e2e/run.sh cargo run --quiet --manifest-path rust/Cargo.toml --bin checkout` |
 
-The exact commands will be confirmed in each language's README when its CLI lands.
+The TypeScript command works today (Node.js 22.18+ runs `.ts` files directly); the others
+will be confirmed in each language's README when its CLI lands.
 
 ## What it checks – and what it leaves to the languages
 

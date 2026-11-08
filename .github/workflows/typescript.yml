@@ -7,6 +7,7 @@ on:
     paths:
       - "typescript/**"
       - "spec/**"
+      - "e2e/**"
       - ".github/workflows/typescript.yml"
   workflow_dispatch:
 
@@ -34,7 +35,33 @@ jobs:
           cache-dependency-path: typescript/package-lock.json
       - name: Install dependencies
         run: npm ci
-      - name: Type-check
+
+      # Static checks: no code runs, but whole classes of mistakes are caught.
+      - name: Type-check (tsc)
         run: npm run typecheck
-      - name: Run tests
-        run: npm test
+      - name: Lint and check formatting (Biome)
+        run: npm run lint
+
+      # The test pyramid, bottom to top, with coverage thresholds and a JUnit report.
+      - name: Unit, integration, property, contract, snapshot and e2e tests, with coverage (Vitest)
+        run: npm run test:coverage
+      - name: Type-level tests (Vitest --typecheck)
+        run: npm run test:types
+      - name: BDD scenarios from spec/features (Cucumber)
+        run: npm run test:bdd
+      - name: Shared end-to-end runner against the CLI (e2e/run.sh)
+        run: npm run test:e2e:shared
+      - name: Benchmark smoke run (Vitest bench)
+        run: npm run bench
+
+      # Mutation testing: would the tests notice if the code were wrong?
+      - name: Mutation testing (StrykerJS)
+        run: npm run test:mutation
+
+      - name: Upload reports (JUnit, coverage, mutation)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-reports
+          path: typescript/reports/
+          if-no-files-found: ignore

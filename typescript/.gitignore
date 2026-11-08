@@ -12,3 +12,7 @@ dist/
 *.tsbuildinfo
 .vite/
 .vitest/
+
+# Reports: coverage, JUnit XML, mutation testing
+reports/
+.stryker-tmp/

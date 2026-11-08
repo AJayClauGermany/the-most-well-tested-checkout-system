@@ -33,7 +33,7 @@ You only need the tools for the language you pick. Every language folder has a
 | Language   | You need          | Run the tests (from the language folder)                         |
 |------------|-------------------|------------------------------------------------------------------|
 | Python     | Python 3.10+      | `pip install -e ".[dev]"` then `pytest`                          |
-| TypeScript | Node.js 22.12+    | `npm install` then `npm test`                                    |
+| TypeScript | Node.js 22.18+    | `npm install` then `npm test`                                    |
 | Go         | Go 1.24+          | `go test ./...`                                                  |
 | Java       | JDK 21 + Maven    | `mvn verify`                                                     |
 | C#         | .NET 10 SDK       | `dotnet test`                                                    |
@@ -41,6 +41,7 @@ You only need the tools for the language you pick. Every language folder has a
 
 You should see some tests **pass** and one group of tests **skipped**. The skipped
 tests are the shared spec cases, waiting for someone to implement the checkout.
+(In TypeScript the checkout is already implemented, so everything passes there.)
 
 ## 4. Make a test fail on purpose
 

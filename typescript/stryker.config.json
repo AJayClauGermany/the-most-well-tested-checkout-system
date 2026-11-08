@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Mutation testing with StrykerJS: `npm run test:mutation`. Stryker changes the code in small ways (a mutant: `>=` becomes `>`, `+` becomes `-`, a condition becomes `true`) and runs the tests. A mutant that survives shows a gap in the tests.",
+  "testRunner": "vitest",
+  "vitest": {
+    "configFile": "vitest.config.ts"
+  },
+  "mutate": ["src/**/*.ts", "!src/cli.ts"],
+  "coverageAnalysis": "perTest",
+  "ignorePatterns_comment": "Stryker normally rewrites tsconfig.json for its sandbox with the TypeScript compiler API. TypeScript 7 (the native compiler) has no such API, so tsconfig.json is kept out of the sandbox; Vitest does not need it to run the tests.",
+  "ignorePatterns": ["tsconfig.json", "reports"],
+  "reporters": ["clear-text", "progress", "html", "json"],
+  "htmlReporter": {
+    "fileName": "reports/mutation/index.html"
+  },
+  "thresholds": {
+    "high": 100,
+    "low": 95,
+    "break": 95
+  },
+  "tempDirName": ".stryker-tmp",
+  "incremental": false,
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
+  },
+  "cleanTempDir": "always"
+}

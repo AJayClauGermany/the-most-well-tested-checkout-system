@@ -1,0 +1,41 @@
+name: Spec
+
+# Checks that the shared, language-agnostic spec files are valid.
+# Only runs on pull requests that change the spec, or when started by hand.
+on:
+  pull_request:
+    paths:
+      - "spec/**"
+      - ".github/workflows/spec.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install check-jsonschema
+        run: pip install check-jsonschema==0.39.0
+
+      - name: Validate the catalog
+        run: check-jsonschema --schemafile spec/schema/catalog.schema.json spec/catalog.json
+
+      - name: Validate the test cases
+        run: check-jsonschema --schemafile spec/schema/test-cases.schema.json spec/test-cases/*.json
+
+      - name: Check test case ids are unique
+        run: python3 spec/check_unique_ids.py

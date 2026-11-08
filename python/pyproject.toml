@@ -1,0 +1,60 @@
+# pyproject.toml is the one place where a modern Python project describes itself:
+# its name, which Python it needs, its dependencies, and the settings for its tools.
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "checkout"
+version = "0.1.0"
+description = "A small checkout system, built to show many kinds of software testing."
+readme = "README.md"
+license = "BSL-1.0"
+requires-python = ">=3.10"
+# The checkout itself only uses the Python standard library.
+dependencies = []
+
+[project.optional-dependencies]
+# Tools for developing and testing. Install them with:  pip install -e ".[dev]"
+# Versions are pinned with == so everybody (and CI) uses exactly the same tools.
+dev = [
+    "pytest==9.2.0",
+    "ruff==0.17.4",
+]
+
+[tool.setuptools.packages.find]
+# "src layout": the importable code lives in src/checkout/.
+where = ["src"]
+
+# ---------------------------------------------------------------------------
+# pytest – the test runner
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "9.0"
+# Where to look for tests when you just type `pytest`.
+testpaths = ["tests"]
+# Lets test files `import spec_loader` (tests/spec_loader.py).
+pythonpath = ["tests"]
+addopts = [
+    # The import mode recommended by pytest for new projects.
+    "--import-mode=importlib",
+    # Fail on typos in @pytest.mark.<name>.
+    "--strict-markers",
+    # Print a short summary of skipped / failed tests at the end.
+    "-ra",
+]
+
+# ---------------------------------------------------------------------------
+# Ruff – a fast linter ("is this code suspicious?") and formatter ("is it tidy?")
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# A modest set of rules:
+#   E, W = pycodestyle (basic style)     F = pyflakes (unused imports, undefined names, ...)
+#   I    = isort (sorted imports)        B = flake8-bugbear (common bug patterns)
+#   UP   = pyupgrade (use modern syntax for our Python version)
+select = ["E", "W", "F", "I", "B", "UP"]

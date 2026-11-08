@@ -1,0 +1,78 @@
+{
+  "$schema": "../schema/test-cases.schema.json",
+  "description": "Invalid baskets. When several things are wrong, the first error in the rules' check order wins.",
+  "cases": [
+    {
+      "id": "validation-empty-basket",
+      "description": "A basket with no items cannot be checked out",
+      "basket": {"items": []},
+      "expected_error": "EMPTY_BASKET"
+    },
+    {
+      "id": "validation-unknown-product",
+      "description": "BANANA is not in the catalog",
+      "basket": {"items": [{"sku": "BANANA", "quantity": 1}]},
+      "expected_error": "UNKNOWN_PRODUCT"
+    },
+    {
+      "id": "validation-sku-is-case-sensitive",
+      "description": "SKUs must match exactly, so 'apple' is unknown",
+      "basket": {"items": [{"sku": "apple", "quantity": 1}]},
+      "expected_error": "UNKNOWN_PRODUCT"
+    },
+    {
+      "id": "validation-zero-quantity",
+      "description": "Quantity must be at least 1",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 0}]},
+      "expected_error": "INVALID_QUANTITY"
+    },
+    {
+      "id": "validation-negative-quantity",
+      "description": "Negative quantities are not allowed",
+      "basket": {"items": [{"sku": "APPLE", "quantity": -1}]},
+      "expected_error": "INVALID_QUANTITY"
+    },
+    {
+      "id": "validation-quantity-over-maximum",
+      "description": "100 is more than the maximum of 99",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 100}]},
+      "expected_error": "INVALID_QUANTITY"
+    },
+    {
+      "id": "validation-merged-quantity-over-maximum",
+      "description": "50 + 50 apples is 100 after merging",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 50}, {"sku": "APPLE", "quantity": 50}]},
+      "expected_error": "INVALID_QUANTITY"
+    },
+    {
+      "id": "validation-order-empty-before-coupon",
+      "description": "Empty basket is reported before an unknown coupon",
+      "basket": {"items": [], "coupon": "NOPE"},
+      "expected_error": "EMPTY_BASKET"
+    },
+    {
+      "id": "validation-order-product-before-quantity",
+      "description": "All SKUs are checked before any quantity",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 0}, {"sku": "BANANA", "quantity": 1}]},
+      "expected_error": "UNKNOWN_PRODUCT"
+    },
+    {
+      "id": "validation-order-quantity-before-shipping",
+      "description": "A bad quantity is reported before a bad shipping method",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 0}], "shipping": "overnight"},
+      "expected_error": "INVALID_QUANTITY"
+    },
+    {
+      "id": "validation-order-shipping-before-coupon",
+      "description": "A bad shipping method is reported before a bad coupon",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "coupon": "NOPE", "shipping": "overnight"},
+      "expected_error": "UNKNOWN_SHIPPING_METHOD"
+    },
+    {
+      "id": "validation-order-unknown-coupon-before-minimum",
+      "description": "An unknown coupon is reported (there is no minimum to check)",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "coupon": "WELCOME50"},
+      "expected_error": "UNKNOWN_COUPON"
+    }
+  ]
+}

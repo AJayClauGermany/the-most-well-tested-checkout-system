@@ -1,0 +1,42 @@
+{
+  "$schema": "../schema/test-cases.schema.json",
+  "description": "Tax: 8% of the price after all discounts. Shipping is not taxed.",
+  "cases": [
+    {
+      "id": "tax-exact-amount",
+      "description": "8% of $0.50 is exactly 4 cents",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}]},
+      "expected": {"subtotal": 50, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 4, "total": 553}
+    },
+    {
+      "id": "tax-fraction-rounds-up",
+      "description": "8% of $1.20 is 9.6 cents, which rounds to 10",
+      "basket": {"items": [{"sku": "PEN", "quantity": 1}]},
+      "expected": {"subtotal": 120, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 10, "total": 629}
+    },
+    {
+      "id": "tax-fraction-rounds-down",
+      "description": "8% of $2.40 is 19.2 cents, which rounds to 19",
+      "basket": {"items": [{"sku": "PEN", "quantity": 2}]},
+      "expected": {"subtotal": 240, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 19, "total": 758}
+    },
+    {
+      "id": "tax-is-not-charged-on-shipping",
+      "description": "Tax on $0.50 is 4 cents even though shipping adds $4.99",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "shipping": "express"},
+      "expected": {"subtotal": 50, "promotion_discount": 0, "coupon_discount": 0, "shipping": 999, "tax": 4, "total": 1053}
+    },
+    {
+      "id": "tax-is-charged-after-discounts",
+      "description": "Tax is 8% of $4.50 (after SAVE10), not of $5.00",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 10}], "coupon": "SAVE10"},
+      "expected": {"subtotal": 500, "promotion_discount": 0, "coupon_discount": 50, "shipping": 499, "tax": 36, "total": 985}
+    },
+    {
+      "id": "tax-on-large-order",
+      "description": "Tax on a large order",
+      "basket": {"items": [{"sku": "HEADPHONES", "quantity": 1}, {"sku": "NOTEBOOK", "quantity": 1}]},
+      "expected": {"subtotal": 6348, "promotion_discount": 0, "coupon_discount": 0, "shipping": 0, "tax": 508, "total": 6856}
+    }
+  ]
+}

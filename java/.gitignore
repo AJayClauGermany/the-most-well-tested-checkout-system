@@ -1,0 +1,11 @@
+# Maven build output (compiled classes, test reports, the jar)
+target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath

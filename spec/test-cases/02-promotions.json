@@ -1,0 +1,78 @@
+{
+  "$schema": "../schema/test-cases.schema.json",
+  "description": "Product promotions: COFFEE is buy 2 get 1 free, NOTEBOOK is 10% off 10 or more.",
+  "cases": [
+    {
+      "id": "promo-coffee-one-bag-no-discount",
+      "description": "1 coffee: not enough for a free bag",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 1}]},
+      "expected": {"subtotal": 899, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 72, "total": 1470}
+    },
+    {
+      "id": "promo-coffee-two-bags-no-discount",
+      "description": "2 coffees: still not enough for a free bag",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 2}]},
+      "expected": {"subtotal": 1798, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 144, "total": 2441}
+    },
+    {
+      "id": "promo-coffee-three-bags-one-free",
+      "description": "3 coffees: the third one is free",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 3}]},
+      "expected": {"subtotal": 2697, "promotion_discount": 899, "coupon_discount": 0, "shipping": 499, "tax": 144, "total": 2441}
+    },
+    {
+      "id": "promo-coffee-five-bags-one-free",
+      "description": "5 coffees: only one complete group of 3, so 1 free",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 5}]},
+      "expected": {"subtotal": 4495, "promotion_discount": 899, "coupon_discount": 0, "shipping": 499, "tax": 288, "total": 4383}
+    },
+    {
+      "id": "promo-coffee-six-bags-two-free",
+      "description": "6 coffees: two complete groups of 3, so 2 free",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 6}]},
+      "expected": {"subtotal": 5394, "promotion_discount": 1798, "coupon_discount": 0, "shipping": 499, "tax": 288, "total": 4383}
+    },
+    {
+      "id": "promo-coffee-merged-lines-count-together",
+      "description": "2 + 1 coffees on separate lines are merged, so 1 is free",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 2}, {"sku": "COFFEE", "quantity": 1}]},
+      "expected": {"subtotal": 2697, "promotion_discount": 899, "coupon_discount": 0, "shipping": 499, "tax": 144, "total": 2441}
+    },
+    {
+      "id": "promo-notebook-nine-no-discount",
+      "description": "9 notebooks: one short of the bulk discount",
+      "basket": {"items": [{"sku": "NOTEBOOK", "quantity": 9}]},
+      "expected": {"subtotal": 3141, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 251, "total": 3891}
+    },
+    {
+      "id": "promo-notebook-ten-gets-discount",
+      "description": "10 notebooks: exactly enough for 10% off",
+      "basket": {"items": [{"sku": "NOTEBOOK", "quantity": 10}]},
+      "expected": {"subtotal": 3490, "promotion_discount": 349, "coupon_discount": 0, "shipping": 499, "tax": 251, "total": 3891}
+    },
+    {
+      "id": "promo-notebook-eleven-rounds-down-fraction",
+      "description": "11 notebooks: 10% of $38.39 is 383.9 cents, rounded to 384",
+      "basket": {"items": [{"sku": "NOTEBOOK", "quantity": 11}]},
+      "expected": {"subtotal": 3839, "promotion_discount": 384, "coupon_discount": 0, "shipping": 499, "tax": 276, "total": 4230}
+    },
+    {
+      "id": "promo-notebook-fifteen-half-rounds-up",
+      "description": "15 notebooks: 10% of $52.35 is exactly 523.5 cents, which rounds UP to 524",
+      "basket": {"items": [{"sku": "NOTEBOOK", "quantity": 15}]},
+      "expected": {"subtotal": 5235, "promotion_discount": 524, "coupon_discount": 0, "shipping": 499, "tax": 377, "total": 5587}
+    },
+    {
+      "id": "promo-both-promotions-together",
+      "description": "Coffee and notebook promotions are added together",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 3}, {"sku": "NOTEBOOK", "quantity": 10}]},
+      "expected": {"subtotal": 6187, "promotion_discount": 1248, "coupon_discount": 0, "shipping": 499, "tax": 395, "total": 5833}
+    },
+    {
+      "id": "promo-not-applied-to-other-products",
+      "description": "Products without a promotion are never discounted",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 10}, {"sku": "PEN", "quantity": 10}]},
+      "expected": {"subtotal": 1700, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 136, "total": 2335}
+    }
+  ]
+}

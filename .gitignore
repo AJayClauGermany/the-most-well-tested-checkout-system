@@ -1,0 +1,15 @@
+# Editor and operating system files.
+# Each language folder has its own .gitignore for build output.
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Jekyll (documentation site preview)
+docs/_site/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
+docs/Gemfile.lock
+docs/vendor/
+docs/.bundle/

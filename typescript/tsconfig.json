@@ -1,0 +1,29 @@
+{
+  // TypeScript settings. We never compile to JavaScript files ("noEmit"):
+  // Vitest runs our .ts files directly, and `npm run typecheck` only checks types.
+  "compilerOptions": {
+    // Catch as many mistakes as possible (null checks, implicit `any`, ...).
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+
+    // Modern JavaScript, using Node.js' own rules for ES modules.
+    "target": "es2023",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+
+    // We import files with their real ".ts" extension (e.g. "./types.ts").
+    // That way Node.js can also run our files directly (Node strips the types),
+    // which will be handy for the command line program from rules §8.
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  // Type-check the tests too, not only the code they test.
+  "include": ["src", "tests", "*.ts"]
+}

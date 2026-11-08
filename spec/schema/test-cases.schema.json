@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shared checkout test cases",
+  "description": "A file of language-agnostic test cases. Each case is a basket plus EITHER the expected totals OR the expected error code.",
+  "type": "object",
+  "required": ["description", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "description": { "type": "string" },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "cents": { "type": "integer", "minimum": 0 },
+    "case": {
+      "type": "object",
+      "required": ["id", "description", "basket"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "description": { "type": "string" },
+        "basket": { "$ref": "basket.schema.json" },
+        "expected": { "$ref": "#/$defs/totals" },
+        "expected_error": {
+          "enum": [
+            "EMPTY_BASKET",
+            "UNKNOWN_PRODUCT",
+            "INVALID_QUANTITY",
+            "UNKNOWN_SHIPPING_METHOD",
+            "UNKNOWN_COUPON",
+            "COUPON_MINIMUM_NOT_MET"
+          ]
+        }
+      },
+      "oneOf": [
+        { "required": ["expected"] },
+        { "required": ["expected_error"] }
+      ]
+    },
+    "totals": {
+      "type": "object",
+      "required": ["subtotal", "promotion_discount", "coupon_discount", "shipping", "tax", "total"],
+      "additionalProperties": false,
+      "properties": {
+        "subtotal": { "$ref": "#/$defs/cents" },
+        "promotion_discount": { "$ref": "#/$defs/cents" },
+        "coupon_discount": { "$ref": "#/$defs/cents" },
+        "shipping": { "$ref": "#/$defs/cents" },
+        "tax": { "$ref": "#/$defs/cents" },
+        "total": { "$ref": "#/$defs/cents" }
+      }
+    }
+  }
+}

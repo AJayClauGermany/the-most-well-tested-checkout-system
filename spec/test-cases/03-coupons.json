@@ -1,0 +1,66 @@
+{
+  "$schema": "../schema/test-cases.schema.json",
+  "description": "Coupons: SAVE10 is 10% off, WELCOME5 is $5 off when spending at least $25.",
+  "cases": [
+    {
+      "id": "coupon-save10-basic",
+      "description": "SAVE10 takes 10% off $5.00",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 10}], "coupon": "SAVE10"},
+      "expected": {"subtotal": 500, "promotion_discount": 0, "coupon_discount": 50, "shipping": 499, "tax": 36, "total": 985}
+    },
+    {
+      "id": "coupon-save10-half-cent-rounds-up",
+      "description": "10% of $2.25 is exactly 22.5 cents, which rounds UP to 23 (banker's rounding would give 22)",
+      "basket": {"items": [{"sku": "BREAD", "quantity": 1}], "coupon": "SAVE10"},
+      "expected": {"subtotal": 225, "promotion_discount": 0, "coupon_discount": 23, "shipping": 499, "tax": 16, "total": 717}
+    },
+    {
+      "id": "coupon-code-is-not-case-sensitive",
+      "description": "Lower case code with spaces around it still works",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 10}], "coupon": "  save10 "},
+      "expected": {"subtotal": 500, "promotion_discount": 0, "coupon_discount": 50, "shipping": 499, "tax": 36, "total": 985}
+    },
+    {
+      "id": "coupon-save10-applies-after-promotions",
+      "description": "10% is taken from the price after the free coffee",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 3}], "coupon": "SAVE10"},
+      "expected": {"subtotal": 2697, "promotion_discount": 899, "coupon_discount": 180, "shipping": 499, "tax": 129, "total": 2246}
+    },
+    {
+      "id": "coupon-welcome5-exactly-minimum",
+      "description": "WELCOME5 works when spending exactly $25.00",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 50}], "coupon": "WELCOME5"},
+      "expected": {"subtotal": 2500, "promotion_discount": 0, "coupon_discount": 500, "shipping": 499, "tax": 160, "total": 2659}
+    },
+    {
+      "id": "coupon-welcome5-one-cent-short",
+      "description": "$24.50 is below the $25.00 minimum",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 49}], "coupon": "WELCOME5"},
+      "expected_error": "COUPON_MINIMUM_NOT_MET"
+    },
+    {
+      "id": "coupon-welcome5-minimum-uses-price-after-promotions",
+      "description": "3 coffees cost $26.97 but only $17.98 after the free bag, so the minimum is not met",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 3}], "coupon": "WELCOME5"},
+      "expected_error": "COUPON_MINIMUM_NOT_MET"
+    },
+    {
+      "id": "coupon-unknown-code",
+      "description": "A code that does not exist is rejected",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "coupon": "FREESTUFF"},
+      "expected_error": "UNKNOWN_COUPON"
+    },
+    {
+      "id": "coupon-empty-string-means-no-coupon",
+      "description": "An empty coupon is the same as no coupon",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "coupon": ""},
+      "expected": {"subtotal": 50, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 4, "total": 553}
+    },
+    {
+      "id": "coupon-blank-string-means-no-coupon",
+      "description": "A coupon of only spaces is the same as no coupon",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "coupon": "   "},
+      "expected": {"subtotal": 50, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 4, "total": 553}
+    }
+  ]
+}

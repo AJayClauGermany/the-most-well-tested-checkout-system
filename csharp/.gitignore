@@ -1,0 +1,15 @@
+# Build output
+bin/
+obj/
+
+# Test results and coverage reports
+TestResults/
+*.trx
+coverage*.xml
+coverage*.json
+
+# IDE files
+.vs/
+.idea/
+*.user
+*.suo

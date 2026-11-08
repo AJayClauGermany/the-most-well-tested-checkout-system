@@ -1,0 +1,27 @@
+# Settings for the documentation website.
+# GitHub Pages builds this folder with Jekyll automatically
+# (Settings → Pages → "Deploy from a branch" → main, /docs).
+title: The Most Well-Tested Checkout System
+description: >-
+  One small checkout system, six languages, and every kind of test we can think of.
+  A friendly place to learn how software testing works.
+
+theme: minima
+
+# Used to build links to files in the repository (outside this docs folder).
+repository_url: https://github.com/AJayClauGermany/the-most-well-tested-checkout-system
+repository_files: https://github.com/AJayClauGermany/the-most-well-tested-checkout-system/blob/main
+
+# Order of the links in the site header.
+header_pages:
+  - getting-started.md
+  - checkout-rules.md
+  - kinds-of-tests.md
+  - languages.md
+  - contributing.md
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - vendor

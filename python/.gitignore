@@ -1,0 +1,25 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Packaging / build output
+*.egg-info/
+build/
+dist/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.mutmut-cache
+mutants/
+
+# Coverage reports
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/

@@ -1,0 +1,124 @@
+---
+layout: page
+title: Kinds of tests
+---
+
+There is no single "right" way to test. Different kinds of tests answer different
+questions, cost different amounts of time, and catch different bugs. This page
+describes the kinds of tests this project wants to show. The
+[languages page](languages.html) tracks which ones exist so far.
+
+## The testing pyramid
+
+```
+            /\
+           /  \        End-to-end      few, slow, test everything together
+          /----\
+         /      \      Integration     some, test parts working together
+        /--------\
+       /          \    Unit            many, fast, test one small piece
+      /____________\
+```
+
+Lots of small, fast tests at the bottom; a few big, slow ones at the top.
+It is a rule of thumb, not a law – but it is a good place to start.
+
+---
+
+## Unit tests
+
+**Question:** *Does this one small piece of code do the right thing?*
+
+A unit test calls one function (or class) directly and checks the result. No files,
+no network, no database. They run in milliseconds, so you can have hundreds.
+
+> *Example:* `round_half_up(225, 10)` returns `23`.
+
+## Data-driven (table / parameterised) tests
+
+**Question:** *Does it work for all these examples?*
+
+The same test code runs once per row of a table of inputs and expected outputs. This
+project's shared [`spec/test-cases`]({{ site.repository_files }}/spec/test-cases/) are
+exactly this: one table of examples, used by six languages.
+
+> *Example:* for each case in `02-promotions.json`, check the promotion discount.
+
+## Behaviour-driven development (BDD)
+
+**Question:** *Does it behave the way the people who asked for it described?*
+
+Scenarios are written in near-English (*Given / When / Then*) in `.feature` files.
+"Step definitions" connect each sentence to code. Non-programmers can read – and even
+write – the scenarios.
+
+> *Example:* [`spec/features/coupons.feature`]({{ site.repository_files }}/spec/features/coupons.feature)
+
+## Integration tests
+
+**Question:** *Do these parts work together, including the real outside world?*
+
+Integration tests use real files, databases, or other components instead of
+pretending. They are slower and need more setup, so there are fewer of them.
+
+> *Example:* save an order with a file-based repository, then read it back from disk.
+
+## Test doubles: fakes, stubs and mocks
+
+**Question:** *How do I test this piece without its slow or unpredictable neighbours?*
+
+A *test double* stands in for a real dependency. A **fake** is a simple working
+version (an in-memory order repository). A **stub** returns canned answers. A **mock**
+also records how it was called so the test can check it.
+
+> *Example:* check that a failed checkout never calls `save()` on the repository.
+
+## Property-based tests
+
+**Question:** *Is this always true, for any input?*
+
+Instead of choosing examples yourself, you describe a property and the tool invents
+hundreds of random inputs to try to break it – then shrinks any failure down to the
+smallest example.
+
+> *Example:* for **any** valid basket, `total = subtotal − discounts + shipping + tax`,
+> and no amount is ever negative.
+
+## Snapshot (approval) tests
+
+**Question:** *Did the output change since last time?*
+
+The first run saves the output (for example a printed receipt) to a file. Later runs
+compare against it. Great for big outputs that are tedious to assert line by line.
+
+## End-to-end (E2E) tests
+
+**Question:** *Does the whole program work the way a user would use it?*
+
+E2E tests run the real program from the outside. Here, every language will provide the
+same command line interface (basket JSON in, receipt JSON out – see
+[rules §8]({{ site.repository_files }}/spec/checkout-rules.md#8-command-line-interface-for-end-to-end-tests)),
+so a single E2E suite could test all six.
+
+## Mutation testing
+
+**Question:** *Would my tests notice if the code were wrong?*
+
+A mutation testing tool makes small changes ("mutants") to your code – `>=` becomes
+`>`, `+` becomes `-` – and runs your tests. If the tests still pass, that mutant
+"survived", which shows a gap in your tests.
+
+## Code coverage
+
+**Question:** *Which lines did my tests never run?*
+
+Coverage tools report which lines (and branches) ran during the tests. High coverage
+does not prove the tests are good – mutation testing is better at that – but
+low coverage definitely shows untested code.
+
+## Static checks
+
+**Question:** *Can we catch mistakes without running anything?*
+
+Type checkers, linters and formatters are not tests, but they catch whole groups of bugs
+before any test runs. Every language here runs at least one in CI.

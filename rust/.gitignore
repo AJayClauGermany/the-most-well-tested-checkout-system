@@ -1,0 +1,6 @@
+# Everything Cargo builds (compiled code, test binaries, caches) goes here.
+/target/
+
+# Coverage / profiling output that tools like cargo-llvm-cov or cargo-mutants may create.
+*.profraw
+/mutants.out*/

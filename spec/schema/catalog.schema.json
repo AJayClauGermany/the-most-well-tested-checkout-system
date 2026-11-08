@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Catalog",
+  "type": "object",
+  "required": ["products"],
+  "additionalProperties": false,
+  "properties": {
+    "description": { "type": "string" },
+    "products": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["sku", "name", "unit_price", "promotion"],
+        "additionalProperties": false,
+        "properties": {
+          "sku": { "type": "string", "pattern": "^[A-Z0-9_]+$" },
+          "name": { "type": "string" },
+          "unit_price": { "type": "integer", "minimum": 0 },
+          "promotion": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "required": ["type", "buy", "free"],
+                "additionalProperties": false,
+                "properties": {
+                  "type": { "const": "buy_x_get_y_free" },
+                  "buy": { "type": "integer", "minimum": 1 },
+                  "free": { "type": "integer", "minimum": 1 }
+                }
+              },
+              {
+                "type": "object",
+                "required": ["type", "min_quantity", "percent"],
+                "additionalProperties": false,
+                "properties": {
+                  "type": { "const": "bulk_discount" },
+                  "min_quantity": { "type": "integer", "minimum": 1 },
+                  "percent": { "type": "integer", "minimum": 1, "maximum": 100 }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

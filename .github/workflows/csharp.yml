@@ -1,0 +1,50 @@
+name: C#
+
+# Only run on pull requests that touch this language or the shared spec,
+# or when started by hand from the Actions tab.
+on:
+  pull_request:
+    paths:
+      - "csharp/**"
+      - "spec/**"
+      - ".github/workflows/csharp.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: csharp
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          # Installs the SDK version pinned in global.json.
+          global-json-file: csharp/global.json
+          # Cache downloaded NuGet packages, keyed on the lock files.
+          cache: true
+          cache-dependency-path: csharp/**/packages.lock.json
+
+      - name: Restore NuGet packages
+        # --locked-mode fails if packages.lock.json is out of date with the .csproj files.
+        run: dotnet restore --locked-mode
+
+      - name: Check formatting (dotnet format)
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Run tests
+        run: dotnet test --no-build

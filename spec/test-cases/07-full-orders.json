@@ -1,0 +1,30 @@
+{
+  "$schema": "../schema/test-cases.schema.json",
+  "description": "Realistic baskets that use several rules at once.",
+  "cases": [
+    {
+      "id": "full-receipt-example",
+      "description": "The receipt example from checkout-rules.md",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 3}, {"sku": "APPLE", "quantity": 2}], "coupon": "SAVE10", "shipping": "standard"},
+      "expected": {"subtotal": 2797, "promotion_discount": 899, "coupon_discount": 190, "shipping": 499, "tax": 137, "total": 2344}
+    },
+    {
+      "id": "full-weekly-shop",
+      "description": "A small weekly shop with no coupon",
+      "basket": {"items": [{"sku": "BREAD", "quantity": 2}, {"sku": "APPLE", "quantity": 6}, {"sku": "COFFEE", "quantity": 1}]},
+      "expected": {"subtotal": 1649, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 132, "total": 2280}
+    },
+    {
+      "id": "full-back-to-school",
+      "description": "Bulk notebooks and pens with SAVE10",
+      "basket": {"items": [{"sku": "NOTEBOOK", "quantity": 12}, {"sku": "PEN", "quantity": 10}], "coupon": "save10"},
+      "expected": {"subtotal": 5388, "promotion_discount": 419, "coupon_discount": 497, "shipping": 499, "tax": 358, "total": 5329}
+    },
+    {
+      "id": "full-everything",
+      "description": "Every product, both promotions, WELCOME5 and express shipping",
+      "basket": {"items": [{"sku": "HEADPHONES", "quantity": 1}, {"sku": "COFFEE", "quantity": 6}, {"sku": "NOTEBOOK", "quantity": 12}, {"sku": "PEN", "quantity": 5}, {"sku": "BREAD", "quantity": 1}, {"sku": "APPLE", "quantity": 3}], "coupon": "WELCOME5", "shipping": "express"},
+      "expected": {"subtotal": 16556, "promotion_discount": 2217, "coupon_discount": 500, "shipping": 999, "tax": 1107, "total": 15945}
+    }
+  ]
+}

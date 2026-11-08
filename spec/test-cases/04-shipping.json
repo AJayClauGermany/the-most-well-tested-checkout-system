@@ -1,0 +1,66 @@
+{
+  "$schema": "../schema/test-cases.schema.json",
+  "description": "Shipping: standard is $4.99 (free from $50.00), express is always $9.99.",
+  "cases": [
+    {
+      "id": "shipping-defaults-to-standard",
+      "description": "No shipping method given means standard",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}]},
+      "expected": {"subtotal": 50, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 4, "total": 553}
+    },
+    {
+      "id": "shipping-standard-below-threshold",
+      "description": "Standard shipping costs $4.99",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "shipping": "standard"},
+      "expected": {"subtotal": 50, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 4, "total": 553}
+    },
+    {
+      "id": "shipping-standard-one-cent-below-threshold",
+      "description": "$49.99 is one cent short of free shipping",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 4}, {"sku": "BREAD", "quantity": 5}, {"sku": "COFFEE", "quantity": 2}, {"sku": "NOTEBOOK", "quantity": 4}, {"sku": "PEN", "quantity": 4}], "shipping": "standard"},
+      "expected": {"subtotal": 4999, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 400, "total": 5898}
+    },
+    {
+      "id": "shipping-standard-free-at-exactly-threshold",
+      "description": "$50.00 exactly gets free shipping",
+      "basket": {"items": [{"sku": "BREAD", "quantity": 20}, {"sku": "APPLE", "quantity": 10}], "shipping": "standard"},
+      "expected": {"subtotal": 5000, "promotion_discount": 0, "coupon_discount": 0, "shipping": 0, "tax": 400, "total": 5400}
+    },
+    {
+      "id": "shipping-threshold-uses-price-after-coupon",
+      "description": "$50.00 minus 10% is $45.00, so shipping is no longer free",
+      "basket": {"items": [{"sku": "BREAD", "quantity": 20}, {"sku": "APPLE", "quantity": 10}], "coupon": "SAVE10", "shipping": "standard"},
+      "expected": {"subtotal": 5000, "promotion_discount": 0, "coupon_discount": 500, "shipping": 499, "tax": 360, "total": 5359}
+    },
+    {
+      "id": "shipping-threshold-uses-price-after-promotions",
+      "description": "$53.94 of coffee is $35.96 after 2 free bags, so shipping is not free",
+      "basket": {"items": [{"sku": "COFFEE", "quantity": 6}]},
+      "expected": {"subtotal": 5394, "promotion_discount": 1798, "coupon_discount": 0, "shipping": 499, "tax": 288, "total": 4383}
+    },
+    {
+      "id": "shipping-express-small-order",
+      "description": "Express shipping costs $9.99",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "shipping": "express"},
+      "expected": {"subtotal": 50, "promotion_discount": 0, "coupon_discount": 0, "shipping": 999, "tax": 4, "total": 1053}
+    },
+    {
+      "id": "shipping-express-is-never-free",
+      "description": "Express shipping is $9.99 even for big orders",
+      "basket": {"items": [{"sku": "HEADPHONES", "quantity": 1}], "shipping": "express"},
+      "expected": {"subtotal": 5999, "promotion_discount": 0, "coupon_discount": 0, "shipping": 999, "tax": 480, "total": 7478}
+    },
+    {
+      "id": "shipping-unknown-method",
+      "description": "Only standard and express exist",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "shipping": "overnight"},
+      "expected_error": "UNKNOWN_SHIPPING_METHOD"
+    },
+    {
+      "id": "shipping-method-is-case-sensitive",
+      "description": "Shipping methods must be lower case",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}], "shipping": "Express"},
+      "expected_error": "UNKNOWN_SHIPPING_METHOD"
+    }
+  ]
+}

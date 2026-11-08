@@ -1,0 +1,42 @@
+{
+  "$schema": "../schema/test-cases.schema.json",
+  "description": "Adding up line totals. No promotions, no coupons, standard shipping.",
+  "cases": [
+    {
+      "id": "subtotal-single-item",
+      "description": "One apple costs $0.50",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}]},
+      "expected": {"subtotal": 50, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 4, "total": 553}
+    },
+    {
+      "id": "subtotal-quantity-multiplies-price",
+      "description": "Three apples cost 3 x $0.50 = $1.50",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 3}]},
+      "expected": {"subtotal": 150, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 12, "total": 661}
+    },
+    {
+      "id": "subtotal-several-products",
+      "description": "Line totals of different products are added together",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 2}, {"sku": "BREAD", "quantity": 1}, {"sku": "PEN", "quantity": 3}]},
+      "expected": {"subtotal": 685, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 55, "total": 1239}
+    },
+    {
+      "id": "subtotal-duplicate-lines-are-merged",
+      "description": "Two APPLE lines are merged into one line of 4 apples",
+      "basket": {"items": [{"sku": "APPLE", "quantity": 1}, {"sku": "PEN", "quantity": 2}, {"sku": "APPLE", "quantity": 3}]},
+      "expected": {"subtotal": 440, "promotion_discount": 0, "coupon_discount": 0, "shipping": 499, "tax": 35, "total": 974}
+    },
+    {
+      "id": "subtotal-maximum-quantity",
+      "description": "99 is the largest allowed quantity",
+      "basket": {"items": [{"sku": "PEN", "quantity": 99}]},
+      "expected": {"subtotal": 11880, "promotion_discount": 0, "coupon_discount": 0, "shipping": 0, "tax": 950, "total": 12830}
+    },
+    {
+      "id": "subtotal-single-expensive-item",
+      "description": "One pair of headphones",
+      "basket": {"items": [{"sku": "HEADPHONES", "quantity": 1}]},
+      "expected": {"subtotal": 5999, "promotion_discount": 0, "coupon_discount": 0, "shipping": 0, "tax": 480, "total": 6479}
+    }
+  ]
+}

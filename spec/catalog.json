@@ -1,0 +1,21 @@
+{
+  "description": "The standard product catalog used by every shared test case. All prices are whole cents (199 means $1.99).",
+  "products": [
+    { "sku": "APPLE", "name": "Apple", "unit_price": 50, "promotion": null },
+    { "sku": "BREAD", "name": "Loaf of Bread", "unit_price": 225, "promotion": null },
+    {
+      "sku": "COFFEE",
+      "name": "Bag of Coffee Beans",
+      "unit_price": 899,
+      "promotion": { "type": "buy_x_get_y_free", "buy": 2, "free": 1 }
+    },
+    {
+      "sku": "NOTEBOOK",
+      "name": "Notebook",
+      "unit_price": 349,
+      "promotion": { "type": "bulk_discount", "min_quantity": 10, "percent": 10 }
+    },
+    { "sku": "PEN", "name": "Pen", "unit_price": 120, "promotion": null },
+    { "sku": "HEADPHONES", "name": "Wireless Headphones", "unit_price": 5999, "promotion": null }
+  ]
+}

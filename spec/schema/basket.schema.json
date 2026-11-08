@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Basket",
+  "description": "The checkout input. Quantities may be invalid on purpose (0, -1, 100) so tests can check validation, but they are always integers.",
+  "type": "object",
+  "required": ["items"],
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sku", "quantity"],
+        "additionalProperties": false,
+        "properties": {
+          "sku": { "type": "string" },
+          "quantity": { "type": "integer" }
+        }
+      }
+    },
+    "coupon": { "type": ["string", "null"] },
+    "shipping": { "type": "string" }
+  }
+}

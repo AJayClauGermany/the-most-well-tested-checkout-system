@@ -26,13 +26,17 @@ for cleverness or performance:
 | Implement part of the checkout (test-first!)      | that language's folder                    |
 | Improve explanations                              | [`docs/`](docs/) (published with GitHub Pages) |
 
-Each language README has a **"Testing ideas we'd love contributions for"** list.
-Pick one, or open an issue with your own idea.
+The **[testing matrix](docs/testing-matrix.md)** is the list of what we want to show, with
+the tool we recommend for each kind of test in each language. Pick an empty cell, or open
+an issue with your own idea. Each language README mirrors its column with practical hints.
+
+When you add a kind of test, also tick it in the matrix – in the same pull request.
 
 ## How the pieces fit together
 
 ```
 spec/        rules + shared test data (the same for every language)
+e2e/         one end-to-end runner for every language's CLI
 python/      ┐
 typescript/  │
 go/          │ one folder per language, each with its own README,
@@ -49,9 +53,28 @@ docs/        the documentation website (Jekyll / GitHub Pages)
 2. Read [`spec/checkout-rules.md`](spec/checkout-rules.md) if you haven't yet.
 3. Make your change. If you change *behaviour*, change the rules first, then the shared
    test cases, then the code. (That is test-driven development in a nutshell.)
+   When you touch `spec/checkout-rules.md`, check the two questions in
+   [Keep the spec declarative](#keep-the-spec-declarative).
 4. Run the tests and checks for every language you touched – each language README
    lists the exact commands.
 5. Open a pull request and fill in the template.
+
+## Keep the spec declarative
+
+The shared spec says **what** the checkout does, never **how** a program should be
+built. That is what lets six languages each solve it in their own idiomatic way and still
+be compared. Before you change `spec/checkout-rules.md`, `spec/features/` or
+`spec/properties.md`, ask:
+
+1. **Does it describe *what*, not *how*?** Inputs, outputs, error codes, amounts. Not
+   steps, loops, classes, method names or the order in which things are computed.
+2. **Could two languages implement it differently and both pass every shared test?**
+   If only one program structure can satisfy the sentence, it belongs in a 💡 *Hint*, in a
+   language README, or nowhere.
+
+Names like `save` and `find` are vocabulary so scenarios and properties can refer to a
+capability; they are not required identifiers. The Gherkin step sentences are the one
+place where fixed wording is required – and they describe behaviour, not code.
 
 ## Continuous integration (CI)
 
@@ -61,7 +84,7 @@ change will not wait for the Java build.
 
 | Workflow                       | Runs when these change                     |
 |--------------------------------|--------------------------------------------|
-| `spec.yml`                     | `spec/**`                                  |
+| `spec.yml`                     | `spec/**`, `e2e/**`                        |
 | `<language>.yml`               | `<language>/**` or `spec/**`               |
 
 ## Skipped tests are on purpose

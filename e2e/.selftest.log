@@ -1,0 +1,127 @@
+== 01-subtotal.json
+FAIL  subtotal-single-item
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":50,"tax":4,"total":553} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  subtotal-quantity-multiplies-price
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":150,"tax":12,"total":661} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  subtotal-several-products
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":685,"tax":55,"total":1239} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  subtotal-duplicate-lines-are-merged
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":440,"tax":35,"total":974} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  subtotal-maximum-quantity
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":0,"subtotal":11880,"tax":950,"total":12830} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  subtotal-single-expensive-item
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":0,"subtotal":5999,"tax":480,"total":6479} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+== 02-promotions.json
+FAIL  promo-coffee-one-bag-no-discount
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":899,"tax":72,"total":1470} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-coffee-two-bags-no-discount
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":1798,"tax":144,"total":2441} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-coffee-three-bags-one-free
+      expected {"coupon_discount":0,"promotion_discount":899,"shipping":499,"subtotal":2697,"tax":144,"total":2441} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-coffee-five-bags-one-free
+      expected {"coupon_discount":0,"promotion_discount":899,"shipping":499,"subtotal":4495,"tax":288,"total":4383} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-coffee-six-bags-two-free
+      expected {"coupon_discount":0,"promotion_discount":1798,"shipping":499,"subtotal":5394,"tax":288,"total":4383} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-coffee-merged-lines-count-together
+      expected {"coupon_discount":0,"promotion_discount":899,"shipping":499,"subtotal":2697,"tax":144,"total":2441} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-notebook-nine-no-discount
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":3141,"tax":251,"total":3891} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-notebook-ten-gets-discount
+      expected {"coupon_discount":0,"promotion_discount":349,"shipping":499,"subtotal":3490,"tax":251,"total":3891} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-notebook-eleven-rounds-down-fraction
+      expected {"coupon_discount":0,"promotion_discount":384,"shipping":499,"subtotal":3839,"tax":276,"total":4230} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-notebook-fifteen-half-rounds-up
+      expected {"coupon_discount":0,"promotion_discount":524,"shipping":499,"subtotal":5235,"tax":377,"total":5587} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-both-promotions-together
+      expected {"coupon_discount":0,"promotion_discount":1248,"shipping":499,"subtotal":6187,"tax":395,"total":5833} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  promo-not-applied-to-other-products
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":1700,"tax":136,"total":2335} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+== 03-coupons.json
+FAIL  coupon-save10-basic
+      expected {"coupon_discount":50,"promotion_discount":0,"shipping":499,"subtotal":500,"tax":36,"total":985} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  coupon-save10-half-cent-rounds-up
+      expected {"coupon_discount":23,"promotion_discount":0,"shipping":499,"subtotal":225,"tax":16,"total":717} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  coupon-code-is-not-case-sensitive
+      expected {"coupon_discount":50,"promotion_discount":0,"shipping":499,"subtotal":500,"tax":36,"total":985} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  coupon-save10-applies-after-promotions
+      expected {"coupon_discount":180,"promotion_discount":899,"shipping":499,"subtotal":2697,"tax":129,"total":2246} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  coupon-welcome5-exactly-minimum
+      expected {"coupon_discount":500,"promotion_discount":0,"shipping":499,"subtotal":2500,"tax":160,"total":2659} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  coupon-welcome5-one-cent-short
+      expected error COUPON_MINIMUM_NOT_MET with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  coupon-welcome5-minimum-uses-price-after-promotions
+      expected error COUPON_MINIMUM_NOT_MET with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  coupon-unknown-code
+      expected error UNKNOWN_COUPON with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  coupon-empty-string-means-no-coupon
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":50,"tax":4,"total":553} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  coupon-blank-string-means-no-coupon
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":50,"tax":4,"total":553} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+== 04-shipping.json
+FAIL  shipping-defaults-to-standard
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":50,"tax":4,"total":553} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  shipping-standard-below-threshold
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":50,"tax":4,"total":553} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  shipping-standard-one-cent-below-threshold
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":4999,"tax":400,"total":5898} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  shipping-standard-free-at-exactly-threshold
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":0,"subtotal":5000,"tax":400,"total":5400} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  shipping-threshold-uses-price-after-coupon
+      expected {"coupon_discount":500,"promotion_discount":0,"shipping":499,"subtotal":5000,"tax":360,"total":5359} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  shipping-threshold-uses-price-after-promotions
+      expected {"coupon_discount":0,"promotion_discount":1798,"shipping":499,"subtotal":5394,"tax":288,"total":4383} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  shipping-express-small-order
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":999,"subtotal":50,"tax":4,"total":1053} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  shipping-express-is-never-free
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":999,"subtotal":5999,"tax":480,"total":7478} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  shipping-unknown-method
+      expected error UNKNOWN_SHIPPING_METHOD with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  shipping-method-is-case-sensitive
+      expected error UNKNOWN_SHIPPING_METHOD with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+== 05-tax.json
+FAIL  tax-exact-amount
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":50,"tax":4,"total":553} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  tax-fraction-rounds-up
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":120,"tax":10,"total":629} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  tax-fraction-rounds-down
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":240,"tax":19,"total":758} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  tax-is-not-charged-on-shipping
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":999,"subtotal":50,"tax":4,"total":1053} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  tax-is-charged-after-discounts
+      expected {"coupon_discount":50,"promotion_discount":0,"shipping":499,"subtotal":500,"tax":36,"total":985} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  tax-on-large-order
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":0,"subtotal":6348,"tax":508,"total":6856} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+== 06-validation.json
+ok    validation-empty-basket
+FAIL  validation-unknown-product
+      expected error UNKNOWN_PRODUCT with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  validation-sku-is-case-sensitive
+      expected error UNKNOWN_PRODUCT with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  validation-zero-quantity
+      expected error INVALID_QUANTITY with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  validation-negative-quantity
+      expected error INVALID_QUANTITY with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  validation-quantity-over-maximum
+      expected error INVALID_QUANTITY with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  validation-merged-quantity-over-maximum
+      expected error INVALID_QUANTITY with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+ok    validation-order-empty-before-coupon
+FAIL  validation-order-product-before-quantity
+      expected error UNKNOWN_PRODUCT with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  validation-order-quantity-before-shipping
+      expected error INVALID_QUANTITY with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  validation-order-shipping-before-coupon
+      expected error UNKNOWN_SHIPPING_METHOD with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+FAIL  validation-order-unknown-coupon-before-minimum
+      expected error UNKNOWN_COUPON with exit code 1; got error 'EMPTY_BASKET' with exit code 1
+== 07-full-orders.json
+FAIL  full-receipt-example
+      expected {"coupon_discount":190,"promotion_discount":899,"shipping":499,"subtotal":2797,"tax":137,"total":2344} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  full-weekly-shop
+      expected {"coupon_discount":0,"promotion_discount":0,"shipping":499,"subtotal":1649,"tax":132,"total":2280} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  full-back-to-school
+      expected {"coupon_discount":497,"promotion_discount":419,"shipping":499,"subtotal":5388,"tax":358,"total":5329} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+FAIL  full-everything
+      expected {"coupon_discount":500,"promotion_discount":2217,"shipping":999,"subtotal":16556,"tax":1107,"total":15945} with exit code 0; got {"coupon_discount":null,"promotion_discount":null,"shipping":null,"subtotal":null,"tax":null,"total":null} with exit code 1
+
+2 passed, 58 failed

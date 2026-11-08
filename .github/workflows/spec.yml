@@ -1,11 +1,12 @@
 name: Spec
 
-# Checks that the shared, language-agnostic spec files are valid.
-# Only runs on pull requests that change the spec, or when started by hand.
+# Checks that the shared, language-agnostic spec files are valid, and that the shared
+# end-to-end runner works. Only runs on pull requests that change those, or by hand.
 on:
   pull_request:
     paths:
       - "spec/**"
+      - "e2e/**"
       - ".github/workflows/spec.yml"
   workflow_dispatch:
 
@@ -39,3 +40,15 @@ jobs:
 
       - name: Check test case ids are unique
         run: python3 spec/check_unique_ids.py
+
+      - name: Validate the example outputs against their schemas
+        run: |
+          check-jsonschema --schemafile spec/schema/receipt.schema.json spec/examples/receipt.json
+          check-jsonschema --schemafile spec/schema/order.schema.json spec/examples/order.json
+          check-jsonschema --schemafile spec/schema/cli-error.schema.json spec/examples/cli-error.json
+
+      - name: Lint the shared e2e runner (shellcheck)
+        run: shellcheck e2e/run.sh e2e/selftest.sh e2e/selftest/*.sh
+
+      - name: Test the shared e2e runner against its fake programs
+        run: e2e/selftest.sh

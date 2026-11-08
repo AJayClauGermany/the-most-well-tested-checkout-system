@@ -37,12 +37,17 @@ If you need a new step, add it here as well.
 | `Then the receipt has <n> lines`                                 | |
 | `Then the receipt line for "<sku>" has a quantity of <n>`        | |
 | `Then checkout fails with the error "<CODE>"`                    | |
-| `Given an empty order repository`                                | A fresh in-memory repository |
+| `Given an empty order repository`                                | A fresh order store with nothing saved in it (rules §6) |
 | `When the customer checks out and saves the order`               | Check out, then save the receipt if it succeeded |
 | `Then the order is saved with the id "<id>"`                     | The id of the most recently saved order |
 | `Then the saved order "<id>" has a total of $<amount>`           | |
 | `Then the order repository is empty`                             | |
 | `Then the order "<id>" cannot be found`                          | |
+| `Given the clock is fixed at "<timestamp>"`                      | The repository's clock always answers this UTC time (rules §6). Orders saved afterwards get it as `created_at` |
+| `Then the saved order "<id>" was created at "<timestamp>"`       | |
+
+Timestamps are written exactly as they appear in a saved order (`2026-01-15T10:30:00Z`);
+compare them as strings.
 
 Amounts are written as dollars and cents (`$12.39`). Convert them to whole cents
 (`1239`) before comparing – never parse them into a floating point number.

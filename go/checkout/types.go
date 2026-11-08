@@ -13,7 +13,7 @@ package checkout
 // PromotionType says which kind of promotion a product has.
 type PromotionType string
 
-// The two kinds of promotion from the rules (§3, step 3).
+// The two kinds of promotion from the rules (§4.2).
 const (
 	BuyXGetYFree PromotionType = "buy_x_get_y_free"
 	BulkDiscount PromotionType = "bulk_discount"

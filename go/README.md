@@ -142,29 +142,50 @@ own unit tests too.
 
 ## Testing ideas we'd love contributions for
 
+This list mirrors the Go column of the [testing matrix](../docs/testing-matrix.md) – the
+project's single list of goals – and adds the practical hints. Tick the matrix when you add
+one. Tip: pin tools like `godog` and `gremlins` with Go 1.24's `go tool` directive in `go.mod`
+so nobody has to install them by hand.
+
+**Tier 1 – every language does these**
+
+* **Implement `Checkout`** test-first, with unit tests for each step.
+* **Table-driven subtests** (`[]struct{...}` + `t.Run`) – *the* Go idiom, shown on its own
+  next to the shared spec cases.
 * **BDD:** run `../spec/features/*.feature` with [godog](https://github.com/cucumber/godog).
 * **Nicer assertions and diffs:** [testify](https://github.com/stretchr/testify) (`assert`/`require`)
   or [go-cmp](https://github.com/google/go-cmp) (`cmp.Diff` for whole receipts).
-* **Property-based testing:** [rapid](https://github.com/flyingmutant/rapid) or the built-in
-  [`testing/quick`](https://pkg.go.dev/testing/quick), e.g. "total is never negative",
-  "splitting a line into two lines does not change the price".
-* **Fuzzing:** Go's built-in fuzzing (`func FuzzXxx(f *testing.F)`, run with `go test -fuzz`),
-  e.g. feeding random JSON baskets – checkout must never panic.
+* **Test doubles** for the `OrderRepository` and `Clock` interfaces (rules §6): a hand-written
+  in-memory fake first, then [uber-go/mock](https://github.com/uber-go/mock) to check a failed
+  checkout never calls `Save`, and a fixed clock for `created_at`.
+* **Integration tests** for a JSON-file and an SQLite ([modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite),
+  pure Go) repository using `t.TempDir()`, behind `//go:build integration`. Check stored
+  orders against [`spec/schema/order.schema.json`](../spec/schema/order.schema.json).
+* **Property-based testing** with [rapid](https://github.com/flyingmutant/rapid): one test per
+  property in [`spec/properties.md`](../spec/properties.md), named after its id.
+  (Not `testing/quick`: it is frozen and cannot shrink failures.)
+* **Contract tests** with [santhosh-tekuri/jsonschema](https://github.com/santhosh-tekuri/jsonschema):
+  every receipt must satisfy [`spec/schema/receipt.schema.json`](../spec/schema/receipt.schema.json).
+* **Golden-file / snapshot tests:** receipt JSON compared with files in `testdata/`, hand-rolled
+  with an `-update` flag (teaches the most) or with [go-snaps](https://github.com/gkampitakis/go-snaps).
+* **End-to-end tests:** build the CLI from rules §8 in `cmd/checkout`, drive it with `os/exec`
+  in `e2e/`, then run the shared runner: `e2e/run.sh go run ./go/cmd/checkout`.
+* **Coverage:** `go test -cover ./...`, or `-coverprofile=coverage.out` then `go tool cover -html=coverage.out`.
+* **Mutation testing:** [gremlins](https://github.com/go-gremlins/gremlins) – the only maintained
+  Go option; it moves slowly, so expect rough edges.
+* **Stricter static checks:** [staticcheck](https://staticcheck.dev/) or
+  [golangci-lint](https://golangci-lint.run/), plus `govulncheck`.
+
+**Tier 2 – idiomatic extras**
+
 * **Example tests:** `func ExampleCheckout()` with an `// Output:` comment – documentation
   that is also a test.
-* **Mocks and fakes:** a hand-written in-memory `OrderRepository` fake (rules §6), or generated
-  mocks with [gomock](https://github.com/uber-go/mock) / [mockery](https://github.com/vektra/mockery).
-* **Snapshot / golden-file tests:** compare receipt JSON with files in `testdata/`
-  (hand-rolled with an `-update` flag, or [cupaloy](https://github.com/bradleyjkemp/cupaloy)).
-* **Integration tests:** a JSON-file or SQLite ([modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite))
-  order repository tested with `t.TempDir()` behind `//go:build integration`;
-  [testcontainers-go](https://golang.testcontainers.org/) for a real database.
-* **End-to-end tests:** build the CLI from rules §8 in `cmd/checkout`, then drive it with
-  `os/exec` in `e2e/`, or with [testscript](https://pkg.go.dev/github.com/rogpeppe/go-internal/testscript).
-* **Coverage:** `go test -cover ./...`, or `go test -coverprofile=coverage.out ./...` then
-  `go tool cover -html=coverage.out`.
-* **Mutation testing:** [gremlins](https://github.com/go-gremlins/gremlins) or
-  [go-mutesting](https://github.com/avito-tech/go-mutesting) – do the tests notice when the code is changed?
-* **Benchmarks:** `func BenchmarkCheckout(b *testing.B)`, run with `go test -bench .`.
-* **Race detector:** `go test -race ./...` once something runs concurrently (e.g. a shared repository).
-* **Stricter linting:** [staticcheck](https://staticcheck.dev/) or [golangci-lint](https://golangci-lint.run/).
+* **Fuzzing:** `func FuzzCheckout(f *testing.F)` run with `go test -fuzz` – property P10:
+  random JSON must never panic.
+* **Benchmarks:** `func BenchmarkCheckout(b *testing.B)` using `b.Loop()` (Go 1.24).
+* **Race detector:** `go test -race ./...` once the repository is used from several goroutines.
+
+**Tier 3 – plumbing**
+
+* `go test -json ./... | gotestsum --junitfile report.xml` for a CI report;
+  `t.Parallel()` and `go test -shuffle=on` to prove tests are independent.

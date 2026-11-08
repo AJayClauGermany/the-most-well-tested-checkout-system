@@ -25,7 +25,8 @@ waiting to go from red to green.
 
 | Folder                          | What it is                                                                     |
 |---------------------------------|--------------------------------------------------------------------------------|
-| [`spec/`](spec/)                | The **language-agnostic** rules, product catalog, shared test cases and BDD scenarios |
+| [`spec/`](spec/)                | The **language-agnostic** rules, catalog, shared test cases, BDD scenarios, properties and schemas |
+| [`e2e/`](e2e/)                  | One end-to-end runner that drives every language's command line program          |
 | [`python/`](python/)            | Python – pytest                                                                |
 | [`typescript/`](typescript/)    | TypeScript on Node.js – Vitest                                                  |
 | [`go/`](go/)                    | Go – the built-in `testing` package                                            |
@@ -60,9 +61,19 @@ The [`spec/`](spec/) folder describes the checkout **once**, without any code:
 * [`catalog.json`](spec/catalog.json) – the six products every test uses
 * [`test-cases/`](spec/test-cases/) – 60 data-driven cases: basket in → totals or error out
 * [`features/`](spec/features/) – Given/When/Then scenarios for BDD tools (Cucumber & friends)
+* [`properties.md`](spec/properties.md) – rules that hold for *every* basket, for property-based tests
+* [`schema/`](spec/schema/) – JSON Schemas for baskets, receipts and saved orders, for contract tests
 
 Every language reads these files directly, so all six implementations are checked
 against exactly the same examples.
+
+## What we want to show
+
+The goal is written down once, as a table of *kind of test × language → tool*:
+**[the testing matrix](docs/testing-matrix.md)**. Tier 1 is what every language does
+(unit, data-driven, BDD, test doubles, integration, property-based, contract, snapshot,
+end-to-end, coverage, mutation, static checks); Tier 2 is what only some languages do
+idiomatically (doctests, fuzzing, benchmarks, …). It also lists what we leave out on purpose.
 
 ## Continuous integration
 

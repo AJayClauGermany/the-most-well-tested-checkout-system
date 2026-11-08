@@ -128,34 +128,51 @@ see [`tests/unit/test_error_codes.py`](tests/unit/test_error_codes.py) for an ex
 
 ## Testing ideas we'd love contributions for
 
-* **Implement `checkout()`** test-first: remove the skip in
-  `tests/acceptance/test_spec_cases.py` and make the 60 cases pass, adding unit tests for each
-  step (validation, merging, promotions, coupons, shipping, tax) as you go.
-* **BDD:** run the scenarios in [`spec/features/`](../spec/features/) with
-  [pytest-bdd](https://pytest-bdd.readthedocs.io/) (or [behave](https://behave.readthedocs.io/)).
+This list mirrors the Python column of the
+[testing matrix](../docs/testing-matrix.md) – the project's single list of goals – and adds
+the practical hints. Tick the matrix when you add one.
+
+**Tier 1 – every language does these**
+
+* **Implement `checkout()`** test-first: remove the skip in `tests/acceptance/test_spec_cases.py`
+  and make the 60 cases pass, adding unit tests for each step (validation, merging,
+  promotions, coupons, shipping, tax) as you go.
+* **Parameterised tests** with `@pytest.mark.parametrize` (use `ids=` so each row has a
+  readable name) – the native table style, separate from the shared spec cases.
+* **BDD** with [pytest-bdd](https://pytest-bdd.readthedocs.io/) on [`spec/features/`](../spec/features/);
+  [behave](https://behave.readthedocs.io/) is the alternative with its own runner.
   See [`tests/bdd/README.md`](tests/bdd/README.md).
-* **Property-based testing** with [Hypothesis](https://hypothesis.readthedocs.io/): generate
-  thousands of random baskets and check rules that are always true, e.g.
-  "`total == subtotal - promotion_discount - coupon_discount + shipping + tax`" or
-  "the order of the items never changes the total".
-* **Mocks and fakes** for the order repository (rules §6): an in-memory fake, and
-  [`unittest.mock`](https://docs.python.org/3/library/unittest.mock.html) (or
-  [pytest-mock](https://pytest-mock.readthedocs.io/)) to check that a failed checkout never
-  calls `save()`.
-* **Integration tests** for a repository that stores orders in a JSON file or
-  [`sqlite3`](https://docs.python.org/3/library/sqlite3.html), using pytest's `tmp_path` fixture.
+* **Test doubles** for the order repository and the clock (rules §6): a hand-written
+  in-memory fake first, then [`unittest.mock`](https://docs.python.org/3/library/unittest.mock.html)
+  to check that a failed checkout never calls `save()`, and a fixed clock so `created_at`
+  is predictable.
+* **Integration tests** for a JSON-file and an [`sqlite3`](https://docs.python.org/3/library/sqlite3.html)
+  order repository, using pytest's `tmp_path` fixture. Check the stored JSON against
+  [`spec/schema/order.schema.json`](../spec/schema/order.schema.json).
+* **Property-based testing** with [Hypothesis](https://hypothesis.readthedocs.io/): one test
+  per property in [`spec/properties.md`](../spec/properties.md), named after its id (`P1`, …).
+* **Contract tests** with [`jsonschema`](https://python-jsonschema.readthedocs.io/): every
+  receipt must satisfy [`spec/schema/receipt.schema.json`](../spec/schema/receipt.schema.json).
 * **Snapshot testing** of whole receipts with [syrupy](https://github.com/syrupy-project/syrupy).
-* **End-to-end tests** of the command line program (rules §8) with
-  [`subprocess`](https://docs.python.org/3/library/subprocess.html). See
-  [`tests/e2e/README.md`](tests/e2e/README.md).
-* **Code coverage** with [pytest-cov](https://pytest-cov.readthedocs.io/) /
-  [coverage.py](https://coverage.readthedocs.io/): which lines did the tests never run?
-* **Mutation testing** with [mutmut](https://mutmut.readthedocs.io/): deliberately break the
-  code and check that some test notices. Try changing the rounding to Python's built-in
-  `round()` (banker's rounding!) and see which spec cases catch it.
+* **End-to-end tests** of `python -m checkout` (rules §8) with
+  [`subprocess`](https://docs.python.org/3/library/subprocess.html) – see
+  [`tests/e2e/README.md`](tests/e2e/README.md) – and then the shared runner:
+  `cd python && ../e2e/run.sh python -m checkout`.
+* **Code coverage** with [pytest-cov](https://pytest-cov.readthedocs.io/), with a `fail_under`
+  threshold so CI notices when it drops.
+* **Mutation testing** with [mutmut](https://mutmut.readthedocs.io/) (uses `fork()`: on Windows,
+  run it in WSL). Try swapping the rounding for Python's built-in `round()` – banker's
+  rounding! – and see which spec cases catch it.
 * **Static type checking** with [mypy](https://mypy.readthedocs.io/) or
   [pyright](https://microsoft.github.io/pyright/) – the code already has type hints.
+
+**Tier 2 – idiomatic extras**
+
 * **Doctests** with [`doctest`](https://docs.python.org/3/library/doctest.html): examples in
-  docstrings that are also tests.
-* **Several Python versions** at once with [nox](https://nox.thea.codes/) or
-  [tox](https://tox.wiki/), or a version matrix in CI.
+  docstrings (e.g. of `round_half_up`) that are also tests; run with `pytest --doctest-modules`.
+
+**Tier 3 – plumbing**
+
+* `pytest --junitxml=report.xml` for a CI test report; [pytest-xdist](https://pytest-xdist.readthedocs.io/)
+  (`-n auto`) and [pytest-randomly](https://github.com/pytest-dev/pytest-randomly) to prove tests
+  are independent of each other; `--strict-markers` and `--strict-config` in `pyproject.toml`.

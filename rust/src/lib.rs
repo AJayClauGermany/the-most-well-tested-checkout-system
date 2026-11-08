@@ -33,7 +33,7 @@ pub type Cents = i64;
 /// Calculates the receipt for a basket, using the products in `catalog`.
 ///
 /// Returns `Ok(receipt)` on success, or `Err(error)` carrying one of the six
-/// [`ErrorCode`]s when the basket is invalid (rules §4, step 1).
+/// [`ErrorCode`]s when the basket is invalid (rules §4.1).
 ///
 /// # Example
 ///

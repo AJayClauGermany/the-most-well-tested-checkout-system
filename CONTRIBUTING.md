@@ -92,4 +92,5 @@ change will not wait for the Java build.
 Every language has a test that runs **all** shared spec cases against `checkout(...)`.
 Until the checkout is implemented, that test is skipped (`skip`, `@Disabled`,
 `#[ignore]`, …). When you start implementing, remove the skip and watch the
-tests go from red to green one by one.
+tests go from red to green one by one. TypeScript has been through this already – its
+[`README.md`](typescript/README.md) and git history show what "test-first" looked like.

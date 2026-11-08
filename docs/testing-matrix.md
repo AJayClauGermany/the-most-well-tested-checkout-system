@@ -23,24 +23,27 @@ The core. A language is "complete" when every row below is ✅.
 | Kind of test | Shared input | Python | TypeScript | Go | Java | C# | Rust |
 |---|---|---|---|---|---|---|---|
 | **Unit tests** | – | ✅ pytest | ✅ Vitest | ✅ `testing` | ✅ JUnit 6 | ✅ xUnit v3 | ✅ built-in harness |
-| **Parameterised tests** (the language's native table style) | – | ◻️ `@pytest.mark.parametrize` | ◻️ `test.each` | ◻️ table-driven `t.Run` subtests | ◻️ `@ParameterizedTest` | ◻️ `[Theory]` + `[MemberData]` | ◻️ `rstest` `#[case]` |
-| **Shared spec cases** (data-driven) | `spec/test-cases/` | ⏸️ | ⏸️ | ⏸️ | ⏸️ | ⏸️ | ⏸️ |
-| **BDD** (Given / When / Then) | `spec/features/` | ◻️ pytest-bdd (behave) | ◻️ `@cucumber/cucumber` (vitest-cucumber) | ◻️ godog | ◻️ Cucumber-JVM via `cucumber-junit-platform-engine` | ◻️ Reqnroll | ◻️ `cucumber` crate |
-| **Test doubles** – a hand-written fake *and* a mock of the order repository and the clock | rules §6 | ◻️ `unittest.mock` | ◻️ `vi.fn()` | ◻️ hand-written fake; `uber-go/mock` | ◻️ Mockito | ◻️ NSubstitute | ◻️ `mockall` |
-| **Integration** – JSON-file and SQLite order repositories against a temp folder | `spec/schema/order.schema.json` | ◻️ `tmp_path` + `sqlite3` | ◻️ `node:fs` + `os.tmpdir()` + `node:sqlite` (better-sqlite3) | ◻️ `t.TempDir()` + `modernc.org/sqlite` | ◻️ JDBC + H2 (Failsafe `*IT`) | ◻️ temp folder + `Microsoft.Data.Sqlite` | ◻️ `tempfile` + `rusqlite` |
-| **Property-based** | `spec/properties.md` | ◻️ Hypothesis | ◻️ fast-check | ◻️ rapid | ◻️ jqwik 1.9.x ¹ | ◻️ FsCheck (`FsCheck.Xunit.v3`) (CsCheck) | ◻️ proptest |
-| **Contract (schema) tests** of the receipt | `spec/schema/receipt.schema.json` | ◻️ `jsonschema` | ◻️ ajv | ◻️ `santhosh-tekuri/jsonschema` | ◻️ networknt json-schema-validator | ◻️ JsonSchema.Net | ◻️ `jsonschema` crate |
-| **Snapshot / approval** of whole receipts | `spec/examples/` | ◻️ syrupy | ◻️ `toMatchSnapshot` / inline | ◻️ go-snaps or golden files with `-update` | ◻️ ApprovalTests.Java | ◻️ Verify (`Verify.XunitV3`) | ◻️ insta |
-| **End-to-end** through the CLI, from inside the language | rules §8 | ◻️ `subprocess` | ◻️ `node:child_process` (execa) | ◻️ `os/exec` | ◻️ `ProcessBuilder` | ◻️ `System.Diagnostics.Process` (CliWrap) | ◻️ `assert_cmd` |
-| **Code coverage** | – | ◻️ pytest-cov | ◻️ `@vitest/coverage-v8` | ◻️ `go test -cover` | ◻️ JaCoCo | ◻️ `Microsoft.Testing.Extensions.CodeCoverage` + ReportGenerator | ◻️ cargo-llvm-cov |
-| **Mutation testing** | – | ◻️ mutmut ² | ◻️ StrykerJS (Vitest runner) | ◻️ gremlins ³ | ◻️ PIT (pitest) | ◻️ Stryker.NET (MTP runner, preview) | ◻️ cargo-mutants |
-| **Static checks** | – | ✅ Ruff · ◻️ mypy or pyright | ✅ `tsc` · ◻️ ESLint + Prettier | ✅ `gofmt`, `go vet` · ◻️ staticcheck / golangci-lint | ✅ `-Xlint:all -Werror` · ◻️ Error Prone | ✅ analyzers, warnings as errors | ✅ rustfmt + Clippy |
+| **Parameterised tests** (the language's native table style) | – | ◻️ `@pytest.mark.parametrize` | ✅ `it.each` | ◻️ table-driven `t.Run` subtests | ◻️ `@ParameterizedTest` | ◻️ `[Theory]` + `[MemberData]` | ◻️ `rstest` `#[case]` |
+| **Shared spec cases** (data-driven) | `spec/test-cases/` | ⏸️ | ✅ | ⏸️ | ⏸️ | ⏸️ | ⏸️ |
+| **BDD** (Given / When / Then) | `spec/features/` | ◻️ pytest-bdd (behave) | ✅ `@cucumber/cucumber` | ◻️ godog | ◻️ Cucumber-JVM via `cucumber-junit-platform-engine` | ◻️ Reqnroll | ◻️ `cucumber` crate |
+| **Test doubles** – a hand-written fake *and* a mock of the order repository and the clock | rules §6 | ◻️ `unittest.mock` | ✅ hand-written fake, `vi.fn()`, fake timers | ◻️ hand-written fake; `uber-go/mock` | ◻️ Mockito | ◻️ NSubstitute | ◻️ `mockall` |
+| **Integration** – JSON-file and SQLite order repositories against a temp folder | `spec/schema/order.schema.json` | ◻️ `tmp_path` + `sqlite3` | ✅ `node:fs` + `os.tmpdir()` + `node:sqlite` | ◻️ `t.TempDir()` + `modernc.org/sqlite` | ◻️ JDBC + H2 (Failsafe `*IT`) | ◻️ temp folder + `Microsoft.Data.Sqlite` | ◻️ `tempfile` + `rusqlite` |
+| **Property-based** | `spec/properties.md` | ◻️ Hypothesis | ✅ fast-check | ◻️ rapid | ◻️ jqwik 1.9.x ¹ | ◻️ FsCheck (`FsCheck.Xunit.v3`) (CsCheck) | ◻️ proptest |
+| **Contract (schema) tests** of the receipt | `spec/schema/receipt.schema.json` | ◻️ `jsonschema` | ✅ ajv | ◻️ `santhosh-tekuri/jsonschema` | ◻️ networknt json-schema-validator | ◻️ JsonSchema.Net | ◻️ `jsonschema` crate |
+| **Snapshot / approval** of whole receipts | `spec/examples/` | ◻️ syrupy | ✅ `toMatchSnapshot` / inline | ◻️ go-snaps or golden files with `-update` | ◻️ ApprovalTests.Java | ◻️ Verify (`Verify.XunitV3`) | ◻️ insta |
+| **End-to-end** through the CLI, from inside the language | rules §8 | ◻️ `subprocess` | ✅ `node:child_process` | ◻️ `os/exec` | ◻️ `ProcessBuilder` | ◻️ `System.Diagnostics.Process` (CliWrap) | ◻️ `assert_cmd` |
+| **Code coverage** | – | ◻️ pytest-cov | ✅ `@vitest/coverage-v8` | ◻️ `go test -cover` | ◻️ JaCoCo | ◻️ `Microsoft.Testing.Extensions.CodeCoverage` + ReportGenerator | ◻️ cargo-llvm-cov |
+| **Mutation testing** | – | ◻️ mutmut ² | ✅ StrykerJS (Vitest runner) | ◻️ gremlins ³ | ◻️ PIT (pitest) | ◻️ Stryker.NET (MTP runner, preview) | ◻️ cargo-mutants |
+| **Static checks** | – | ✅ Ruff · ◻️ mypy or pyright | ✅ `tsc` · ✅ Biome ⁴ | ✅ `gofmt`, `go vet` · ◻️ staticcheck / golangci-lint | ✅ `-Xlint:all -Werror` · ◻️ Error Prone | ✅ analyzers, warnings as errors | ✅ rustfmt + Clippy |
 
 ¹ jqwik is in maintenance mode and its 1.10 release added an unusual "anti-AI usage"
 licence clause; we pin 1.9.x (plain Apache 2.0) and note that Java currently has no
 other mainstream property-based library.
 ² mutmut uses `fork()`, so on Windows run it under WSL.
 ³ gremlins is the only maintained Go mutation tool and it moves slowly; expect rough edges.
+⁴ The TypeScript folder pins TypeScript 7, the native (Go) compiler, which has no JavaScript
+compiler API. typescript-eslint needs that API, so the one-binary alternative Biome does
+linting and formatting instead.
 
 ## Tier 2 – where the language has an idiomatic story
 
@@ -51,9 +54,9 @@ and forcing one in would make the example *less* typical of that language.
 |---|---|---|---|---|---|---|
 | **Documentation tests** (examples in docs that also run) | ◻️ `doctest` | – | ◻️ `Example` functions with `// Output:` | – | – | ◻️ doctests (`cargo test --doc`) |
 | **Fuzzing** (random bytes/JSON must never crash – property P10) | – (Hypothesis covers it) | – | ◻️ built-in `go test -fuzz` | ◻️ Jazzer `@FuzzTest` | – | ◻️ cargo-fuzz (needs nightly) |
-| **Benchmarks** (one micro-benchmark of `checkout`) | – | ◻️ `vitest bench` | ◻️ `testing.B` with `b.Loop` | – | ◻️ BenchmarkDotNet | ◻️ criterion |
+| **Benchmarks** (one micro-benchmark of `checkout`) | – | ✅ `vitest bench` | ◻️ `testing.B` with `b.Loop` | – | ◻️ BenchmarkDotNet | ◻️ criterion |
 | **Architecture tests** ("the domain never imports the CLI / IO") | – | – | – | ◻️ ArchUnit | ◻️ ArchUnitNET | – |
-| **Type-level tests** | – | ◻️ `expectTypeOf` + `vitest --typecheck` | – | – | – | – |
+| **Type-level tests** | – | ✅ `expectTypeOf` + `vitest --typecheck` | – | – | – | – |
 | **Concurrency** (the repository used from several goroutines) | – | – | ◻️ `go test -race` | – | – | – |
 
 ## Tier 3 – shared plumbing
@@ -63,15 +66,15 @@ project has them.
 
 | What | Python | TypeScript | Go | Java | C# | Rust |
 |---|---|---|---|---|---|---|
-| **Test report for CI** (JUnit XML or similar) | ◻️ `--junitxml` | ◻️ `--reporter=junit` | ◻️ `go test -json` + gotestsum | ◻️ Surefire (default) | ◻️ `--report-junit` / TRX | ◻️ `cargo nextest --profile ci` |
-| **Tests run in parallel / independently** | ◻️ pytest-xdist, pytest-randomly | ◻️ Vitest (default) | ◻️ `t.Parallel()`, `-shuffle=on` | ◻️ JUnit parallel config | ◻️ xUnit collections | ◻️ cargo-nextest |
+| **Test report for CI** (JUnit XML or similar) | ◻️ `--junitxml` | ✅ `--reporter=junit` | ◻️ `go test -json` + gotestsum | ◻️ Surefire (default) | ◻️ `--report-junit` / TRX | ◻️ `cargo nextest --profile ci` |
+| **Tests run in parallel / independently** | ◻️ pytest-xdist, pytest-randomly | ✅ Vitest (default) | ◻️ `t.Parallel()`, `-shuffle=on` | ◻️ JUnit parallel config | ◻️ xUnit collections | ◻️ cargo-nextest |
 
 And two things that are shared by all six and live outside the language folders:
 
 | What | Where | Status |
 |---|---|---|
 | Spec validation (schemas, unique ids, example outputs) | [`.github/workflows/spec.yml`]({{ site.repository_files }}/.github/workflows/spec.yml) | ✅ |
-| One e2e runner for every language's CLI | [`e2e/run.sh`]({{ site.repository_files }}/e2e/run.sh) | ✅ runner · ◻️ waiting for CLIs |
+| One e2e runner for every language's CLI | [`e2e/run.sh`]({{ site.repository_files }}/e2e/run.sh) | ✅ runner · ✅ TypeScript CLI · ◻️ the other five CLIs |
 
 ## Deliberately out of scope
 

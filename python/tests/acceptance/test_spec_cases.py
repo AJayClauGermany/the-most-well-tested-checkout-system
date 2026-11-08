@@ -4,9 +4,8 @@ An *acceptance test* asks "does the whole checkout do what the spec says?".
 It only uses the public entry point, checkout(), so it does not care how the
 checkout is written inside.
 
-These tests are written BEFORE the code (test-driven development). They are
-skipped for now. When you start implementing checkout(), delete the
-@pytest.mark.skip line and watch them go from red to green, one by one.
+These tests were written BEFORE the code (test-driven development) and were skipped
+until the implementation started. Now they run: 60 cases, the same for all six languages.
 """
 
 import pytest
@@ -19,14 +18,11 @@ from checkout import Catalog, CheckoutError, checkout
 SPEC_CASES = load_spec_cases()
 
 
-@pytest.mark.skip(
-    reason="checkout() is not implemented yet - remove this skip when you start implementing"
-)
 # ids= gives each generated test a readable name, e.g.
 #   test_spec_case[promo-coffee-three-bags-one-free]
 # so you can run just one case with:  pytest -k promo-coffee-three-bags-one-free
 @pytest.mark.parametrize("case", SPEC_CASES, ids=[case.id for case in SPEC_CASES])
-def test_spec_case(case: SpecCase, catalog: Catalog):
+def test_spec_case(case: SpecCase, catalog: Catalog) -> None:
     if case.expected_error is not None:
         # This case describes an invalid basket: checkout must fail with that code.
         with pytest.raises(CheckoutError) as caught:

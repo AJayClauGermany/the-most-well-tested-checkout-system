@@ -1,21 +1,28 @@
-# BDD tests (to do)
+# BDD tests
 
 **Behaviour-driven development (BDD)** tests are written as plain-English
 *Given / When / Then* scenarios that a non-programmer can read and check.
 
-The scenarios already exist in [`spec/features/`](../../../spec/features/) and are
-shared by every language. What's missing is the Python *glue code* (the "step
-definitions") that turns each sentence into a function call.
+The scenarios live in [`spec/features/`](../../../spec/features/) and are shared by every
+language. [`test_features.py`](test_features.py) is the Python *glue code*: it loads the
+`.feature` files straight from that folder (never a copy) with
+[pytest-bdd](https://pytest-bdd.readthedocs.io/)'s `scenarios(...)`, and defines one *step*
+function for each sentence listed in
+[`spec/features/README.md`](../../../spec/features/README.md#step-vocabulary).
 
-Suggested tool: [pytest-bdd](https://pytest-bdd.readthedocs.io/), which runs the
-scenarios as normal pytest tests (so fixtures from `tests/conftest.py` just work).
-[behave](https://behave.readthedocs.io/) is a popular alternative with its own runner.
+Because pytest-bdd turns every scenario into an ordinary pytest test, everything you know
+already works:
 
-Tips:
+```bash
+pytest tests/bdd -v                 # one line per scenario
+pytest tests/bdd -k "WELCOME5"      # only scenarios whose name contains WELCOME5
+```
 
-* Load the `.feature` files straight from `spec/features/` - don't copy them.
-  `spec_loader.SPEC_FOLDER` already knows where that folder is.
-* The allowed sentences are listed in
-  [`spec/features/README.md`](../../../spec/features/README.md#step-vocabulary).
-* Turn amounts like `$12.39` into cents (`1239`) with whole-number maths,
-  never with `float`.
+Things worth noticing in the step definitions:
+
+* A `world` fixture (a small dataclass) carries state from one step to the next; every
+  scenario gets a fresh one.
+* `$12.39` is turned into `1239` cents by a custom `Money` type for `parsers.parse`
+  (see `tests/support/dollars.py`) – with whole-number maths only, never `float`.
+* The data table under `Given a basket containing:` arrives as the `datatable` argument:
+  a list of rows, the first of which is the header.

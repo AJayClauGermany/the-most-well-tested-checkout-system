@@ -53,6 +53,8 @@ class SpecCase:
     id: str  # e.g. "subtotal-single-item"
     description: str
     basket: Basket
+    # The basket exactly as written in the JSON file - what the command line program reads.
+    basket_json: dict[str, Any]
     expected: ExpectedTotals | None
     expected_error: ErrorCode | None
 
@@ -71,6 +73,16 @@ def load_spec_cases() -> list[SpecCase]:
     return cases
 
 
+def valid_spec_cases() -> list[SpecCase]:
+    """Only the cases that expect a receipt."""
+    return [case for case in load_spec_cases() if case.expected is not None]
+
+
+def invalid_spec_cases() -> list[SpecCase]:
+    """Only the cases that expect an error code."""
+    return [case for case in load_spec_cases() if case.expected_error is not None]
+
+
 def _spec_case_from_dict(file: str, data: dict[str, Any]) -> SpecCase:
     expected = data.get("expected")
     expected_error = data.get("expected_error")
@@ -79,6 +91,7 @@ def _spec_case_from_dict(file: str, data: dict[str, Any]) -> SpecCase:
         id=data["id"],
         description=data["description"],
         basket=Basket.from_dict(data["basket"]),
+        basket_json=data["basket"],
         expected=ExpectedTotals(**expected) if expected is not None else None,
         expected_error=ErrorCode(expected_error) if expected_error is not None else None,
     )

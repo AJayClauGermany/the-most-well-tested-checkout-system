@@ -10,7 +10,7 @@ after it is created, which makes the code (and the tests) easier to reason about
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 # ---------------------------------------------------------------------------
@@ -151,3 +151,16 @@ class Receipt:
     shipping: int
     tax: int
     total: int
+
+    def to_dict(self) -> dict[str, Any]:
+        """The JSON form of the receipt (spec/schema/receipt.schema.json).
+
+        The field names are already the snake_case names the schema uses, so
+        ``dataclasses.asdict`` does the whole job - lines included.
+        """
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Receipt:
+        """Reads a receipt back from its JSON form (the inverse of ``to_dict``)."""
+        raise NotImplementedError("Receipt.from_dict() is not implemented yet")

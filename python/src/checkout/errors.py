@@ -26,14 +26,16 @@ class ErrorCode(str, Enum):
 class CheckoutError(Exception):
     """Raised by ``checkout()`` when a basket cannot be checked out.
 
-    The reason is in ``error.code``::
+    The reason is in ``error.code``; ``str(error)`` is a message for humans::
 
         try:
             checkout(basket, catalog)
         except CheckoutError as error:
             print(error.code)  # e.g. ErrorCode.EMPTY_BASKET
+            print(error)       # e.g. "The basket has no items"
     """
 
-    def __init__(self, code: ErrorCode) -> None:
-        super().__init__(code.value)
+    def __init__(self, code: ErrorCode, message: str | None = None) -> None:
+        # Without a message, the code itself is the message (as the baseline did).
+        super().__init__(message if message is not None else code.value)
         self.code = code

@@ -10,9 +10,20 @@ Fixtures defined here can be used by every test below the tests/ folder.
 """
 
 import pytest
+from hypothesis import HealthCheck, settings
 from spec_loader import SpecCase, load_catalog, load_spec_cases
 
 from checkout import Catalog
+
+# Hypothesis settings (tests/property/). A "deadline" fails a test whose single example is
+# slow; on a busy CI machine that is noise, not a bug, so it is switched off. The profile is
+# registered here because conftest.py is loaded before any test module.
+settings.register_profile(
+    "checkout",
+    deadline=None,
+    suppress_health_check=[HealthCheck.too_slow],
+)
+settings.load_profile("checkout")
 
 
 @pytest.fixture(scope="session")

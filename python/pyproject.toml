@@ -12,15 +12,29 @@ description = "A small checkout system, built to show many kinds of software tes
 readme = "README.md"
 license = "BSL-1.0"
 requires-python = ">=3.10"
-# The checkout itself only uses the Python standard library.
+# The checkout itself only uses the Python standard library (json, sqlite3, re, datetime, ...).
 dependencies = []
 
 [project.optional-dependencies]
 # Tools for developing and testing. Install them with:  pip install -e ".[dev]"
 # Versions are pinned with == so everybody (and CI) uses exactly the same tools.
 dev = [
-    "pytest==9.2.0",
-    "ruff==0.17.4",
+    # The test runner and its plugins
+    "pytest==9.2.0",            # finds and runs the tests
+    "pytest-bdd==9.0.1",        # runs the Given/When/Then scenarios in spec/features/
+    "hypothesis==6.170.15",     # property-based testing (P1..P14 in spec/properties.md)
+    "jsonschema==4.26.0",       # contract tests against spec/schema/*.json (draft 2020-12)
+    "referencing==0.37.0",      # lets order.schema.json $ref receipt.schema.json by file name
+    "syrupy==6.1.1",            # snapshot tests (the `snapshot` fixture)
+    "pytest-cov==7.1.0",        # code coverage, with a fail_under threshold
+    "pytest-xdist==3.8.0",      # run tests in parallel (-n auto)
+    "pytest-randomly==5.0.0",   # run tests in a random order, to prove they are independent
+    # Mutation testing
+    "mutmut==3.8.1",
+    # Static checks
+    "ruff==0.17.4",             # linter and formatter
+    "mypy==2.4.1",              # static type checker (strict mode)
+    "types-jsonschema==4.26.0.20261006",  # type information for jsonschema
 ]
 
 [tool.setuptools.packages.find]
@@ -32,18 +46,68 @@ where = ["src"]
 # ---------------------------------------------------------------------------
 [tool.pytest.ini_options]
 minversion = "9.0"
-# Where to look for tests when you just type `pytest`.
-testpaths = ["tests"]
-# Lets test files `import spec_loader` (tests/spec_loader.py).
+# Where to look for tests when you just type `pytest`: the tests, and the doctests in src/.
+testpaths = ["tests", "src"]
+# Lets test files `import spec_loader` and `from support... import ...` (both in tests/).
 pythonpath = ["tests"]
 addopts = [
     # The import mode recommended by pytest for new projects.
     "--import-mode=importlib",
-    # Fail on typos in @pytest.mark.<name>.
+    # Fail on typos in @pytest.mark.<name> and in this very configuration block.
     "--strict-markers",
+    "--strict-config",
+    # Also run the examples in docstrings (`>>> round_half_up(225, 10)`) as tests.
+    # pytest skips __main__.py on purpose, so the command line program is never started here.
+    "--doctest-modules",
     # Print a short summary of skipped / failed tests at the end.
     "-ra",
 ]
+# syrupy stores snapshots next to the test in a __snapshots__/ folder; nothing to configure.
+
+# ---------------------------------------------------------------------------
+# coverage.py (used through pytest-cov) – which lines did the tests never run?
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+# Measure the installed package (src/checkout), including which if/else branches were taken.
+source = ["checkout"]
+branch = true
+# __main__.py is the few lines that connect the program to the terminal. It runs in a
+# separate process (tests/e2e/), which in-process coverage cannot see, so it is left out.
+omit = ["*/checkout/__main__.py"]
+
+[tool.coverage.report]
+# Fail (`pytest --cov`) when less than 100% of lines AND branches are covered.
+fail_under = 100
+show_missing = true
+exclude_also = [
+    # `if TYPE_CHECKING:` blocks only exist for the type checker.
+    "if TYPE_CHECKING:",
+    # A Protocol's method bodies are just `...` and are never meant to run.
+    "^\\s*\\.\\.\\.$",
+]
+
+# ---------------------------------------------------------------------------
+# mutmut – mutation testing: would the tests notice if the code were wrong?
+# ---------------------------------------------------------------------------
+[tool.mutmut]
+# mutmut copies these into a mutants/ folder, changes one thing at a time ("a mutant") and
+# runs the tests against each mutant. A mutant that survives means no test noticed.
+source_paths = ["src/checkout"]
+# The program's entry point runs in a separate process, where in-process mutants are invisible.
+do_not_mutate = ["src/checkout/__main__.py"]
+# Which tests to run against the mutants. The e2e tests start the *installed* program in a
+# subprocess, so they can never see a mutant and would only cost time.
+pytest_add_cli_args_test_selection = [
+    "tests/unit",
+    "tests/acceptance",
+    "tests/integration",
+    "tests/contract",
+    "tests/snapshot",
+    "tests/property",
+    "tests/bdd",
+]
+# No coverage, no parallelism and a fixed test order inside mutmut's own test runs.
+pytest_add_cli_args = ["-p", "no:cov", "-p", "no:xdist", "-p", "no:randomly", "-p", "no:cacheprovider", "-q"]
 
 # ---------------------------------------------------------------------------
 # Ruff – a fast linter ("is this code suspicious?") and formatter ("is it tidy?")
@@ -51,6 +115,8 @@ addopts = [
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+# mutmut's working copy is generated code; never lint or format it.
+extend-exclude = ["mutants"]
 
 [tool.ruff.lint]
 # A modest set of rules:
@@ -58,3 +124,19 @@ target-version = "py310"
 #   I    = isort (sorted imports)        B = flake8-bugbear (common bug patterns)
 #   UP   = pyupgrade (use modern syntax for our Python version)
 select = ["E", "W", "F", "I", "B", "UP"]
+
+# ---------------------------------------------------------------------------
+# mypy – static type checking, in strict mode, for the code AND the tests
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+pretty = true
+files = ["src", "tests"]
+# With explicit_package_bases, src/checkout/money.py is module `checkout.money` and
+# tests/support/dollars.py is `support.dollars` - the same names the code uses at run time.
+mypy_path = ["src", "tests"]
+explicit_package_bases = true
+# mutmut's working copy is generated code; never type-check it.
+exclude = ["^mutants/"]

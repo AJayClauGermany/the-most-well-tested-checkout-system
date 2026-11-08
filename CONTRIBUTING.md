@@ -53,9 +53,28 @@ docs/        the documentation website (Jekyll / GitHub Pages)
 2. Read [`spec/checkout-rules.md`](spec/checkout-rules.md) if you haven't yet.
 3. Make your change. If you change *behaviour*, change the rules first, then the shared
    test cases, then the code. (That is test-driven development in a nutshell.)
+   When you touch `spec/checkout-rules.md`, check the two questions in
+   [Keep the spec declarative](#keep-the-spec-declarative).
 4. Run the tests and checks for every language you touched – each language README
    lists the exact commands.
 5. Open a pull request and fill in the template.
+
+## Keep the spec declarative
+
+The shared spec says **what** the checkout does, never **how** a program should be
+built. That is what lets six languages each solve it in their own idiomatic way and still
+be compared. Before you change `spec/checkout-rules.md`, `spec/features/` or
+`spec/properties.md`, ask:
+
+1. **Does it describe *what*, not *how*?** Inputs, outputs, error codes, amounts. Not
+   steps, loops, classes, method names or the order in which things are computed.
+2. **Could two languages implement it differently and both pass every shared test?**
+   If only one program structure can satisfy the sentence, it belongs in a 💡 *Hint*, in a
+   language README, or nowhere.
+
+Names like `save` and `find` are vocabulary so scenarios and properties can refer to a
+capability; they are not required identifiers. The Gherkin step sentences are the one
+place where fixed wording is required – and they describe behaviour, not code.
 
 ## Continuous integration (CI)
 

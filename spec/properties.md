@@ -11,6 +11,8 @@ languages check the **same** properties. Each property has an id (`P1`, `P2`, �
 the test name so the suites can be compared.
 
 All amounts are whole cents. "Valid basket" means a basket that checks out successfully.
+`save` and `find` are the vocabulary from rules §6 for storing and looking up an order,
+not required method names.
 
 ## Generating baskets
 
@@ -37,7 +39,7 @@ succeeds (skip or filter the rest), and P10 is about the failures.
 | P6  | `shipping` is `0`, `499` or `999`; it is `999` if and only if shipping is `express`; with `standard` it is `0` if and only if `subtotal − promotion_discount − coupon_discount ≥ 5000` | The shipping table is applied exactly. |
 | P7  | `tax == (discounted_subtotal × 8 + 50) ÷ 100` (integer division) | Tax is 8% rounded half up, and shipping is never taxed. |
 | P8  | writing the coupon in another case or with surrounding spaces gives the same receipt | Coupons are case-insensitive and trimmed. |
-| P9  | the receipt has one line per **distinct** SKU, in order of first appearance, each with quantity 1–99 | Lines are merged and ordered as rules §4 step 2 says. |
+| P9  | the receipt has one line per **distinct** SKU, in order of first appearance, each with quantity 1–99 | Lines are merged and ordered as rules §4.2 says. |
 
 ## Properties of any input at all
 
@@ -52,7 +54,7 @@ succeeds (skip or filter the rest), and P10 is about the failures.
 |-----|----------|----------|
 | P12 | after saving `n` orders the ids are exactly `ORDER-1` … `ORDER-n`, in that order | Ids are sequential per repository. |
 | P13 | `find(save(receipt))` returns an order whose `receipt` equals the saved one and whose `created_at` is what the clock said | Nothing is lost on the way in and out. |
-| P14 | a failed checkout never calls `save`, and `find` of an id that was never returned by `save` is "not found" | Failures leave no trace; lookups do not invent orders. |
+| P14 | a failed checkout never saves anything, and `find` of an id that was never returned by `save` is "not found" | Failures leave no trace; lookups do not invent orders. |
 
 ## Adding a property
 

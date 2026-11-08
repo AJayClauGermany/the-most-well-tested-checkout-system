@@ -3,7 +3,7 @@
 use crate::Cents;
 use serde::{Deserialize, Serialize};
 
-/// A special offer attached to a product (rules §4, step 3).
+/// A special offer attached to a product (rules §4.2).
 ///
 /// In JSON the kind of promotion is stored in a `"type"` field:
 ///

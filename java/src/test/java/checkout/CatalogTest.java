@@ -53,7 +53,7 @@ class CatalogTest {
 
     @Test
     void skusAreCaseSensitive() {
-        // Rules section 4, step 1: "apple" is an unknown product.
+        // Rules section 4.1: "apple" is an unknown product.
         Optional<Product> found = catalog.findBySku("apple");
 
         assertTrue(found.isEmpty(), "'apple' must not find 'APPLE'");

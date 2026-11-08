@@ -51,7 +51,7 @@ public class CatalogTests
     [Fact]
     public void FindBySku_SkuInWrongCase_ReturnsNull()
     {
-        // Rules §4 step 1: SKUs are case sensitive, so "apple" is NOT "APPLE".
+        // Rules §4.1: SKUs are case sensitive, so "apple" is NOT "APPLE".
         var product = _catalog.FindBySku("apple");
 
         Assert.Null(product);

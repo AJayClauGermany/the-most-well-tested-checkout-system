@@ -15,8 +15,11 @@ basket ──▶ validate ──▶ merge lines ──▶ promotions ──▶ c
                                                                           (optional) save order
 ```
 
-Each arrow is a small step that can be tested on its own (**unit tests**), and the
-whole chain can be tested together (**integration** and **end-to-end tests**).
+This is one way to picture how each amount on the receipt depends on the one before
+it. The rules define the amounts, not this order of work – a program may compute them
+however suits its language. Still, splitting the code along these arrows gives small
+pieces that can be tested on their own (**unit tests**), while the whole chain is tested
+together (**integration** and **end-to-end tests**).
 
 ## The products
 
@@ -41,7 +44,7 @@ whole chain can be tested together (**integration** and **end-to-end tests**).
 | Shipping   | Standard $4.99 (free from $50). Express $9.99 (never free). |
 | Tax        | 8% of the price after discounts. Shipping is not taxed. |
 | Rounding   | Half a cent rounds **up** (22.5 → 23). |
-| Saving     | Optional. Orders get ids `ORDER-1`, `ORDER-2`, … and a `created_at` time from a **clock** that tests can fix. |
+| Saving     | Optional. Orders get ids `ORDER-1`, `ORDER-2`, … and a `created_at` time; tests must be able to fix the time. |
 
 ## A worked example
 

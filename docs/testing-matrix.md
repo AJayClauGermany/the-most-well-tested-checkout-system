@@ -90,12 +90,27 @@ kinds of testing have nothing real to test here, so they would only add noise:
 make *API testing* (request/response contracts, OpenAPI validation) meaningful. It is
 explicitly not part of the current goal; the matrix above comes first.
 
+## Order stores used by the integration tests
+
+The rules ([§6]({{ site.repository_files }}/spec/checkout-rules.md#6-saving-an-order-optional))
+say what saving an order *does*, not where orders are kept. Which stores to build is a
+testing decision, so it is recorded here:
+
+| Store | Why it is here | Kind of test it shows |
+|---|---|---|
+| **In memory** | The simplest thing that works, and a hand-written *fake* for tests of the checkout itself | Unit tests, test doubles |
+| **JSON file** (orders written as [`order.schema.json`]({{ site.repository_files }}/spec/schema/order.schema.json)) | Real files in a real temporary folder | Integration tests, contract tests |
+| **SQLite** (the language's usual embedded library) | A real database with no server to install | Integration tests |
+
+A database server behind Docker (Testcontainers) is deliberately not on the list: SQLite
+shows the same idea and runs on any laptop.
+
 ## Order of work
 
 1. Implement the checkout, test-first, until the shared spec cases are ✅ (they unblock
    almost every other row).
-2. Add the order repository with the clock (rules §6) – this unlocks test doubles and
-   integration tests.
+2. Add saving orders with a replaceable time source (rules §6) – this unlocks test
+   doubles and integration tests.
 3. Add the CLI (rules §8) – this unlocks e2e tests and the shared runner.
 4. Fill in the rest of Tier 1, then Tier 2 and 3 where they fit.
 

@@ -48,7 +48,7 @@ func TestCatalogFindDoesNotFindUnknownSKUs(t *testing.T) {
 		sku  string
 	}{
 		{name: "not-in-catalog", sku: "BANANA"},
-		{name: "lower-case", sku: "apple"}, // SKUs are case sensitive (rules §4, step 1)
+		{name: "lower-case", sku: "apple"}, // SKUs are case sensitive (rules §4.1)
 		{name: "empty", sku: ""},
 	}
 

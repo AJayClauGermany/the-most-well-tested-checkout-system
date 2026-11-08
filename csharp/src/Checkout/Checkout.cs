@@ -11,7 +11,7 @@ public static class Checkout
     /// <param name="basket">What the customer wants to buy.</param>
     /// <param name="catalog">The products the shop sells (prices and promotions).</param>
     /// <returns>The receipt with every line and the six totals.</returns>
-    /// <exception cref="CheckoutException">The basket is invalid (see rules §4, step 1).</exception>
+    /// <exception cref="CheckoutException">The basket is invalid (see rules §4.1).</exception>
     public static Receipt Calculate(Basket basket, Catalog catalog)
     {
         // Test-driven development: the tests come first. Remove this line and

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace CheckoutSystem;
 
 /// <summary>
-/// A promotion attached to a product (rules §4, step 3). There are exactly two kinds,
+/// A promotion attached to a product (rules §4.2). There are exactly two kinds,
 /// so <see cref="Promotion"/> is an abstract base record with one sub-record per kind.
 /// Later code can tell them apart with a <c>switch</c>:
 /// <code>

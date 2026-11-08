@@ -37,7 +37,7 @@ If you need a new step, add it here as well.
 | `Then the receipt has <n> lines`                                 | |
 | `Then the receipt line for "<sku>" has a quantity of <n>`        | |
 | `Then checkout fails with the error "<CODE>"`                    | |
-| `Given an empty order repository`                                | A fresh in-memory repository |
+| `Given an empty order repository`                                | A fresh order store with nothing saved in it (rules §6) |
 | `When the customer checks out and saves the order`               | Check out, then save the receipt if it succeeded |
 | `Then the order is saved with the id "<id>"`                     | The id of the most recently saved order |
 | `Then the saved order "<id>" has a total of $<amount>`           | |

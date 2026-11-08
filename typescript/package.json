@@ -6,15 +6,32 @@
   "license": "BSL-1.0",
   "type": "module",
   "engines": {
-    "node": ">=22.12"
+    "node": ">=22.18"
   },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "test:unit": "vitest run tests/unit",
+    "test:coverage": "vitest run --coverage",
+    "test:types": "vitest run --typecheck.only",
+    "test:bdd": "cucumber-js",
+    "test:e2e:shared": "../e2e/run.sh node src/cli.ts",
+    "test:mutation": "stryker run",
+    "bench": "vitest bench --run",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "check": "npm run typecheck && npm run lint && npm test && npm run test:types && npm run test:bdd"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.6",
+    "@cucumber/cucumber": "13.3.0",
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
     "@types/node": "22.20.5",
+    "@vitest/coverage-v8": "5.1.0",
+    "ajv": "8.20.0",
+    "fast-check": "4.10.2",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
   }

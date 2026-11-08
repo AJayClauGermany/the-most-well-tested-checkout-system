@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Mutation testing with StrykerJS: `npm run test:mutation`. Stryker changes the code in small ways (a mutant: `>=` becomes `>`, `+` becomes `-`, a condition becomes `true`) and runs the tests. A mutant that survives shows a gap in the tests.",
+  "testRunner": "vitest",
+  "vitest": {
+    "configFile": "vitest.config.ts"
+  },
+  "mutate": ["src/**/*.ts", "!src/cli.ts"],
+  "coverageAnalysis": "perTest",
+  "reporters": ["clear-text", "progress", "html"],
+  "htmlReporter": {
+    "fileName": "reports/mutation/index.html"
+  },
+  "thresholds": {
+    "high": 100,
+    "low": 95,
+    "break": 95
+  },
+  "tempDirName": ".stryker-tmp",
+  "incremental": false
+}

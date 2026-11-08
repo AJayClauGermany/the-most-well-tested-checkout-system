@@ -1,0 +1,8 @@
+{
+  "default": {
+    "paths": ["../spec/features/*.feature"],
+    "import": ["tests/bdd/world.ts", "tests/bdd/steps.ts"],
+    "format": ["progress"],
+    "publish": false
+  }
+}

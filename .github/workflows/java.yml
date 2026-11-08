@@ -1,0 +1,43 @@
+name: Java
+
+# Only run on pull requests that touch this language or the shared spec,
+# or when started by hand from the Actions tab.
+on:
+  pull_request:
+    paths:
+      - "java/**"
+      - "spec/**"
+      - ".github/workflows/java.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: java
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Set up Java 21 (with Maven cache)
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          cache-dependency-path: java/pom.xml
+
+      - name: Download dependencies and compile (static check, -Xlint:all -Werror)
+        # Compiles the main and test code. Any compiler warning fails this step.
+        run: mvn -B test-compile
+
+      - name: Run unit tests (Surefire) and integration tests (Failsafe)
+        run: mvn -B verify

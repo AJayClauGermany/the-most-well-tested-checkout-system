@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The checkout itself: a class library (no Main method). Shared settings live in ../../Directory.Build.props. -->
+  <PropertyGroup>
+    <RootNamespace>CheckoutSystem</RootNamespace>
+  </PropertyGroup>
+
+</Project>

@@ -43,7 +43,7 @@ waiting to go from red to green.
    | Language   | Needs            | Run the tests                                   |
    |------------|------------------|-------------------------------------------------|
    | Python     | Python 3.10+     | `pip install -e ".[dev]"` then `pytest`         |
-   | TypeScript | Node.js 22+      | `npm install` then `npm test`                   |
+   | TypeScript | Node.js 22.12+   | `npm install` then `npm test`                   |
    | Go         | Go 1.24+         | `go test ./...`                                 |
    | Java       | JDK 21 + Maven   | `mvn verify`                                    |
    | C#         | .NET 10 SDK      | `dotnet test`                                   |

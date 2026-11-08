@@ -1,0 +1,23 @@
+# Code style for the C# projects. `dotnet format` reads this file, and so do
+# Visual Studio, Rider and VS Code.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,slnx,json,yml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+# File-scoped namespaces (`namespace CheckoutSystem;`) save one level of indentation.
+csharp_style_namespace_declarations = file_scoped:warning
+# Put `using System...` first, like the .NET documentation does.
+dotnet_sort_system_directives_first = true

@@ -1,0 +1,58 @@
+name: Rust
+
+# Only run on pull requests that touch this language or the shared spec,
+# or when started by hand from the Actions tab.
+on:
+  pull_request:
+    paths:
+      - "rust/**"
+      - "spec/**"
+      - ".github/workflows/rust.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      # Rust (rustup, cargo) is preinstalled on GitHub's Ubuntu runners.
+      - name: Install rustfmt and clippy
+        run: |
+          rustup component add rustfmt clippy
+          rustc --version
+          cargo --version
+
+      # Caches downloaded crates and compiled dependencies between runs.
+      - name: Cache Cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      # --locked: fail if Cargo.lock is out of date instead of silently changing it.
+      - name: Download dependencies
+        run: cargo fetch --locked
+
+      - name: Check formatting (rustfmt)
+        run: cargo fmt --check
+
+      - name: Lint (clippy)
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      # Runs unit tests (src/), integration tests (tests/) and doc tests.
+      # Ignored tests (like the not-yet-implemented spec cases) still have to compile.
+      - name: Run tests
+        run: cargo test --locked

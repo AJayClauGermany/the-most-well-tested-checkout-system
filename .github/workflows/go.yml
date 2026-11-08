@@ -1,0 +1,59 @@
+name: Go
+
+# Only run on pull requests that touch this language or the shared spec,
+# or when started by hand from the Actions tab.
+on:
+  pull_request:
+    paths:
+      - "go/**"
+      - "spec/**"
+      - ".github/workflows/go.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go/go.mod
+          # We only use the standard library, so there is no go.sum and no
+          # downloaded modules to cache. When a dependency is added (go.sum
+          # appears), switch this to:  cache-dependency-path: go/go.sum
+          cache: false
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Check formatting (gofmt)
+        # gofmt -l lists files that are not formatted; any output fails the step.
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "These files need 'gofmt -w':"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Static check (go vet)
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Run end-to-end tests (build tag e2e)
+        run: go test -v -tags e2e ./e2e/...

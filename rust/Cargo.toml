@@ -1,0 +1,15 @@
+[package]
+name = "checkout"
+version = "0.1.0"
+edition = "2024"
+# Edition 2024 needs Rust 1.85 or newer.
+rust-version = "1.85"
+description = "A small checkout system, used to show off many kinds of software testing."
+license = "BSL-1.0"
+publish = false
+
+# `cargo add` writes versions like "1.0.229", which means "1.0.229 or any newer 1.x".
+# The exact versions that were tested are pinned in Cargo.lock (which we commit).
+[dependencies]
+serde = { version = "1.0.229", features = ["derive"] } # turns JSON into Rust structs (and back)
+serde_json = "1.0.154"                                 # the JSON format for serde

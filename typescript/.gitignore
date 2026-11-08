@@ -1,0 +1,14 @@
+# Installed packages (recreate them with `npm ci`)
+node_modules/
+
+# Test coverage reports (if you run Vitest with --coverage)
+coverage/
+
+# Build output (if a build step is ever added)
+dist/
+
+# Logs and caches
+*.log
+*.tsbuildinfo
+.vite/
+.vitest/

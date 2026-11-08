@@ -1,0 +1,12 @@
+# Compiled programs and test binaries (e.g. from `go build` or `go test -c`)
+*.exe
+*.test
+/bin/
+
+# Coverage reports (from `go test -coverprofile=coverage.out ./...`)
+coverage.out
+coverage.html
+*.coverprofile
+
+# Note: Go keeps its build and test caches outside the project
+# (see `go env GOCACHE`), so there is no cache folder to ignore here.

@@ -17,9 +17,13 @@ import (
 //
 //	go test ./checkout -run 'TestSpecCases/promo-coffee-three-bags-one-free' -v
 //
-// These are the "red tests waiting" of test-driven development: they describe
-// what Checkout must do before the code exists, so for now they are skipped.
+// This is a DATA-DRIVEN test: the test code is written once and runs for every
+// case in the JSON files. These 60 cases are the acceptance tests of the whole
+// project – every language runs exactly the same ones, so the six
+// implementations can be compared. They were the "red tests waiting" of
+// test-driven development: written (and skipped) before Checkout existed.
 func TestSpecCases(t *testing.T) {
+	t.Parallel()
 	catalog, err := spec.LoadCatalog()
 	if err != nil {
 		t.Fatalf("loading the catalog: %v", err)
@@ -31,7 +35,7 @@ func TestSpecCases(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.ID, func(t *testing.T) {
-			t.Skip("Checkout() is not implemented yet – remove this skip when you start implementing")
+			t.Parallel()
 
 			receipt, err := checkout.Checkout(c.Basket, catalog)
 
@@ -64,15 +68,7 @@ func checkTotals(t *testing.T, c spec.Case, receipt checkout.Receipt, err error)
 	if err != nil {
 		t.Fatalf("%s\nunexpected error: %v", c.Description, err)
 	}
-	got := spec.Totals{
-		Subtotal:          receipt.Subtotal,
-		PromotionDiscount: receipt.PromotionDiscount,
-		CouponDiscount:    receipt.CouponDiscount,
-		Shipping:          receipt.Shipping,
-		Tax:               receipt.Tax,
-		Total:             receipt.Total,
-	}
-	if got != *c.Expected {
+	if got := spec.TotalsOf(receipt); got != *c.Expected {
 		t.Errorf("%s\ngot  %+v\nwant %+v", c.Description, got, *c.Expected)
 	}
 }

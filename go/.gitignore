@@ -3,10 +3,18 @@
 *.test
 /bin/
 
-# Coverage reports (from `go test -coverprofile=coverage.out ./...`)
+# Reports written by the test commands in README.md and by CI:
+# coverage (coverage.out, coverage.html), the JUnit XML report, mutation results.
+/reports/
 coverage.out
 coverage.html
 *.coverprofile
 
+# rapid (property-based tests) saves each failing case here so the next run replays it
+# first. Useful on your machine while you fix the bug, not something to commit.
+testdata/rapid/
+
 # Note: Go keeps its build and test caches outside the project
 # (see `go env GOCACHE`), so there is no cache folder to ignore here.
+# The fuzzer's own working corpus lives there too; only inputs that made a fuzz test
+# FAIL are written to testdata/fuzz/ – keep those, they become regression tests.

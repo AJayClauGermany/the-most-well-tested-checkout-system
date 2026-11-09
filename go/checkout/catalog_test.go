@@ -13,7 +13,10 @@ package checkout
 // This file says `package checkout` (not checkout_test), so it is a
 // "white-box" test: it could also see unexported (lower-case) names.
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 // A tiny catalog just for these tests. Small, made-up data keeps unit tests
 // easy to read: you can see every product the test depends on.
@@ -60,5 +63,32 @@ func TestCatalogFindDoesNotFindUnknownSKUs(t *testing.T) {
 				t.Errorf("Find(%q) found a product, want not found", tt.sku)
 			}
 		})
+	}
+}
+
+func TestRequireProductReturnsTheProductWhenItExists(t *testing.T) {
+	product, err := RequireProduct(testCatalog, "APPLE")
+
+	if err != nil {
+		t.Fatalf("RequireProduct(\"APPLE\") returned an error: %v", err)
+	}
+	if product != testCatalog.Products[0] {
+		t.Errorf("RequireProduct(\"APPLE\") = %+v, want %+v", product, testCatalog.Products[0])
+	}
+}
+
+func TestRequireProductFailsWithUnknownProductWhenItDoesNot(t *testing.T) {
+	_, err := RequireProduct(testCatalog, "BANANA")
+
+	var checkoutErr *CheckoutError
+	if !errors.As(err, &checkoutErr) {
+		t.Fatalf("got err = %v, want a *CheckoutError", err)
+	}
+	if checkoutErr.Code != CodeUnknownProduct {
+		t.Errorf("code = %s, want %s", checkoutErr.Code, CodeUnknownProduct)
+	}
+	// The message names the SKU, so it is useful to a human reading a log.
+	if checkoutErr.Message != "Unknown product: BANANA" {
+		t.Errorf("message = %q, want %q", checkoutErr.Message, "Unknown product: BANANA")
 	}
 }

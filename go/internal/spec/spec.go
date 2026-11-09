@@ -27,6 +27,19 @@ type Totals struct {
 	Total             int `json:"total"`
 }
 
+// TotalsOf picks the six totals out of a receipt, so a test can compare them with a case's
+// Expected totals in one go.
+func TotalsOf(receipt checkout.Receipt) Totals {
+	return Totals{
+		Subtotal:          receipt.Subtotal,
+		PromotionDiscount: receipt.PromotionDiscount,
+		CouponDiscount:    receipt.CouponDiscount,
+		Shipping:          receipt.Shipping,
+		Tax:               receipt.Tax,
+		Total:             receipt.Total,
+	}
+}
+
 // Case is one shared test case from spec/test-cases/*.json.
 // Exactly one of Expected and ExpectedError is set.
 type Case struct {
@@ -69,7 +82,7 @@ func LoadCatalog() (checkout.Catalog, error) {
 	if err != nil {
 		return catalog, err
 	}
-	err = readJSON(filepath.Join(dir, "catalog.json"), &catalog)
+	err = ReadJSON(filepath.Join(dir, "catalog.json"), &catalog)
 	return catalog, err
 }
 
@@ -90,7 +103,7 @@ func LoadCases() ([]Case, error) {
 		var file struct {
 			Cases []Case `json:"cases"`
 		}
-		if err := readJSON(path, &file); err != nil {
+		if err := ReadJSON(path, &file); err != nil {
 			return nil, err
 		}
 		for _, c := range file.Cases {
@@ -101,8 +114,8 @@ func LoadCases() ([]Case, error) {
 	return all, nil
 }
 
-// readJSON decodes the JSON file at path into target.
-func readJSON(path string, target any) error {
+// ReadJSON decodes the JSON file at path into target.
+func ReadJSON(path string, target any) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err

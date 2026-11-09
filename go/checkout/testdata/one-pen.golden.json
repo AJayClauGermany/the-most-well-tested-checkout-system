@@ -1,0 +1,18 @@
+{
+  "lines": [
+    {
+      "sku": "PEN",
+      "name": "Pen",
+      "quantity": 1,
+      "unit_price": 120,
+      "line_total": 120,
+      "line_discount": 0
+    }
+  ],
+  "subtotal": 120,
+  "promotion_discount": 0,
+  "coupon_discount": 0,
+  "shipping": 499,
+  "tax": 10,
+  "total": 629
+}

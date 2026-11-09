@@ -1,0 +1,58 @@
+{
+  "lines": [
+    {
+      "sku": "HEADPHONES",
+      "name": "Wireless Headphones",
+      "quantity": 1,
+      "unit_price": 5999,
+      "line_total": 5999,
+      "line_discount": 0
+    },
+    {
+      "sku": "COFFEE",
+      "name": "Bag of Coffee Beans",
+      "quantity": 6,
+      "unit_price": 899,
+      "line_total": 5394,
+      "line_discount": 1798
+    },
+    {
+      "sku": "NOTEBOOK",
+      "name": "Notebook",
+      "quantity": 12,
+      "unit_price": 349,
+      "line_total": 4188,
+      "line_discount": 419
+    },
+    {
+      "sku": "PEN",
+      "name": "Pen",
+      "quantity": 5,
+      "unit_price": 120,
+      "line_total": 600,
+      "line_discount": 0
+    },
+    {
+      "sku": "BREAD",
+      "name": "Loaf of Bread",
+      "quantity": 1,
+      "unit_price": 225,
+      "line_total": 225,
+      "line_discount": 0
+    },
+    {
+      "sku": "APPLE",
+      "name": "Apple",
+      "quantity": 3,
+      "unit_price": 50,
+      "line_total": 150,
+      "line_discount": 0
+    }
+  ],
+  "subtotal": 16556,
+  "promotion_discount": 2217,
+  "coupon_discount": 500,
+  "shipping": 999,
+  "tax": 1107,
+  "total": 15945
+}

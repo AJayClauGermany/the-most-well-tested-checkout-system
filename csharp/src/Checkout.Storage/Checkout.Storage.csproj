@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The two "real" order stores (rules §6): one JSON file per order, and an SQLite database.
+    They live in their own project so that the checkout itself (src/Checkout) stays free of
+    files, databases and NuGet packages. Microsoft.Data.Sqlite is the SQLite driver from
+    the .NET team; it brings the SQLite engine along, so there is nothing else to install.
+  -->
+  <PropertyGroup>
+    <RootNamespace>CheckoutSystem.Storage</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Checkout\Checkout.csproj" />
+  </ItemGroup>
+
+</Project>

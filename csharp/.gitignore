@@ -8,6 +8,15 @@ TestResults/
 coverage*.xml
 coverage*.json
 
+# Verify writes what a snapshot test received next to the .verified.txt file; only the
+# verified (approved) files are committed.
+*.received.*
+
+# Reports written by CI and the README commands (JUnit/TRX, coverage, mutation, benchmarks)
+reports/
+StrykerOutput/
+BenchmarkDotNet.Artifacts/
+
 # IDE files
 .vs/
 .idea/

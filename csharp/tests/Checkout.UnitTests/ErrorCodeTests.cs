@@ -26,6 +26,14 @@ public class ErrorCodeTests
         Assert.Equal(expected, actual);
     }
 
+    [Theory]
+    [InlineData("EMPTY_BASKET", ErrorCode.EmptyBasket)]
+    [InlineData("COUPON_MINIMUM_NOT_MET", ErrorCode.CouponMinimumNotMet)]
+    public void FromSpecCode_KnownText_ReturnsTheCode(string specCode, ErrorCode expected)
+    {
+        Assert.Equal(expected, ErrorCodeExtensions.FromSpecCode(specCode));
+    }
+
     [Fact]
     public void ErrorCode_HasExactlyTheSixCodesFromTheSpec()
     {
@@ -39,5 +47,43 @@ public class ErrorCodeTests
         // Assert.Throws checks that the code inside the lambda (() => ...) throws
         // this exact exception type. The test fails if nothing is thrown.
         Assert.Throws<ArgumentException>(() => ErrorCodeExtensions.FromSpecCode("NOT_A_CODE"));
+    }
+
+    [Fact]
+    public void ToSpecCode_ValueOutsideTheEnum_Throws()
+    {
+        // C# lets you cast any int to an enum; the switch must not quietly accept it.
+        Assert.Throws<ArgumentOutOfRangeException>(() => ((ErrorCode)42).ToSpecCode());
+    }
+}
+
+/// <summary>Unit tests for <see cref="CheckoutException"/>: it carries the code, and a useful message.</summary>
+public class CheckoutExceptionTests
+{
+    [Fact]
+    public void Constructor_CodeOnly_UsesAGenericMessage()
+    {
+        var exception = new CheckoutException(ErrorCode.UnknownCoupon);
+
+        Assert.Equal(ErrorCode.UnknownCoupon, exception.Code);
+        Assert.Equal("Checkout failed: UNKNOWN_COUPON", exception.Message);
+    }
+
+    [Fact]
+    public void Constructor_CodeAndMessage_KeepsBoth()
+    {
+        var exception = new CheckoutException(ErrorCode.EmptyBasket, "The basket has no items");
+
+        Assert.Equal(ErrorCode.EmptyBasket, exception.Code);
+        Assert.Equal("The basket has no items", exception.Message);
+    }
+
+    [Fact]
+    public void CheckoutException_IsANormalException_SoItCanBeThrownAndCaught()
+    {
+        var exception = new CheckoutException(ErrorCode.EmptyBasket, "The basket has no items");
+
+        // Any `catch (Exception)` block will catch it, because it derives from Exception.
+        Assert.IsAssignableFrom<Exception>(exception);
     }
 }

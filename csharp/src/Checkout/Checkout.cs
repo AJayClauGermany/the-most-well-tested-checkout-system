@@ -12,10 +12,16 @@ public static class Checkout
     /// <param name="catalog">The products the shop sells (prices and promotions).</param>
     /// <returns>The receipt with every line and the six totals.</returns>
     /// <exception cref="CheckoutException">The basket is invalid (see rules §4.1).</exception>
-    public static Receipt Calculate(Basket basket, Catalog catalog)
-    {
-        // Test-driven development: the tests come first. Remove this line and
-        // implement the rules step by step, making one skipped test pass at a time.
-        throw new NotImplementedException("Checkout.Calculate is not implemented yet – see spec/checkout-rules.md");
-    }
+    public static Receipt Calculate(Basket basket, Catalog catalog) =>
+        throw new NotImplementedException();
+
+    /// <summary>
+    /// Checks out, then saves the receipt as an order (rules §6). A failed checkout saves
+    /// nothing: the <see cref="CheckoutException"/> is thrown before the repository is touched.
+    /// </summary>
+    public static PlacedOrder PlaceOrder(Basket basket, Catalog catalog, IOrderRepository repository) =>
+        throw new NotImplementedException();
 }
+
+/// <summary>What <see cref="Checkout.PlaceOrder"/> gives back: the receipt and the id the repository gave it.</summary>
+public sealed record PlacedOrder(Receipt Receipt, string OrderId);

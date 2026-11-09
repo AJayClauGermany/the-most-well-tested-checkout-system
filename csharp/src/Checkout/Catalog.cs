@@ -12,4 +12,11 @@ public sealed record Catalog(IReadOnlyList<Product> Products)
     /// <returns>The product, or <c>null</c> when no product has this SKU.</returns>
     public Product? FindBySku(string sku) =>
         Products.FirstOrDefault(product => product.Sku == sku);
+
+    /// <summary>
+    /// Like <see cref="FindBySku"/>, but a missing product is an error.
+    /// </summary>
+    /// <exception cref="CheckoutException">UNKNOWN_PRODUCT (rules §4.1 row 2).</exception>
+    public Product RequireProduct(string sku) =>
+        throw new NotImplementedException();
 }

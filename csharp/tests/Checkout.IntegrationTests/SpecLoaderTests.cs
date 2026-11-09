@@ -1,11 +1,10 @@
-using CheckoutSystem.UnitTests.SpecSupport;
-
-namespace CheckoutSystem.UnitTests;
+namespace CheckoutSystem.IntegrationTests;
 
 /// <summary>
 /// Tests for the test helper <see cref="SpecLoader"/>. Testing test code may sound odd,
 /// but if the loader silently read zero cases, every spec-case test would "pass"
-/// without checking anything. These tests make sure the shared spec is really loaded.
+/// without checking anything. These are integration tests: they read the real JSON files
+/// on disk in the shared spec/ folder.
 /// </summary>
 public class SpecLoaderTests
 {
@@ -66,11 +65,27 @@ public class SpecLoaderTests
     }
 
     [Fact]
+    public void LoadValidAndInvalidCases_TogetherMakeUpAllCases()
+    {
+        Assert.Equal(60, SpecLoader.LoadValidCases().Count + SpecLoader.LoadInvalidCases().Count);
+        Assert.All(SpecLoader.LoadValidCases(), specCase => Assert.NotNull(specCase.Expected));
+        Assert.All(SpecLoader.LoadInvalidCases(), specCase => Assert.NotNull(specCase.ExpectedError));
+    }
+
+    [Fact]
     public void LoadCases_BasketWithoutShipping_DefaultsToStandard()
     {
         var specCase = SpecLoader.LoadCase("subtotal-single-item");
 
         Assert.Equal("standard", specCase.Basket.Shipping);
         Assert.Null(specCase.Basket.Coupon);
+    }
+
+    [Fact]
+    public void ReadSpecFile_ExampleReceipt_IsTheWorkedExampleFromTheRules()
+    {
+        var text = SpecLoader.ReadSpecFile("examples", "receipt.json");
+
+        Assert.Contains("\"total\": 2344", text, StringComparison.Ordinal);
     }
 }

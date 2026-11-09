@@ -1,4 +1,4 @@
-namespace CheckoutSystem.UnitTests.SpecSupport;
+namespace CheckoutSystem.TestSupport;
 
 /// <summary>
 /// One shared test case from spec/test-cases/*.json: a basket plus EITHER the

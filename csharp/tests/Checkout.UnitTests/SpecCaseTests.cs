@@ -1,5 +1,3 @@
-using CheckoutSystem.UnitTests.SpecSupport;
-
 namespace CheckoutSystem.UnitTests;
 
 /// <summary>
@@ -11,40 +9,47 @@ namespace CheckoutSystem.UnitTests;
 ///
 /// We pass only the id (a plain string): it is short, readable in the test results,
 /// and lets you run a single case by name.
+///
+/// These 60 cases are the acceptance tests of the whole project: every language runs
+/// exactly the same ones, so the six implementations can be compared.
 /// </summary>
-public class SpecCaseTests
+[Collection(StandardCatalogCollectionDefinition.Name)]
+public class SpecCaseTests(StandardCatalogFixture spec)
 {
     public static TheoryData<string> CaseIds() =>
         new(SpecLoader.LoadCases().Select(specCase => specCase.Id));
 
-    // TDD "red tests waiting": these tests are written before the code. They are
-    // skipped for now so the build stays green. Delete the `Skip = "..."` text when you
-    // start implementing Checkout.Calculate, then make the cases pass one by one.
-    //
-    // Why is Skip on [MemberData] and not on [Theory]? A skipped [Theory] is reported
-    // as ONE skipped test. Skipping the data instead reports every case separately
-    // (60 skipped tests, each with its id), so you can see exactly what is waiting.
     [Theory]
-    [MemberData(nameof(CaseIds), Skip = "Checkout.Calculate() is not implemented yet – remove this Skip when you start implementing")]
+    [MemberData(nameof(CaseIds))]
     public void Calculate_SharedSpecCase_MatchesExpectedTotalsOrError(string caseId)
     {
         // Arrange
-        var specCase = SpecLoader.LoadCase(caseId);
-        var catalog = SpecLoader.LoadCatalog();
+        var specCase = spec.Cases.Single(c => c.Id == caseId);
 
         if (specCase.ExpectedError is { } expectedError)
         {
             // Act + Assert: checkout must fail with the expected error code.
-            var exception = Assert.Throws<CheckoutException>(() => Checkout.Calculate(specCase.Basket, catalog));
+            var exception = Assert.Throws<CheckoutException>(() => Checkout.Calculate(specCase.Basket, spec.Catalog));
             Assert.Equal(expectedError, exception.Code);
         }
         else
         {
             // Act
-            var receipt = Checkout.Calculate(specCase.Basket, catalog);
+            var receipt = Checkout.Calculate(specCase.Basket, spec.Catalog);
 
             // Assert: compare all six totals at once.
             Assert.Equal(specCase.Expected, Totals.From(receipt));
         }
     }
+}
+
+/// <summary>
+/// Declares the "standard catalog" collection: every test class marked
+/// <c>[Collection(StandardCatalogCollectionDefinition.Name)]</c> shares ONE <see cref="StandardCatalogFixture"/>
+/// (the spec files are read once) and runs in sequence with the others in the collection.
+/// </summary>
+[CollectionDefinition(Name)]
+public sealed class StandardCatalogCollectionDefinition : ICollectionFixture<StandardCatalogFixture>
+{
+    public const string Name = "standard catalog";
 }

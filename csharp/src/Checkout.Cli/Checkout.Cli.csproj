@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The command line program (rules §8): basket JSON in on stdin, receipt JSON out on stdout.
+    Its logic (CheckoutCommand) is a plain method that the unit tests call in-process;
+    Program.cs only connects it to the terminal and is tested from the outside by
+    tests/Checkout.EndToEndTests and the shared runner e2e/run.sh.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>CheckoutSystem.Cli</RootNamespace>
+    <!-- Start fast: the program runs once per basket, so skip the usual "tiered" warm-up. -->
+    <TieredPGO>false</TieredPGO>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Checkout\Checkout.csproj" />
+  </ItemGroup>
+
+</Project>

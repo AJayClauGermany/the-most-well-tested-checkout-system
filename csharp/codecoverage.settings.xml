@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Settings for the code coverage of `dotnet test` (Microsoft.Testing.Extensions.CodeCoverage),
+  passed with its coverage-settings option as an ABSOLUTE path (see the README: each test
+  program starts in its own folder, so a relative path is not found). Without these settings the
+  report would also measure the
+  test projects and the NuGet packages; we only want the checkout itself: src/Checkout,
+  src/Checkout.Storage and src/Checkout.Cli.
+-->
+<Configuration>
+  <CodeCoverage>
+    <!--
+      Measure in memory only. "Static" instrumentation rewrites Checkout.dll on disk, adding
+      references to System.IO and System.Console - which the architecture tests (rightly) reject.
+    -->
+    <EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>
+    <EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>
+    <ModulePaths>
+      <Include>
+        <ModulePath>.*[\\/]Checkout\.dll$</ModulePath>
+        <ModulePath>.*[\\/]Checkout\.Storage\.dll$</ModulePath>
+        <ModulePath>.*[\\/]Checkout\.Cli\.dll$</ModulePath>
+      </Include>
+    </ModulePaths>
+    <!-- Code marked [ExcludeFromCodeCoverage] (the CLI's Main, tested end-to-end) is left out. -->
+    <Attributes>
+      <Exclude>
+        <Attribute>^System\.Diagnostics\.CodeAnalysis\.ExcludeFromCodeCoverageAttribute$</Attribute>
+      </Exclude>
+    </Attributes>
+  </CodeCoverage>
+</Configuration>

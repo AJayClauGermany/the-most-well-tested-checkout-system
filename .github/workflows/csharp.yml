@@ -7,6 +7,7 @@ on:
     paths:
       - "csharp/**"
       - "spec/**"
+      - "e2e/**"
       - ".github/workflows/csharp.yml"
   workflow_dispatch:
 
@@ -36,15 +37,86 @@ jobs:
           cache: true
           cache-dependency-path: csharp/**/packages.lock.json
 
-      - name: Restore NuGet packages
-        # --locked-mode fails if packages.lock.json is out of date with the .csproj files.
-        run: dotnet restore --locked-mode
+      - name: Restore NuGet packages and .NET tools
+        # --locked-mode fails if a packages.lock.json is out of date with the .csproj files.
+        # The tools (ReportGenerator, Stryker.NET) are pinned in .config/dotnet-tools.json.
+        run: |
+          dotnet restore --locked-mode
+          dotnet tool restore
 
+      # Static checks: no code runs, but whole classes of mistakes are caught.
       - name: Check formatting (dotnet format)
         run: dotnet format --verify-no-changes --no-restore
-
-      - name: Build
+      - name: Build, with the code analyzers and warnings as errors
         run: dotnet build --no-restore
 
-      - name: Run tests
-        run: dotnet test --no-build
+      # Every test project (unit, integration, BDD, property, contract, snapshot, architecture,
+      # end-to-end), with code coverage and a JUnit + TRX report per project.
+      - name: Run all tests, with coverage and test reports
+        run: >-
+          dotnet test --no-build
+          --coverage --coverage-output-format cobertura
+          --coverage-settings "$PWD/codecoverage.settings.xml"
+          --results-directory "$PWD/reports/test-results"
+          --report-xunit-junit --report-xunit-trx
+      - name: Merge the coverage reports (ReportGenerator)
+        if: always()
+        run: >-
+          dotnet reportgenerator
+          "-reports:reports/test-results/*.cobertura.xml"
+          -targetdir:reports/coverage
+          "-reporttypes:Html;TextSummary;MarkdownSummaryGithub;Cobertura"
+          "-classfilters:-System.Text.RegularExpressions.Generated*"
+      - name: Check the coverage thresholds
+        run: |
+          cat reports/coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+          ./check-coverage.sh
+
+      - name: Shared end-to-end runner against the CLI (e2e/run.sh)
+        # The built program, started with `dotnet <dll>`: the same program as
+        # `dotnet run --project src/Checkout.Cli` (which e2e/README.md lists), without a
+        # build check before each of the 60 cases.
+        working-directory: .
+        run: e2e/run.sh dotnet csharp/src/Checkout.Cli/bin/Debug/net10.0/Checkout.Cli.dll
+
+      - name: Benchmark smoke run (BenchmarkDotNet, one iteration each)
+        run: dotnet run -c Release --project benchmarks/Checkout.Benchmarks -- --job dry --filter '*' --artifacts reports/benchmarks
+
+      - name: Upload reports (JUnit, TRX, coverage, benchmarks)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: csharp-reports
+          path: csharp/reports/
+          if-no-files-found: ignore
+
+  # Mutation testing takes a few minutes, so it runs as a separate job, side by side with
+  # the tests above instead of after them.
+  mutation:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: csharp
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: csharp/global.json
+          cache: true
+          cache-dependency-path: csharp/**/packages.lock.json
+      - name: Restore NuGet packages and .NET tools
+        run: |
+          dotnet restore --locked-mode
+          dotnet tool restore
+      - name: Mutation testing (Stryker.NET, Microsoft.Testing.Platform runner)
+        # stryker-config.json: mutate src/Checkout, fail below a score of 95%.
+        run: dotnet stryker --output reports/mutation
+      - name: Upload the mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: csharp-mutation-report
+          path: csharp/reports/mutation/reports/
+          if-no-files-found: ignore

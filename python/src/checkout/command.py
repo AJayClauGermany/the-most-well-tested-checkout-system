@@ -23,7 +23,8 @@ def standard_catalog_path() -> Path:
 
 def load_standard_catalog() -> Catalog:
     """Reads spec/catalog.json."""
-    return Catalog.from_dict(json.loads(standard_catalog_path().read_text(encoding="utf-8")))
+    # json.loads accepts bytes and works out the encoding (UTF-8) by itself.
+    return Catalog.from_dict(json.loads(standard_catalog_path().read_bytes()))
 
 
 class NotABasketError(ValueError):
@@ -66,6 +67,15 @@ def parse_basket(text: str) -> Basket:
     return Basket.from_dict(parsed)
 
 
+def compact_json(value: object) -> str:
+    """JSON on one line with no spaces, the way the program prints it.
+
+    >>> compact_json({"error": "EMPTY_BASKET", "n": [1, 2]})
+    '{"error":"EMPTY_BASKET","n":[1,2]}'
+    """
+    return json.dumps(value, separators=(",", ":"))
+
+
 @dataclass(frozen=True)
 class CommandResult:
     """What the program prints and the exit code it ends with."""
@@ -87,8 +97,8 @@ def run_checkout_command(text: str, catalog: Catalog) -> CommandResult:
     try:
         receipt = checkout(basket, catalog)
     except CheckoutError as error:
-        return CommandResult(json.dumps({"error": error.code.value}, separators=(",", ":")), 1)
-    return CommandResult(json.dumps(receipt.to_dict(), separators=(",", ":")), 0)
+        return CommandResult(compact_json({"error": error.code.value}), 1)
+    return CommandResult(compact_json(receipt.to_dict()), 0)
 
 
 def main(catalog: Catalog | None = None) -> int:

@@ -13,7 +13,15 @@ import pytest
 from support.fixtures import ONE_APPLE_RECEIPT, TINY_CATALOG, fixed_clock
 from support.schemas import schema_errors
 
-from checkout import Basket, BasketItem, JsonFileOrderRepository, Order, checkout
+from checkout import (
+    Basket,
+    BasketItem,
+    JsonFileOrderRepository,
+    Order,
+    Receipt,
+    ReceiptLine,
+    checkout,
+)
 
 
 def test_writes_order_1_json_into_the_folder_on_the_first_save(tmp_path: Path) -> None:
@@ -45,8 +53,10 @@ def test_writes_human_readable_json_indented_ending_in_a_newline(tmp_path: Path)
 
     text = (tmp_path / "ORDER-1.json").read_text(encoding="utf-8")
 
-    assert "\n  " in text
-    assert text.endswith("\n")
+    # Two spaces per level, one field per line.
+    assert text.startswith('{\n  "id": "ORDER-1",\n  "created_at": "2026-01-15T10:30:00Z",\n')
+    assert '\n    "subtotal": 50,\n' in text
+    assert text.endswith("\n}\n")
 
 
 def test_reads_a_saved_order_back_exactly_as_saved(tmp_path: Path) -> None:
@@ -157,6 +167,20 @@ def test_stamps_each_order_with_the_clock_s_time_at_the_moment_of_saving(tmp_pat
     second_order = repository.find(second)
     assert first_order is not None and first_order.created_at == "2026-01-15T10:30:00Z"
     assert second_order is not None and second_order.created_at == "2026-01-16T09:00:00Z"
+
+
+def test_a_product_name_with_accents_survives_the_round_trip(tmp_path: Path) -> None:
+    repository = JsonFileOrderRepository(tmp_path, fixed_clock)
+    line = ReceiptLine("CREPE", "Crêpe à la crème", 1, 300, 300, 0)
+    receipt = Receipt([line], 300, 0, 0, 499, 24, 823)
+
+    identifier = repository.save(receipt)
+
+    found = repository.find(identifier)
+    assert found is not None
+    assert found.receipt.lines[0].name == "Crêpe à la crème"
+    # Stored as plain ASCII with \u escapes, so any program in any language can read it.
+    assert (tmp_path / "ORDER-1.json").read_bytes().isascii()
 
 
 def test_uses_the_real_clock_when_none_is_given(tmp_path: Path) -> None:

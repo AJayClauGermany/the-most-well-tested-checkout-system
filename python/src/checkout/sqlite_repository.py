@@ -40,8 +40,10 @@ class SqliteOrderRepository:
     def save(self, receipt: Receipt) -> str:
         # "?" placeholders keep the values apart from the SQL, so a receipt can never be
         # mistaken for a command (no SQL injection).
+        # (`pragma: no mutate`: SQL ignores upper/lower case, so mutmut's case-changing
+        # mutants of this statement would behave identically - "equivalent mutants".)
         cursor = self._connection.execute(
-            "INSERT INTO orders (created_at, receipt) VALUES (?, ?)",
+            "INSERT INTO orders (created_at, receipt) VALUES (?, ?)",  # pragma: no mutate
             (format_timestamp(self._clock()), json.dumps(receipt.to_dict())),
         )
         self._connection.commit()
@@ -53,7 +55,8 @@ class SqliteOrderRepository:
         if number is None:
             return None
         row = self._connection.execute(
-            "SELECT number, created_at, receipt FROM orders WHERE number = ?", (number,)
+            "SELECT number, created_at, receipt FROM orders WHERE number = ?",  # pragma: no mutate
+            (number,),
         ).fetchone()
         if row is None:
             return None

@@ -29,8 +29,11 @@ class JsonFileOrderRepository:
             receipt=receipt,
         )
         # indent=2 makes the file readable for humans; the newline at the end is good manners.
+        # json.dumps escapes every non-ASCII character ("é" becomes "é"), so the text is
+        # plain ASCII and every encoding writes the same bytes. That makes mutants of the
+        # encoding ("UTF-8", None, ...) impossible to observe, hence `pragma: no mutate`.
         text = json.dumps(order.to_dict(), indent=2) + "\n"
-        self._path_of(order.id).write_text(text, encoding="utf-8")
+        self._path_of(order.id).write_text(text, encoding="utf-8")  # pragma: no mutate
         return order.id
 
     def find(self, identifier: str) -> Order | None:
@@ -40,7 +43,7 @@ class JsonFileOrderRepository:
         path = self._path_of(identifier)
         if not path.is_file():
             return None
-        return Order.from_dict(json.loads(path.read_text(encoding="utf-8")))
+        return Order.from_dict(json.loads(path.read_bytes()))
 
     def _path_of(self, identifier: str) -> Path:
         return self._folder / f"{identifier}.json"

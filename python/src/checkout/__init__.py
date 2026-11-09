@@ -14,6 +14,7 @@ from checkout.catalog import require_product
 from checkout.command import (
     CommandResult,
     NotABasketError,
+    compact_json,
     load_standard_catalog,
     main,
     parse_basket,
@@ -92,6 +93,7 @@ __all__ = [
     "ShippingMethod",
     "SqliteOrderRepository",
     "checkout",
+    "compact_json",
     "coupon_discount",
     "find_spec_folder",
     "format_timestamp",

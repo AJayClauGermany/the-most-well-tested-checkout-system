@@ -190,8 +190,9 @@ def test_reports_every_kind_of_error_the_same_way() -> None:
 def test_prints_compact_json_on_a_single_line() -> None:
     result = run_checkout_command(ONE_APPLE, TINY_CATALOG)
 
+    assert result.output.startswith('{"lines":[{"sku":"APPLE","name":"Apple","quantity":1,')
+    assert result.output.endswith(',"shipping":499,"tax":4,"total":553}')
     assert "\n" not in result.output
-    assert " " not in result.output.replace('"Apple"', "")  # no spaces after : and ,
 
 
 def test_does_not_hide_bad_input_behind_an_error_code() -> None:
@@ -258,6 +259,16 @@ def test_main_returns_2_with_nothing_on_stdout_and_a_message_on_stderr_for_bad_i
     assert captured.out == ""
     assert captured.err.startswith("checkout: ")
     assert complaint in captured.err
+
+
+def test_main_uses_the_catalog_it_is_given(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A TV is only in the tiny made-up catalog, not in the standard one.
+    exit_code = run_main('{"items":[{"sku":"TV","quantity":1}]}', monkeypatch)
+
+    assert exit_code == 0
+    assert json.loads(capsys.readouterr().out)["subtotal"] == 10000
 
 
 def test_main_uses_the_standard_catalog_when_none_is_given(

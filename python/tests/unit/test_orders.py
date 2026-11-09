@@ -9,6 +9,7 @@ pytest's `monkeypatch` fixture is a fourth tool: it swaps a real function for a 
 for the duration of one test, and puts the original back afterwards.
 """
 
+import time
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, Mock, create_autospec
 
@@ -52,6 +53,22 @@ def test_converts_other_time_zones_to_utc() -> None:
     half_past_twelve_in_berlin = datetime(2026, 1, 15, 12, 30, 0, tzinfo=berlin)
 
     assert format_timestamp(half_past_twelve_in_berlin) == "2026-01-15T10:30:00Z"
+
+
+@pytest.mark.skipif(not hasattr(time, "tzset"), reason="time.tzset() only exists on Unix")
+def test_converts_to_utc_even_when_the_computer_is_set_to_another_time_zone(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # This test machine is probably set to UTC, which would hide a bug that converts to the
+    # computer's LOCAL time instead of UTC. So: pretend to be in Japan for one test.
+    # "JST-9" is a POSIX time zone string (9 hours ahead of UTC) that needs no tz database.
+    monkeypatch.setenv("TZ", "JST-9")
+    time.tzset()
+    try:
+        assert format_timestamp(FIXED_TIME) == "2026-01-15T10:30:00Z"
+    finally:
+        monkeypatch.undo()  # put the real TZ back ...
+        time.tzset()  # ... and tell the C library about it
 
 
 def test_refuses_a_datetime_without_a_time_zone() -> None:

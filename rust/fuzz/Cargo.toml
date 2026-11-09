@@ -1,0 +1,29 @@
+# Fuzzing with cargo-fuzz (https://rust-fuzz.github.io/book/cargo-fuzz.html).
+#
+# This is a separate crate (the main Cargo.toml excludes it from its workspace) because
+# fuzzing needs a nightly compiler and a sanitizer; `cargo test` of the main crate never
+# touches it. See the "Fuzzing" section of ../README.md for how to run it.
+[package]
+name = "checkout-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.13"
+
+[dependencies.checkout]
+path = ".."
+
+# Each fuzz target is a tiny program that libFuzzer calls with random bytes, millions of times.
+[[bin]]
+name = "basket_checkout"
+path = "fuzz_targets/basket_checkout.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]

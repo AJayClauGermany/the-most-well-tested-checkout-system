@@ -1,4 +1,5 @@
-//! Shared helpers for the integration tests: loading the language-agnostic spec.
+//! Shared helpers for the integration tests: loading the language-agnostic spec, small
+//! fixtures, schema validation and the `$12.39` → `1239` helper.
 //!
 //! Why `tests/common/mod.rs` and not `tests/common.rs`? Cargo treats every `.rs` file
 //! directly inside `tests/` as its own test program. Files in a sub-folder are not,
@@ -12,13 +13,26 @@
 // would warn about the unused ones (and our CI treats warnings as errors).
 #![allow(dead_code)]
 
-use checkout::{Basket, Catalog, Cents, ErrorCode, Receipt};
-use serde::Deserialize;
+pub mod dollars;
+pub mod fixtures;
+pub mod schemas;
+
+use checkout::{Basket, Catalog, Cents, Clock, ErrorCode, FixedClock, Receipt};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// The time every fixed clock in the tests answers (the one from `spec/examples/order.json`).
+pub const FIXED_TIME: &str = "2026-01-15T10:30:00Z";
+
+/// A stub clock that always says [`FIXED_TIME`].
+pub fn fixed_clock() -> Box<dyn Clock> {
+    Box::new(FixedClock::at(FIXED_TIME).expect("FIXED_TIME should be a valid timestamp"))
+}
+
 /// The six totals of a receipt, as written in a test case's `"expected"` field.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExpectedTotals {
     pub subtotal: Cents,
     pub promotion_discount: Cents,
@@ -101,6 +115,14 @@ pub fn load_spec_cases() -> Vec<SpecCase> {
     }
 
     all_cases
+}
+
+/// Loads one of the hand-checked outputs in `spec/examples/`, e.g. `"receipt.json"`.
+pub fn load_example(name: &str) -> Value {
+    let path = spec_dir().join("examples").join(name);
+    let text = read_file(&path);
+    serde_json::from_str(&text)
+        .unwrap_or_else(|error| panic!("could not parse {}: {error}", path.display()))
 }
 
 /// All `.json` files in `spec/test-cases/`, sorted so the order is always the same.

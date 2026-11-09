@@ -7,7 +7,7 @@ use std::fmt;
 ///
 /// `rename_all = "SCREAMING_SNAKE_CASE"` lets serde read `"EMPTY_BASKET"` from JSON
 /// as `ErrorCode::EmptyBasket` (and write it back the same way).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ErrorCode {
     EmptyBasket,
@@ -49,18 +49,33 @@ impl fmt::Display for ErrorCode {
     }
 }
 
-/// The error returned when a checkout fails. It carries exactly one [`ErrorCode`].
+/// The error returned when a checkout fails. It carries exactly one [`ErrorCode`]
+/// (what programs look at) and a human-readable `message` (what a person reads in a log).
 ///
 /// In Rust, failures are normal return values (`Result<Receipt, CheckoutError>`),
 /// not exceptions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CheckoutError {
     pub code: ErrorCode,
+    /// Extra detail such as `"Unknown product: BANANA"`. Empty when there is none.
+    pub message: String,
 }
 
 impl CheckoutError {
+    /// An error with a code and no further detail.
     pub fn new(code: ErrorCode) -> Self {
-        CheckoutError { code }
+        CheckoutError {
+            code,
+            message: String::new(),
+        }
+    }
+
+    /// An error with a code and a message explaining it.
+    pub fn with_message(code: ErrorCode, message: impl Into<String>) -> Self {
+        CheckoutError {
+            code,
+            message: message.into(),
+        }
     }
 }
 
@@ -73,7 +88,11 @@ impl From<ErrorCode> for CheckoutError {
 
 impl fmt::Display for CheckoutError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "checkout failed: {}", self.code)
+        write!(f, "checkout failed: {}", self.code)?;
+        if !self.message.is_empty() {
+            write!(f, ": {}", self.message)?;
+        }
+        Ok(())
     }
 }
 
@@ -122,10 +141,41 @@ mod tests {
     }
 
     #[test]
+    fn error_codes_are_written_to_json_exactly_like_the_spec() {
+        // The CLI prints {"error":"EMPTY_BASKET"}, so the JSON spelling matters too.
+        let json = serde_json::to_string(&ErrorCode::CouponMinimumNotMet).unwrap();
+
+        assert_eq!(json, "\"COUPON_MINIMUM_NOT_MET\"");
+    }
+
+    #[test]
     fn checkout_error_message_mentions_the_code() {
         let error = CheckoutError::from(ErrorCode::EmptyBasket);
 
         assert_eq!(error.code, ErrorCode::EmptyBasket);
+        assert_eq!(error.message, "");
         assert_eq!(error.to_string(), "checkout failed: EMPTY_BASKET");
+    }
+
+    #[test]
+    fn checkout_error_with_a_message_shows_both_the_code_and_the_message() {
+        let error =
+            CheckoutError::with_message(ErrorCode::UnknownProduct, "Unknown product: BANANA");
+
+        assert_eq!(error.code, ErrorCode::UnknownProduct);
+        assert_eq!(error.message, "Unknown product: BANANA");
+        assert_eq!(
+            error.to_string(),
+            "checkout failed: UNKNOWN_PRODUCT: Unknown product: BANANA"
+        );
+    }
+
+    #[test]
+    fn checkout_error_is_a_normal_error_so_it_works_with_box_dyn_error() {
+        // `?` in a function returning `Result<_, Box<dyn Error>>` relies on this.
+        let boxed: Box<dyn std::error::Error> =
+            Box::new(CheckoutError::new(ErrorCode::UnknownCoupon));
+
+        assert_eq!(boxed.to_string(), "checkout failed: UNKNOWN_COUPON");
     }
 }

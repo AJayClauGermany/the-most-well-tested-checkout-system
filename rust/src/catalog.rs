@@ -1,6 +1,6 @@
 //! Products, promotions and the catalog (rules §2).
 
-use crate::Cents;
+use crate::{Cents, CheckoutError};
 use serde::{Deserialize, Serialize};
 
 /// A special offer attached to a product (rules §4.2).
@@ -55,11 +55,19 @@ impl Catalog {
     pub fn find(&self, sku: &str) -> Option<&Product> {
         self.products.iter().find(|product| product.sku == sku)
     }
+
+    /// Like [`Catalog::find`], but a missing product is an error: `UNKNOWN_PRODUCT`
+    /// (rules §4.1 row 2).
+    pub fn require(&self, sku: &str) -> Result<&Product, CheckoutError> {
+        let _ = sku;
+        todo!("Catalog::require() is not implemented yet")
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ErrorCode;
 
     /// A small helper that builds a product without a promotion, to keep the tests short.
     fn product(sku: &str, unit_price: Cents) -> Product {
@@ -96,6 +104,31 @@ mod tests {
         let catalog = Catalog::new(vec![product("APPLE", 50)]);
 
         assert_eq!(catalog.find("apple"), None);
+    }
+
+    #[test]
+    fn require_returns_the_product_when_it_exists() {
+        let catalog = Catalog::new(vec![product("APPLE", 50), product("PEN", 120)]);
+
+        assert_eq!(catalog.require("APPLE"), Ok(&product("APPLE", 50)));
+    }
+
+    #[test]
+    fn require_fails_with_unknown_product_when_it_does_not() {
+        let catalog = Catalog::new(vec![product("APPLE", 50)]);
+
+        let error = catalog.require("BANANA").unwrap_err();
+
+        assert_eq!(error.code, ErrorCode::UnknownProduct);
+    }
+
+    #[test]
+    fn require_mentions_the_sku_in_the_error_message_so_it_is_useful_to_a_human() {
+        let catalog = Catalog::new(vec![product("APPLE", 50)]);
+
+        let error = catalog.require("BANANA").unwrap_err();
+
+        assert_eq!(error.message, "Unknown product: BANANA");
     }
 
     #[test]

@@ -1,0 +1,21 @@
+# Settings for cargo-nextest (https://nexte.st/), the alternative test runner.
+#
+# nextest runs every test in its own process (so tests cannot influence each other and
+# run in parallel), and it can write a JUnit XML report that CI dashboards understand.
+# `cargo nextest run` uses the `default` profile; `cargo nextest run --profile ci` uses `ci`.
+# Doc tests are not run by nextest – CI runs `cargo test --doc` for those.
+
+[profile.default]
+# Fail fast while developing: stop at the first failing test.
+fail-fast = true
+
+[profile.ci]
+# In CI we want to see every failure, not only the first one.
+fail-fast = false
+# Retries would only hide flaky tests; a flaky test here is a bug.
+retries = 0
+
+[profile.ci.junit]
+# Written to target/nextest/ci/junit.xml; the workflow uploads it as an artifact.
+path = "junit.xml"
+report-name = "checkout-rust"

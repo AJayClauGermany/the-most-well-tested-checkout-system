@@ -1,0 +1,5 @@
+# What cargo-fuzz creates while running: builds, inputs it found interesting, and crashes.
+/target/
+/corpus/
+/artifacts/
+/coverage/

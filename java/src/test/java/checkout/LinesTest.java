@@ -5,6 +5,7 @@ import static checkout.spec.Fixtures.COFFEE;
 import static checkout.spec.Fixtures.NOTEBOOK;
 import static checkout.spec.Fixtures.item;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,24 @@ class LinesTest {
                     Lines.mergeItems(List.of(item("COFFEE", 1), item("COFFEE", 1), item("COFFEE", 1)));
 
             assertThat(merged).containsExactly(item("COFFEE", 3));
+        }
+
+        @Test
+        void addsUpQuantitiesTooBigForAnIntWithoutOverflowing() {
+            // 3 billion + 3 billion would overflow an int; a long holds it.
+            List<BasketItem> merged =
+                    Lines.mergeItems(List.of(item("APPLE", 3_000_000_000L), item("APPLE", 3_000_000_000L)));
+
+            assertThat(merged).containsExactly(item("APPLE", 6_000_000_000L));
+        }
+
+        @Test
+        void throwsInsteadOfOverflowingSilentlyWhenTheSumDoesNotFitALong() {
+            // Validation never lets this happen (row 3 runs first), but a wrong total must never
+            // be the answer: Math.addExact throws instead of wrapping around to a negative number.
+            List<BasketItem> items = List.of(item("APPLE", Long.MAX_VALUE), item("APPLE", 1));
+
+            assertThatThrownBy(() -> Lines.mergeItems(items)).isInstanceOf(ArithmeticException.class);
         }
 
         @Test

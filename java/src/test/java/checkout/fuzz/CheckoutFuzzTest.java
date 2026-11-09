@@ -68,7 +68,7 @@ class CheckoutFuzzTest {
         int lines = data.consumeInt(0, 6);
         for (int i = 0; i < lines; i++) {
             String sku = data.consumeBoolean() ? data.pickValue(skus()) : data.consumeString(8);
-            items.add(new BasketItem(sku, data.consumeInt()));
+            items.add(new BasketItem(sku, data.consumeLong()));
         }
         String coupon = data.consumeBoolean() ? null : data.consumeString(10);
         String shipping = data.consumeBoolean() ? null : data.consumeString(10);

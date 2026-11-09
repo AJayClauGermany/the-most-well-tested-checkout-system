@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -116,6 +117,29 @@ class CliIT {
     @Test
     void exitsWith2WhenTheJsonIsNotABasket() throws IOException, InterruptedException {
         CliResult result = run("{\"hello\": \"world\"}");
+
+        assertThat(result.exitCode()).isEqualTo(2);
+        assertThat(result.stdout()).isEmpty();
+        assertThat(result.stderr()).contains("not a basket");
+    }
+
+    @Test
+    void exitsWith1AndInvalidQuantityForAQuantityTooBigForAnInt() throws IOException, InterruptedException {
+        // 10000000000 does not fit a 32-bit int, but it is still a whole number: rules section 4.1
+        // says INVALID_QUANTITY, not "not a basket".
+        CliResult result = run("{\"items\":[{\"sku\":\"APPLE\",\"quantity\":10000000000}]}");
+
+        assertThat(result.exitCode()).as("stderr: %s", result.stderr()).isEqualTo(1);
+        assertThat(Json.parse(result.stdout())).isEqualTo(Json.parse("{\"error\":\"INVALID_QUANTITY\"}"));
+    }
+
+    @ParameterizedTest(name = "quantity {0}")
+    @ValueSource(strings = {"1.5", "9223372036854775808"})
+    void exitsWith2ForAQuantityThatIsNotAWholeNumberOrDoesNotFitIn64Bits(String quantity)
+            throws IOException, InterruptedException {
+        // 1.5 is not a whole number, and 9223372036854775808 is one more than the largest 64-bit
+        // number (Long.MAX_VALUE). Neither can be a quantity, so the input is not a basket.
+        CliResult result = run("{\"items\":[{\"sku\":\"APPLE\",\"quantity\":" + quantity + "}]}");
 
         assertThat(result.exitCode()).isEqualTo(2);
         assertThat(result.stdout()).isEmpty();

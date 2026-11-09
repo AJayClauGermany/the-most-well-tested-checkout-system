@@ -115,8 +115,8 @@ class CheckoutPropertiesTest {
                         Arbitraries.oneOf(
                                 Arbitraries.of(SKUS), Arbitraries.strings().ofMaxLength(8), Arbitraries.just(null)),
                         Arbitraries.oneOf(
-                                Arbitraries.integers().between(-5, 150),
-                                Arbitraries.integers()))
+                                Arbitraries.longs().between(-5, 150),
+                                Arbitraries.longs())) // any 64-bit quantity, like the CLI reads
                 .as(BasketItem::new);
         Arbitrary<String> coupon = Arbitraries.oneOf(
                 Arbitraries.just(null),
@@ -216,7 +216,7 @@ class CheckoutPropertiesTest {
         }
         int index = splittable.get(pick % splittable.size());
         BasketItem line = basket.items().get(index);
-        int first = 1 + cut % (line.quantity() - 1); // 1 .. quantity-1
+        long first = 1 + cut % (line.quantity() - 1); // 1 .. quantity-1
         List<BasketItem> split = new ArrayList<>(basket.items());
         split.set(index, new BasketItem(line.sku(), first));
         split.add(new BasketItem(line.sku(), line.quantity() - first));
@@ -270,11 +270,11 @@ class CheckoutPropertiesTest {
         assertThat(r.lines()).extracting(ReceiptLine::sku).containsExactlyElementsOf(distinctInOrder);
         for (ReceiptLine line : r.lines()) {
             assertThat(line.quantity()).isBetween(1, 99);
-            int expectedQuantity = basket.items().stream()
+            long expectedQuantity = basket.items().stream()
                     .filter(item -> item.sku().equals(line.sku()))
-                    .mapToInt(BasketItem::quantity)
+                    .mapToLong(BasketItem::quantity)
                     .sum();
-            assertThat(line.quantity()).isEqualTo(expectedQuantity);
+            assertThat((long) line.quantity()).isEqualTo(expectedQuantity);
         }
     }
 

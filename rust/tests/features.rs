@@ -7,10 +7,18 @@
 //! below as a step definition; `fail_on_skipped()` makes sure a sentence without a
 //! definition fails the run instead of being quietly skipped.
 //!
-//! The cucumber crate is `async`, so `main` drives it with a small executor from the
-//! `futures` crate. `harness = false` in Cargo.toml tells Cargo this file has its own `main`.
+//! How it runs: `main` turns every `.feature` file into one named test with the
+//! `libtest-mimic` crate (`[features] pricing`, `[features] tax`, ...), and each test runs
+//! that file's scenarios with cucumber. Going through libtest-mimic means this file
+//! understands the same options as every other test program – which is what lets
+//! cargo-nextest list and run it. The cucumber crate is `async`, so each test drives it with
+//! the small executor from the `futures` crate. `harness = false` in Cargo.toml tells Cargo
+//! this file has its own `main`.
 //!
-//! Run only this file with: `cargo test --test features`
+//! ```text
+//! cargo test --test features              # every feature file
+//! cargo test --test features shipping     # only spec/features/shipping.feature
+//! ```
 
 mod common;
 
@@ -21,7 +29,11 @@ use checkout::{
 use common::dollars::dollars_to_cents;
 use common::fixtures::SharedClock;
 use cucumber::gherkin::Step;
-use cucumber::{Parameter, World, given, then, when};
+use cucumber::writer::Stats;
+use cucumber::{Parameter, World, cli, given, then, when};
+use libtest_mimic::{Arguments, Failed, Trial};
+use std::path::{Path, PathBuf};
+use std::process::ExitCode;
 use std::str::FromStr;
 
 // --- The World: one per scenario, carries the state from step to step -------
@@ -278,11 +290,60 @@ fn the_saved_order_was_created_at(world: &mut CheckoutWorld, id: String, timesta
 
 // --- The runner -------------------------------------------------------------
 
-fn main() {
-    let features = common::spec_dir().join("features");
-    futures::executor::block_on(
+fn main() -> ExitCode {
+    let mut arguments = Arguments::from_args();
+    // One feature file at a time by default, so cucumber's output stays readable.
+    // (cargo-nextest runs each test in its own process anyway.)
+    if arguments.test_threads.is_none() {
+        arguments.test_threads = Some(1);
+    }
+
+    let trials: Vec<Trial> = feature_files()
+        .into_iter()
+        .map(|path| {
+            let name = path.file_stem().unwrap().to_string_lossy().to_string();
+            Trial::test(name, move || run_feature(&path)).with_kind("features")
+        })
+        .collect();
+
+    libtest_mimic::run(&arguments, trials).exit_code()
+}
+
+/// Every `.feature` file in `spec/features/`, sorted so the order is always the same.
+fn feature_files() -> Vec<PathBuf> {
+    let folder = common::spec_dir().join("features");
+    let mut files: Vec<PathBuf> = std::fs::read_dir(&folder)
+        .unwrap_or_else(|error| panic!("could not list {}: {error}", folder.display()))
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "feature")
+        })
+        .collect();
+    files.sort();
+    files
+}
+
+/// Runs the scenarios of one feature file. A failed, undefined (skipped) step, a hook error
+/// or a file that does not parse fails the test.
+fn run_feature(path: &Path) -> Result<(), Failed> {
+    let results = futures::executor::block_on(
         CheckoutWorld::cucumber()
             .fail_on_skipped()
-            .run_and_exit(features),
+            // Settings in code instead of from the command line, which belongs to libtest-mimic.
+            .with_cli(cli::Opts::<_, _, _, cli::Empty>::default())
+            .run(path),
     );
+
+    if results.execution_has_failed() {
+        Err(format!(
+            "{} failed steps, {} parsing errors, {} hook errors",
+            results.failed_steps(),
+            results.parsing_errors(),
+            results.hook_errors()
+        )
+        .into())
+    } else {
+        Ok(())
+    }
 }

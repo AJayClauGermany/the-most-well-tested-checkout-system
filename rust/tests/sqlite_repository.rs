@@ -83,7 +83,7 @@ fn continues_numbering_after_the_database_is_closed_and_opened_again() {
     let mut first = open(&path);
     first.save(&one_apple_receipt()).unwrap();
     first.save(&one_apple_receipt()).unwrap();
-    first.close().unwrap();
+    drop(first); // dropping the repository closes the database file
 
     let mut second = open(&path);
 
@@ -96,7 +96,7 @@ fn really_writes_to_the_database_file_checked_with_a_separate_connection() {
     let (_folder, path) = temporary_database();
     let mut repository = open(&path);
     repository.save(&one_apple_receipt()).unwrap();
-    repository.close().unwrap();
+    drop(repository); // closes the database, so everything is on disk
 
     let connection = Connection::open(&path).unwrap();
     let count: i64 = connection
@@ -170,6 +170,40 @@ fn opening_fails_when_the_folder_for_the_file_does_not_exist() {
         result.is_err(),
         "SQLite cannot create a file in a missing folder"
     );
+}
+
+#[test]
+fn opening_fails_when_the_file_is_not_an_sqlite_database() {
+    let (_folder, path) = temporary_database();
+    std::fs::write(
+        &path,
+        "this is a text file, not a database, and long enough to tell",
+    )
+    .unwrap();
+
+    let error = SqliteOrderRepository::open(&path, fixed_clock())
+        .err()
+        .expect("opening a text file as a database should fail");
+
+    assert!(
+        error.message.contains("not a database"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn saving_fails_with_a_repository_error_when_the_table_has_gone() {
+    let (_folder, path) = temporary_database();
+    let mut repository = open(&path);
+    Connection::open(&path)
+        .unwrap()
+        .execute_batch("DROP TABLE orders")
+        .unwrap();
+
+    let error = repository.save(&one_apple_receipt()).unwrap_err();
+
+    assert!(error.message.contains("no such table"), "{}", error.message);
 }
 
 #[test]

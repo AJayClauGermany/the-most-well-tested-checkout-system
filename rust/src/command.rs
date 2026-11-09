@@ -6,7 +6,7 @@ use crate::{Basket, Catalog, checkout, locate_spec_folder};
 use serde_json::json;
 use std::fmt;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// What the program prints and the exit code it ends with: `0` with a receipt,
 /// `1` with `{"error":"<CODE>"}`.
@@ -41,7 +41,13 @@ impl std::error::Error for CommandError {}
 
 /// Where the standard catalog lives: `spec/catalog.json` at the root of the repository.
 pub fn standard_catalog_path() -> Result<PathBuf, CommandError> {
-    let spec = locate_spec_folder().ok_or_else(|| {
+    catalog_path_in(locate_spec_folder())
+}
+
+/// `catalog.json` inside the spec folder, or an explanation when no spec folder was found.
+/// (A separate function, so a test can pass `None` – on a real machine the spec is found.)
+fn catalog_path_in(spec_folder: Option<PathBuf>) -> Result<PathBuf, CommandError> {
+    let spec = spec_folder.ok_or_else(|| {
         CommandError::new(
             "could not find spec/catalog.json above the program, the current directory \
              or the folder it was built from",
@@ -52,8 +58,12 @@ pub fn standard_catalog_path() -> Result<PathBuf, CommandError> {
 
 /// Reads `spec/catalog.json`.
 pub fn load_standard_catalog() -> Result<Catalog, CommandError> {
-    let path = standard_catalog_path()?;
-    let text = fs::read_to_string(&path).map_err(|error| {
+    load_catalog(&standard_catalog_path()?)
+}
+
+/// Reads a catalog from a JSON file, with a message that names the file when it cannot.
+pub fn load_catalog(path: &Path) -> Result<Catalog, CommandError> {
+    let text = fs::read_to_string(path).map_err(|error| {
         CommandError::new(format!("could not read {}: {error}", path.display()))
     })?;
     serde_json::from_str(&text)
@@ -129,6 +139,50 @@ mod tests {
             skus,
             ["APPLE", "BREAD", "COFFEE", "NOTEBOOK", "PEN", "HEADPHONES"]
         );
+    }
+
+    #[test]
+    fn explains_when_no_spec_folder_can_be_found() {
+        let error = catalog_path_in(None).unwrap_err();
+
+        assert!(
+            error
+                .message
+                .starts_with("could not find spec/catalog.json"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn names_the_file_when_the_catalog_cannot_be_read() {
+        let folder = tempfile::tempdir().unwrap();
+        let path = folder.path().join("missing.json");
+
+        let error = load_catalog(&path).unwrap_err();
+
+        assert!(
+            error.message.starts_with("could not read "),
+            "{}",
+            error.message
+        );
+        assert!(error.message.contains("missing.json"), "{}", error.message);
+    }
+
+    #[test]
+    fn names_the_file_when_the_catalog_is_not_a_catalog() {
+        let folder = tempfile::tempdir().unwrap();
+        let path = folder.path().join("catalog.json");
+        std::fs::write(&path, r#"{"products": "none"}"#).unwrap();
+
+        let error = load_catalog(&path).unwrap_err();
+
+        assert!(
+            error.message.starts_with("could not parse "),
+            "{}",
+            error.message
+        );
+        assert!(error.message.contains("catalog.json"), "{}", error.message);
     }
 
     #[test]

@@ -13,6 +13,9 @@ use std::path::Path;
 /// Keeps orders in one table of an SQLite database file (or in memory).
 /// The database row number becomes the order number, so ids are sequential and survive
 /// closing and reopening the file.
+///
+/// There is no `close()` method: like every resource in Rust, the database is closed
+/// automatically when the repository is dropped (goes out of scope, or `drop(repository)`).
 pub struct SqliteOrderRepository {
     connection: Connection,
     clock: Box<dyn Clock>,
@@ -43,15 +46,6 @@ impl SqliteOrderRepository {
             )",
         )?;
         Ok(SqliteOrderRepository { connection, clock })
-    }
-
-    /// Closes the database. It takes `self` by value, so a closed repository cannot be
-    /// used by mistake – the compiler refuses.
-    pub fn close(self) -> Result<(), RepositoryError> {
-        // On failure rusqlite hands the connection back too; we only need the error.
-        self.connection
-            .close()
-            .map_err(|(_connection, error)| RepositoryError::from(error))
     }
 }
 

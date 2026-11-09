@@ -1,0 +1,18 @@
+# Settings for cargo-mutants (https://mutants.rs/), read by `cargo mutants`.
+#
+# Run it from this rust/ folder with:   cargo mutants --in-place
+# (--in-place because the tests read ../spec/, which a copy of rust/ in a temporary
+# folder - cargo-mutants' default - would not have.)
+
+# Code we do not mutate, and why:
+exclude_globs = [
+    # The CLI wrapper runs as a separate process (tests/cli.rs). Mutants in it cannot be
+    # observed from the test process; its logic lives in command.rs, which IS mutated.
+    "src/bin/**",
+    # Test data for the unit tests, not code under test.
+    "src/test_fixtures.rs",
+]
+
+# A mutant whose tests take longer than this many seconds counts as a timeout (detected).
+# The whole suite takes about 3 seconds, so 60 is very generous.
+minimum_test_timeout = 60

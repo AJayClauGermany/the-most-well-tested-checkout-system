@@ -53,7 +53,8 @@ pub(crate) mod test_fixtures;
 pub use basket::{Basket, BasketItem};
 pub use catalog::{Catalog, Product, Promotion};
 pub use command::{
-    CommandError, CommandResult, load_standard_catalog, run_checkout_command, standard_catalog_path,
+    CommandError, CommandResult, load_catalog, load_standard_catalog, run_checkout_command,
+    standard_catalog_path,
 };
 pub use coupons::{coupon_discount, normalize_coupon_code};
 pub use error::{CheckoutError, ErrorCode};

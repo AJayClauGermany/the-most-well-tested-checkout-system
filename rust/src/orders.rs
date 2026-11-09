@@ -105,15 +105,23 @@ pub fn format_timestamp(time: SystemTime) -> String {
     let second_of_day = seconds % SECONDS_PER_DAY;
 
     // Count whole years, then whole months, the way you would on a paper calendar.
+    // The ranges have an end (a timestamp has four digits for the year), so the counting
+    // always stops – even when a mutation testing tool breaks the arithmetic on purpose.
     let mut year = 1970;
-    while days >= days_in_year(year) {
+    for candidate in 1970..=9999 {
+        year = candidate;
+        if days < days_in_year(year) {
+            break;
+        }
         days -= days_in_year(year);
-        year += 1;
     }
     let mut month = 1;
-    while days >= days_in_month(year, month) {
+    for candidate in 1..=12 {
+        month = candidate;
+        if days < days_in_month(year, month) {
+            break;
+        }
         days -= days_in_month(year, month);
-        month += 1;
     }
     let day = days + 1;
 
@@ -612,6 +620,18 @@ mod tests {
         repository.save(&one_apple_receipt()).unwrap();
 
         assert_eq!(repository.find(id), Ok(None));
+    }
+
+    #[test]
+    fn debug_output_shows_how_many_orders_there_are() {
+        // `{:?}` is what `dbg!` and failing assertions print, so it should say something useful.
+        let mut repository = InMemoryOrderRepository::new(fixed_clock());
+        repository.save(&one_apple_receipt()).unwrap();
+        repository.save(&one_apple_receipt()).unwrap();
+
+        let debug = format!("{repository:?}");
+
+        assert_eq!(debug, "InMemoryOrderRepository { orders: 2, .. }");
     }
 
     #[test]

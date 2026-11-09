@@ -18,5 +18,5 @@ public sealed record Catalog(IReadOnlyList<Product> Products)
     /// </summary>
     /// <exception cref="CheckoutException">UNKNOWN_PRODUCT (rules §4.1 row 2).</exception>
     public Product RequireProduct(string sku) =>
-        throw new NotImplementedException();
+        FindBySku(sku) ?? throw new CheckoutException(ErrorCode.UnknownProduct, $"Unknown product: {sku}");
 }

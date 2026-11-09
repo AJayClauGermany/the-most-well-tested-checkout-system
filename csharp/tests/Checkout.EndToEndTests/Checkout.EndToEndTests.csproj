@@ -15,7 +15,7 @@
       also works for `dotnet test -c Release`. (Checkout.Cli is built first because
       Checkout.TestSupport references it.)
     -->
-    <AssemblyMetadata Include="CheckoutCliPath" Value="$(MSBuildThisFileDirectory)..\..\src\Checkout.Cli\bin\$(Configuration)\$(TargetFramework)\Checkout.Cli.dll" />
+    <AssemblyMetadata Include="CheckoutCliPath" Value="$(MSBuildThisFileDirectory)../../src/Checkout.Cli/bin/$(Configuration)/$(TargetFramework)/Checkout.Cli.dll" />
   </ItemGroup>
 
 </Project>

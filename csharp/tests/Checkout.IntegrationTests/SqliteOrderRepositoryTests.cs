@@ -147,7 +147,7 @@ public sealed class SqliteOrderRepositoryTests : IDisposable
     [Fact]
     public void New_WithoutAClock_UsesTheRealOne()
     {
-        var repository = Open(timeProvider: null);
+        using var repository = new SqliteOrderRepository(_path);
 
         var id = repository.Save(Receipt);
 

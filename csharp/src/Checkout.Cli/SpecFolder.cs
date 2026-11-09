@@ -14,12 +14,26 @@ public static class SpecFolder
     /// </summary>
     /// <exception cref="DirectoryNotFoundException">No folder above <paramref name="start"/> contains <c>spec/catalog.json</c>.</exception>
     public static string Find(string start) =>
-        throw new NotImplementedException();
+        TryFind(start) ?? throw new DirectoryNotFoundException($"No spec/catalog.json found in any folder above {start}");
 
     /// <summary>
     /// The spec folder for the running program: first looks up from where the program is
     /// installed (<see cref="AppContext.BaseDirectory"/>), then from the current directory.
     /// </summary>
     public static string FindForProgram() =>
-        throw new NotImplementedException();
+        TryFind(AppContext.BaseDirectory) ?? Find(Directory.GetCurrentDirectory());
+
+    private static string? TryFind(string start)
+    {
+        for (var folder = new DirectoryInfo(start); folder is not null; folder = folder.Parent)
+        {
+            var spec = Path.Combine(folder.FullName, "spec");
+            if (File.Exists(Path.Combine(spec, "catalog.json")))
+            {
+                return spec;
+            }
+        }
+
+        return null;
+    }
 }

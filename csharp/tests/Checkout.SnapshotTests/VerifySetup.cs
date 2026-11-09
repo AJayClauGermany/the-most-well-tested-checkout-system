@@ -14,5 +14,7 @@ public static class VerifySetup
         // Keep the snapshots in one folder next to the tests, and never pop up a diff tool (CI has none).
         Verifier.UseProjectRelativeDirectory("Snapshots");
         DiffEngine.DiffRunner.Disabled = true;
+        // Verify leaves out zeros by default; on a receipt "line_discount: 0" is information.
+        VerifierSettings.AddExtraSettings(settings => settings.DefaultValueHandling = Argon.DefaultValueHandling.Include);
     }
 }

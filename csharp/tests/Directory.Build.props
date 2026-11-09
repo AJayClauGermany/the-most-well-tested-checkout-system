@@ -33,6 +33,8 @@
     <!-- The code coverage option of `dotnet test` works thanks to this extension. -->
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)Checkout.TestSupport\Checkout.TestSupport.csproj" />
+    <!-- Direct (not only through TestSupport), so Stryker.NET sees which project the tests test. -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\Checkout\Checkout.csproj" />
     <!-- Every test file can use [Fact], [Theory] and Assert without a `using Xunit;` line. -->
     <Using Include="Xunit" />
     <Using Include="CheckoutSystem" />

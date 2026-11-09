@@ -7,5 +7,5 @@ public static class Tax
 
     /// <summary>8% of <paramref name="discountedSubtotal"/>, rounded half up. Shipping is never passed in here.</summary>
     public static int On(int discountedSubtotal) =>
-        throw new NotImplementedException();
+        Money.RoundHalfUp(discountedSubtotal, Percent);
 }

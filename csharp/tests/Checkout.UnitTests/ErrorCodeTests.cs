@@ -46,14 +46,19 @@ public class ErrorCodeTests
     {
         // Assert.Throws checks that the code inside the lambda (() => ...) throws
         // this exact exception type. The test fails if nothing is thrown.
-        Assert.Throws<ArgumentException>(() => ErrorCodeExtensions.FromSpecCode("NOT_A_CODE"));
+        // It also hands the exception back, so we can check the message helps a human.
+        var exception = Assert.Throws<ArgumentException>(() => ErrorCodeExtensions.FromSpecCode("NOT_A_CODE"));
+
+        Assert.StartsWith("'NOT_A_CODE' is not a known error code", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
     public void ToSpecCode_ValueOutsideTheEnum_Throws()
     {
         // C# lets you cast any int to an enum; the switch must not quietly accept it.
-        Assert.Throws<ArgumentOutOfRangeException>(() => ((ErrorCode)42).ToSpecCode());
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => ((ErrorCode)42).ToSpecCode());
+
+        Assert.StartsWith("Unknown error code", exception.Message, StringComparison.Ordinal);
     }
 }
 

@@ -16,6 +16,13 @@ indent_size = 2
 [*.md]
 trim_trailing_whitespace = false
 
+# Snapshot files are written by Verify exactly like this; editors must not "fix" them.
+[*.{received,verified}.{txt,json}]
+charset = utf-8-bom
+end_of_line = lf
+indent_size = unset
+insert_final_newline = false
+
 [*.cs]
 # File-scoped namespaces (`namespace CheckoutSystem;`) save one level of indentation.
 csharp_style_namespace_declarations = file_scoped:warning

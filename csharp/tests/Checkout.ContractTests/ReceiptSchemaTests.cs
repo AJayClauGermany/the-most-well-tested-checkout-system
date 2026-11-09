@@ -114,7 +114,9 @@ public class BasketSchemaTests
     {
         var json = JsonSerializer.SerializeToNode(new Basket([new BasketItem("APPLE", 1)]), CheckoutJson.Options);
 
-        Assert.Equal(JsonValueKind.Null, json!["coupon"]!.GetValueKind() == JsonValueKind.Null ? JsonValueKind.Null : json["coupon"]!.GetValueKind());
+        // "coupon" is written as JSON null (System.Text.Json gives a C# null for it), which the schema allows.
+        Assert.True(json!.AsObject().ContainsKey("coupon"));
+        Assert.Null(json["coupon"]);
         Assert.Equal("standard", json["shipping"]!.GetValue<string>());
     }
 }

@@ -25,8 +25,9 @@ public static class SchemaValidator
 
     private static readonly EvaluationOptions Options = new()
     {
-        // "List" output: every failing keyword, not just "invalid", so tests can show what is wrong.
-        OutputFormat = OutputFormat.List,
+        // "Hierarchical" output: every failing keyword, not just "invalid", arranged as a tree
+        // that follows the schema, so CollectErrors can tell the real failures from their parents.
+        OutputFormat = OutputFormat.Hierarchical,
     };
 
     /// <summary>
@@ -80,18 +81,26 @@ public static class SchemaValidator
         return schemas;
     }
 
+    /// <summary>
+    /// Walks the results tree and keeps only the LEAF errors – the keywords that actually
+    /// failed, like "minimum" on /tax. Their parents ("properties", "$ref") only repeat
+    /// "something below me failed". Each message reads "where what [which schema rule]", e.g.
+    /// <c>/tax -1 should be at least 0 [/properties/tax/$ref/minimum]</c>.
+    /// </summary>
     private static IEnumerable<string> CollectErrors(EvaluationResults results)
     {
-        if (results.Errors is not null)
+        var details = results.Details ?? [];
+        if (details.Count == 0 && results.Errors is not null)
         {
             foreach (var (keyword, message) in results.Errors)
             {
                 var location = results.InstanceLocation.ToString();
-                yield return $"{(location.Length == 0 ? "/" : location)} {keyword}: {message}";
+                var rule = keyword.Length == 0 ? results.EvaluationPath.ToString() : $"{results.EvaluationPath}/{keyword}";
+                yield return $"{(location.Length == 0 ? "/" : location)} {message} [{rule}]";
             }
         }
 
-        foreach (var detail in results.Details ?? [])
+        foreach (var detail in details)
         {
             foreach (var error in CollectErrors(detail))
             {

@@ -21,6 +21,9 @@ public static class CheckoutJson
         AllowOutOfOrderMetadataProperties = true,
     };
 
-    /// <summary>The same options, but written out indented and human readable (for files on disk).</summary>
-    public static JsonSerializerOptions IndentedOptions { get; } = new(Options) { WriteIndented = true };
+    /// <summary>
+    /// The same options, but written out indented and human readable (for files on disk),
+    /// with "\n" line endings on every operating system.
+    /// </summary>
+    public static JsonSerializerOptions IndentedOptions { get; } = new(Options) { WriteIndented = true, NewLine = "\n" };
 }

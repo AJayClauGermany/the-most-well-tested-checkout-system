@@ -1,0 +1,58 @@
+﻿{
+  Lines: [
+    {
+      Sku: HEADPHONES,
+      Name: Wireless Headphones,
+      Quantity: 1,
+      UnitPrice: 5999,
+      LineTotal: 5999,
+      LineDiscount: 0
+    },
+    {
+      Sku: COFFEE,
+      Name: Bag of Coffee Beans,
+      Quantity: 6,
+      UnitPrice: 899,
+      LineTotal: 5394,
+      LineDiscount: 1798
+    },
+    {
+      Sku: NOTEBOOK,
+      Name: Notebook,
+      Quantity: 12,
+      UnitPrice: 349,
+      LineTotal: 4188,
+      LineDiscount: 419
+    },
+    {
+      Sku: PEN,
+      Name: Pen,
+      Quantity: 5,
+      UnitPrice: 120,
+      LineTotal: 600,
+      LineDiscount: 0
+    },
+    {
+      Sku: BREAD,
+      Name: Loaf of Bread,
+      Quantity: 1,
+      UnitPrice: 225,
+      LineTotal: 225,
+      LineDiscount: 0
+    },
+    {
+      Sku: APPLE,
+      Name: Apple,
+      Quantity: 3,
+      UnitPrice: 50,
+      LineTotal: 150,
+      LineDiscount: 0
+    }
+  ],
+  Subtotal: 16556,
+  PromotionDiscount: 2217,
+  CouponDiscount: 500,
+  Shipping: 999,
+  Tax: 1107,
+  Total: 15945
+}

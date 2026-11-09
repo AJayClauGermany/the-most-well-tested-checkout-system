@@ -2,8 +2,10 @@
 //! unit tested in-process. `src/bin/checkout.rs` is the thin wrapper that talks to the
 //! terminal; it is tested from the outside in `tests/cli.rs`.
 
-use crate::{Basket, Catalog, checkout};
+use crate::{Basket, Catalog, checkout, locate_spec_folder};
+use serde_json::json;
 use std::fmt;
+use std::fs;
 use std::path::PathBuf;
 
 /// What the program prints and the exit code it ends with: `0` with a receipt,
@@ -39,12 +41,23 @@ impl std::error::Error for CommandError {}
 
 /// Where the standard catalog lives: `spec/catalog.json` at the root of the repository.
 pub fn standard_catalog_path() -> Result<PathBuf, CommandError> {
-    todo!("standard_catalog_path() is not implemented yet")
+    let spec = locate_spec_folder().ok_or_else(|| {
+        CommandError::new(
+            "could not find spec/catalog.json above the program, the current directory \
+             or the folder it was built from",
+        )
+    })?;
+    Ok(spec.join("catalog.json"))
 }
 
 /// Reads `spec/catalog.json`.
 pub fn load_standard_catalog() -> Result<Catalog, CommandError> {
-    todo!("load_standard_catalog() is not implemented yet")
+    let path = standard_catalog_path()?;
+    let text = fs::read_to_string(&path).map_err(|error| {
+        CommandError::new(format!("could not read {}: {error}", path.display()))
+    })?;
+    serde_json::from_str(&text)
+        .map_err(|error| CommandError::new(format!("could not parse {}: {error}", path.display())))
 }
 
 /// Runs one checkout from the JSON text of a basket.
@@ -65,13 +78,24 @@ pub fn load_standard_catalog() -> Result<Catalog, CommandError> {
 /// assert_eq!(result.output, r#"{"error":"EMPTY_BASKET"}"#);
 /// ```
 pub fn run_checkout_command(input: &str, catalog: &Catalog) -> Result<CommandResult, CommandError> {
-    let _ = (input, catalog, checkout);
-    todo!("run_checkout_command() is not implemented yet")
-}
+    // serde does the shape check: anything that is not a basket is an error with a precise
+    // reason ("missing field `items`"). checkout() then does the real validation.
+    let basket: Basket = serde_json::from_str(input)
+        .map_err(|error| CommandError::new(format!("The input is not a basket: {error}")))?;
 
-#[allow(dead_code)]
-fn unused_until_implemented(basket: Basket) -> Basket {
-    basket
+    let result = match checkout(&basket, catalog) {
+        Ok(receipt) => CommandResult {
+            // A receipt is plain data (strings and numbers), so writing it cannot fail.
+            output: serde_json::to_string(&receipt)
+                .expect("a receipt can always be written as JSON"),
+            exit_code: 0,
+        },
+        Err(error) => CommandResult {
+            output: json!({ "error": error.code }).to_string(),
+            exit_code: 1,
+        },
+    };
+    Ok(result)
 }
 
 // ---------------------------------------------------------------------------
@@ -198,7 +222,9 @@ mod tests {
     #[case("null", "null, expected struct Basket")]
     #[case("42", "integer `42`, expected struct Basket")]
     #[case(r#""text""#, "string \"text\", expected struct Basket")]
-    #[case("[]", "sequence, expected struct Basket")]
+    // serde can also read a struct from a JSON array (its fields in order), so an empty
+    // array is "too short" rather than "the wrong type" - still not a basket.
+    #[case("[]", "invalid length 0, expected struct Basket")]
     #[case("{}", "missing field `items`")]
     #[case(r#"{"items": "APPLE"}"#, "string \"APPLE\", expected a sequence")]
     #[case(r#"{"items": [1, 2]}"#, "integer `1`, expected struct BasketItem")]

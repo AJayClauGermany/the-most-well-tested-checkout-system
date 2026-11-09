@@ -1,6 +1,6 @@
 //! Products, promotions and the catalog (rules §2).
 
-use crate::{Cents, CheckoutError};
+use crate::{Cents, CheckoutError, ErrorCode};
 use serde::{Deserialize, Serialize};
 
 /// A special offer attached to a product (rules §4.2).
@@ -59,8 +59,12 @@ impl Catalog {
     /// Like [`Catalog::find`], but a missing product is an error: `UNKNOWN_PRODUCT`
     /// (rules §4.1 row 2).
     pub fn require(&self, sku: &str) -> Result<&Product, CheckoutError> {
-        let _ = sku;
-        todo!("Catalog::require() is not implemented yet")
+        self.find(sku).ok_or_else(|| {
+            CheckoutError::with_message(
+                ErrorCode::UnknownProduct,
+                format!("Unknown product: {sku}"),
+            )
+        })
     }
 }
 

@@ -1,6 +1,6 @@
 //! Receipt lines (rules §4.2): merging basket items and pricing a line.
 
-use crate::{BasketItem, Product, ReceiptLine};
+use crate::{BasketItem, Product, ReceiptLine, promotion_discount};
 
 /// One item per distinct SKU, in order of first appearance, with the quantities added up
 /// (rules §4.2). `[APPLE x1, PEN x2, APPLE x3]` gives `[APPLE x4, PEN x2]`.
@@ -14,14 +14,28 @@ use crate::{BasketItem, Product, ReceiptLine};
 /// assert_eq!(merged, vec![item("APPLE", 4), item("PEN", 2)]);
 /// ```
 pub fn merge_items(items: &[BasketItem]) -> Vec<BasketItem> {
-    let _ = items;
-    todo!("merge_items() is not implemented yet")
+    let mut merged: Vec<BasketItem> = Vec::new();
+    for item in items {
+        // Is there a line for this SKU already? Then add to it; otherwise start a new line at
+        // the end, which keeps the lines in order of first appearance.
+        match merged.iter_mut().find(|line| line.sku == item.sku) {
+            Some(line) => line.quantity += item.quantity,
+            None => merged.push(item.clone()),
+        }
+    }
+    merged
 }
 
 /// The receipt line for `quantity` of `product`, including its promotion discount.
 pub fn price_line(product: &Product, quantity: i64) -> ReceiptLine {
-    let _ = (product, quantity);
-    todo!("price_line() is not implemented yet")
+    ReceiptLine {
+        sku: product.sku.clone(),
+        name: product.name.clone(),
+        quantity,
+        unit_price: product.unit_price,
+        line_total: product.unit_price * quantity,
+        line_discount: promotion_discount(product.promotion.as_ref(), quantity, product.unit_price),
+    }
 }
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 //! Coupons (rules §4.4).
 
-use crate::{Cents, CheckoutError};
+use crate::{Cents, CheckoutError, ErrorCode, round_half_up};
 
 /// The coupon code as the shop knows it: trimmed and upper case.
 /// Missing, empty or blank all mean "no coupon" and give `None`.
@@ -13,8 +13,32 @@ use crate::{Cents, CheckoutError};
 /// assert_eq!(normalize_coupon_code(None), None);
 /// ```
 pub fn normalize_coupon_code(coupon: Option<&str>) -> Option<String> {
-    let _ = coupon;
-    todo!("normalize_coupon_code() is not implemented yet")
+    // `?` on an Option: no coupon at all gives `None` straight away.
+    let code = coupon?.trim().to_uppercase();
+    if code.is_empty() { None } else { Some(code) }
+}
+
+/// What the shop knows about one coupon code.
+struct Coupon {
+    /// The least the customer must spend (after promotions) to use it.
+    minimum_spend: Cents,
+    /// The discount in cents, given the price after promotions.
+    discount: fn(Cents) -> Cents,
+}
+
+/// The coupons that exist, by their normalized code (rules §4.4).
+fn find_coupon(code: &str) -> Option<Coupon> {
+    match code {
+        "SAVE10" => Some(Coupon {
+            minimum_spend: 0,
+            discount: |after_promotions| round_half_up(after_promotions, 10),
+        }),
+        "WELCOME5" => Some(Coupon {
+            minimum_spend: 2500,
+            discount: |_| 500,
+        }),
+        _ => None,
+    }
 }
 
 /// The coupon discount in cents for `after_promotions` cents of shopping.
@@ -24,8 +48,27 @@ pub fn coupon_discount(
     coupon: Option<&str>,
     after_promotions: Cents,
 ) -> Result<Cents, CheckoutError> {
-    let _ = (coupon, after_promotions);
-    todo!("coupon_discount() is not implemented yet")
+    // `let ... else` handles the "no coupon" case first and leaves the normal case unindented.
+    let Some(code) = normalize_coupon_code(coupon) else {
+        return Ok(0);
+    };
+
+    let Some(known) = find_coupon(&code) else {
+        return Err(CheckoutError::with_message(
+            ErrorCode::UnknownCoupon,
+            format!("Unknown coupon: {code}"),
+        ));
+    };
+    if after_promotions < known.minimum_spend {
+        return Err(CheckoutError::with_message(
+            ErrorCode::CouponMinimumNotMet,
+            format!(
+                "{code} needs a spend of at least {} cents, got {after_promotions}",
+                known.minimum_spend
+            ),
+        ));
+    }
+    Ok((known.discount)(after_promotions))
 }
 
 // ---------------------------------------------------------------------------

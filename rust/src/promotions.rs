@@ -1,6 +1,6 @@
 //! Promotions (rules §4.2): buy X get Y free, and bulk discounts.
 
-use crate::{Cents, Promotion};
+use crate::{Cents, Promotion, round_half_up};
 
 /// The discount a promotion gives one receipt line, in cents (rules §4.2).
 /// `0` when the product has no promotion.
@@ -17,8 +17,28 @@ pub fn promotion_discount(
     quantity: i64,
     unit_price: Cents,
 ) -> Cents {
-    let _ = (promotion, quantity, unit_price);
-    todo!("promotion_discount() is not implemented yet")
+    // `match` must handle every possibility: no promotion, or one of the two kinds.
+    match promotion {
+        None => 0,
+        Some(Promotion::BuyXGetYFree { buy, free }) => {
+            // For every complete group of `buy + free` items, `free` of them cost nothing.
+            // Integer division rounds down, which is exactly "complete groups".
+            let complete_groups = quantity / (buy + free);
+            let free_items = complete_groups * free;
+            free_items * unit_price
+        }
+        Some(Promotion::BulkDiscount {
+            min_quantity,
+            percent,
+        }) => {
+            // `percent`% off the whole line, but only from `min_quantity` items.
+            if quantity < *min_quantity {
+                0
+            } else {
+                round_half_up(unit_price * quantity, *percent)
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------

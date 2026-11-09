@@ -74,7 +74,7 @@ fn the_schema_check_itself_works_a_broken_receipt_is_rejected_testing_the_test()
         errors,
         vec![
             "/ Additional properties are not allowed ('extra' was unexpected)".to_string(),
-            "/shipping 123 is not one of [0,499,999]".to_string(),
+            "/shipping 123 is not one of 0, 499 or 999".to_string(),
             "/tax -1 is less than the minimum of 0".to_string(),
         ]
     );

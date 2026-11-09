@@ -35,7 +35,7 @@ pub struct SystemClock;
 
 impl Clock for SystemClock {
     fn now(&self) -> SystemTime {
-        todo!("SystemClock::now() is not implemented yet")
+        SystemTime::now()
     }
 }
 
@@ -53,14 +53,33 @@ impl FixedClock {
     /// A fixed clock from a timestamp written like `created_at`: `"2026-01-15T10:30:00Z"`.
     /// `None` when the text is not such a timestamp.
     pub fn at(timestamp: &str) -> Option<Self> {
-        let _ = timestamp;
-        todo!("FixedClock::at() is not implemented yet")
+        parse_timestamp(timestamp).map(FixedClock::new)
     }
 }
 
 impl Clock for FixedClock {
     fn now(&self) -> SystemTime {
-        todo!("FixedClock::now() is not implemented yet")
+        self.time
+    }
+}
+
+const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
+
+/// February has 29 days in a leap year: every 4th year, except every 100th, except every 400th.
+fn is_leap_year(year: u64) -> bool {
+    year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400))
+}
+
+fn days_in_year(year: u64) -> u64 {
+    if is_leap_year(year) { 366 } else { 365 }
+}
+
+fn days_in_month(year: u64, month: u64) -> u64 {
+    match month {
+        2 if is_leap_year(year) => 29,
+        2 => 28,
+        4 | 6 | 9 | 11 => 30,
+        _ => 31,
     }
 }
 
@@ -77,32 +96,92 @@ impl Clock for FixedClock {
 /// assert_eq!(format_timestamp(UNIX_EPOCH + Duration::from_secs(1768473000)), "2026-01-15T10:30:00Z");
 /// ```
 pub fn format_timestamp(time: SystemTime) -> String {
-    let _ = time;
-    todo!("format_timestamp() is not implemented yet")
+    // Whole seconds since 1 January 1970 (a time before that is written as 1970).
+    let seconds = time
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let mut days = seconds / SECONDS_PER_DAY;
+    let second_of_day = seconds % SECONDS_PER_DAY;
+
+    // Count whole years, then whole months, the way you would on a paper calendar.
+    let mut year = 1970;
+    while days >= days_in_year(year) {
+        days -= days_in_year(year);
+        year += 1;
+    }
+    let mut month = 1;
+    while days >= days_in_month(year, month) {
+        days -= days_in_month(year, month);
+        month += 1;
+    }
+    let day = days + 1;
+
+    format!(
+        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
+        second_of_day / 3600,
+        second_of_day / 60 % 60,
+        second_of_day % 60
+    )
 }
 
 /// The inverse of [`format_timestamp`]: reads `"2026-01-15T10:30:00Z"`.
 /// `None` for anything that is not exactly that shape (or not a real date).
 pub fn parse_timestamp(text: &str) -> Option<SystemTime> {
-    let _ = text;
-    todo!("parse_timestamp() is not implemented yet")
+    // The exact shape, character by character: `d` is a digit, anything else must match.
+    const SHAPE: &[u8; 20] = b"dddd-dd-ddTdd:dd:ddZ";
+    let fits_the_shape = text.len() == SHAPE.len()
+        && text
+            .bytes()
+            .zip(SHAPE)
+            .all(|(byte, &expected)| match expected {
+                b'd' => byte.is_ascii_digit(),
+                _ => byte == expected,
+            });
+    if !fits_the_shape {
+        return None;
+    }
+
+    // Only digits are left at these places, so parsing cannot fail.
+    let number = |from: usize, to: usize| -> u64 { text[from..to].parse().unwrap_or_default() };
+    let (year, month, day) = (number(0, 4), number(5, 7), number(8, 10));
+    let (hour, minute, second) = (number(11, 13), number(14, 16), number(17, 19));
+
+    let is_real_date = year >= 1970
+        && (1..=12).contains(&month)
+        && (1..=days_in_month(year, month)).contains(&day);
+    if !is_real_date || hour > 23 || minute > 59 || second > 59 {
+        return None;
+    }
+
+    let days_before_this_year: u64 = (1970..year).map(days_in_year).sum();
+    let days_before_this_month: u64 = (1..month).map(|m| days_in_month(year, m)).sum();
+    let days = days_before_this_year + days_before_this_month + (day - 1);
+    let seconds = days * SECONDS_PER_DAY + hour * 3600 + minute * 60 + second;
+    Some(UNIX_EPOCH + Duration::from_secs(seconds))
 }
 
 // ---------------------------------------------------------------------------
 // Order ids
 // ---------------------------------------------------------------------------
 
+const ORDER_ID_PREFIX: &str = "ORDER-";
+
 /// The id of the n-th order saved into a repository: `"ORDER-1"`, `"ORDER-2"`, ...
 pub fn order_id(n: u64) -> String {
-    let _ = n;
-    todo!("order_id() is not implemented yet")
+    format!("{ORDER_ID_PREFIX}{n}")
 }
 
 /// The inverse of [`order_id`]: `"ORDER-7"` gives `Some(7)`. Anything that is not an
 /// order id (as `order.schema.json` spells it: no leading zero, no `ORDER-0`) gives `None`.
 pub fn order_number(id: &str) -> Option<u64> {
-    let _ = id;
-    todo!("order_number() is not implemented yet")
+    let digits = id.strip_prefix(ORDER_ID_PREFIX)?;
+    // A positive whole number with no leading zero, exactly as order.schema.json spells it.
+    // (`parse` alone would also accept "+7" and "007".)
+    if digits.starts_with('0') || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
+        return None;
+    }
+    digits.parse().ok()
 }
 
 // ---------------------------------------------------------------------------
@@ -174,7 +253,7 @@ impl InMemoryOrderRepository {
 
     /// How many orders are saved. Handy for tests ("the order repository is empty").
     pub fn count(&self) -> usize {
-        todo!("InMemoryOrderRepository::count() is not implemented yet")
+        self.orders.len()
     }
 }
 
@@ -196,13 +275,18 @@ impl Default for InMemoryOrderRepository {
 
 impl OrderRepository for InMemoryOrderRepository {
     fn save(&mut self, receipt: &Receipt) -> Result<String, RepositoryError> {
-        let _ = (receipt, &self.clock);
-        todo!("InMemoryOrderRepository::save() is not implemented yet")
+        let id = order_id(self.orders.len() as u64 + 1);
+        self.orders.push(Order {
+            id: id.clone(),
+            created_at: format_timestamp(self.clock.now()),
+            // A copy, so that whoever gave us the receipt cannot change the saved order afterwards.
+            receipt: receipt.clone(),
+        });
+        Ok(id)
     }
 
     fn find(&self, id: &str) -> Result<Option<Order>, RepositoryError> {
-        let _ = id;
-        todo!("InMemoryOrderRepository::find() is not implemented yet")
+        Ok(self.orders.iter().find(|order| order.id == id).cloned())
     }
 }
 
@@ -266,14 +350,10 @@ pub fn place_order<R: OrderRepository + ?Sized>(
     catalog: &Catalog,
     repository: &mut R,
 ) -> Result<PlacedOrder, PlaceOrderError> {
-    let _ = (basket, catalog, repository, checkout);
-    todo!("place_order() is not implemented yet")
-}
-
-// Keeps the unused-import warnings away while the functions above are still stubs.
-#[allow(dead_code)]
-fn unused_until_implemented(_: Duration, _: SystemTime) -> SystemTime {
-    UNIX_EPOCH
+    // If checkout fails, `?` returns the error right here: save() is never reached.
+    let receipt = checkout(basket, catalog)?;
+    let order_id = repository.save(&receipt)?;
+    Ok(PlacedOrder { order_id, receipt })
 }
 
 // ---------------------------------------------------------------------------

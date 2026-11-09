@@ -114,8 +114,34 @@ pub type Cents = i64;
 /// assert_eq!(receipt.total, 607);
 /// ```
 pub fn checkout(basket: &Basket, catalog: &Catalog) -> Result<Receipt, CheckoutError> {
-    let _ = (basket, catalog);
-    todo!("checkout() is not implemented yet")
+    // The pipeline from the hint in rules §4.7. Every `?` stops at the first error, which is
+    // what makes the error order of rules §4.1 come out right.
+    validate_items(basket, catalog)?; // rows 1-4
+    let method = parse_shipping_method(&basket.shipping)?; // row 5
+
+    let lines = merge_items(&basket.items)
+        .iter()
+        .map(|item| Ok(price_line(catalog.require(&item.sku)?, item.quantity)))
+        .collect::<Result<Vec<ReceiptLine>, CheckoutError>>()?;
+    let subtotal: Cents = lines.iter().map(|line| line.line_total).sum();
+    let promotion_discount: Cents = lines.iter().map(|line| line.line_discount).sum();
+    let after_promotions = subtotal - promotion_discount;
+
+    let coupon_discount = coupon_discount(basket.coupon.as_deref(), after_promotions)?; // rows 6-7
+    let discounted_subtotal = after_promotions - coupon_discount;
+
+    let shipping = shipping_cost(method, discounted_subtotal);
+    let tax = tax_on(discounted_subtotal);
+
+    Ok(Receipt {
+        lines,
+        subtotal,
+        promotion_discount,
+        coupon_discount,
+        shipping,
+        tax,
+        total: discounted_subtotal + shipping + tax,
+    })
 }
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 //! Tax (rules §4.6).
 
-use crate::Cents;
+use crate::{Cents, round_half_up};
 
 /// Tax is 8% of the discounted subtotal.
 pub const TAX_PERCENT: i64 = 8;
@@ -14,8 +14,7 @@ pub const TAX_PERCENT: i64 = 8;
 /// assert_eq!(tax_on(120), 10);  // 9.6 cents rounds up
 /// ```
 pub fn tax_on(discounted_subtotal: Cents) -> Cents {
-    let _ = discounted_subtotal;
-    todo!("tax_on() is not implemented yet")
+    round_half_up(discounted_subtotal, TAX_PERCENT)
 }
 
 // ---------------------------------------------------------------------------

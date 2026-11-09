@@ -1,5 +1,6 @@
 //! Finding the shared `spec/` folder at the root of the repository.
 
+use std::env;
 use std::path::{Path, PathBuf};
 
 /// The repository's `spec/` folder, found by walking up from `start` until a folder
@@ -8,26 +9,31 @@ use std::path::{Path, PathBuf};
 /// Looking upwards (instead of hard-coding `../spec`) means the program finds the spec
 /// no matter where the compiled binary ends up (`target/debug/`, a copy made by a tool, ...).
 pub fn find_spec_folder(start: &Path) -> Option<PathBuf> {
-    let _ = start;
-    todo!("find_spec_folder() is not implemented yet")
+    // `ancestors()` gives `start`, its parent, its grandparent, ... up to the root.
+    start
+        .ancestors()
+        .map(|folder| folder.join("spec"))
+        .find(|spec| spec.join("catalog.json").is_file())
 }
 
 /// The `spec/` folder for the running program: looks above the program's own location
 /// first, then above the current directory, and finally falls back to the location this
 /// crate was compiled from (`CARGO_MANIFEST_DIR`, which is what `cargo run` uses).
 pub fn locate_spec_folder() -> Option<PathBuf> {
-    todo!("locate_spec_folder() is not implemented yet")
+    let candidates = [
+        env::current_exe().ok(),
+        env::current_dir().ok(),
+        Some(PathBuf::from(env!("CARGO_MANIFEST_DIR"))),
+    ];
+    // `flatten` skips the `None`s (a location the operating system could not tell us).
+    locate_spec_folder_among(candidates.into_iter().flatten())
 }
 
 /// The first of `candidates` that has a `spec/` folder somewhere above it.
 fn locate_spec_folder_among(candidates: impl IntoIterator<Item = PathBuf>) -> Option<PathBuf> {
-    let _ = candidates;
-    todo!("locate_spec_folder_among() is not implemented yet")
-}
-
-#[allow(dead_code)]
-fn unused_until_implemented() -> Option<PathBuf> {
-    locate_spec_folder_among(Vec::new())
+    candidates
+        .into_iter()
+        .find_map(|candidate| find_spec_folder(&candidate))
 }
 
 // ---------------------------------------------------------------------------

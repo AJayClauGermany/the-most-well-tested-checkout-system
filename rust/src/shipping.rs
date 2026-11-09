@@ -1,6 +1,6 @@
 //! Shipping (rules §4.5).
 
-use crate::{Cents, CheckoutError};
+use crate::{Cents, CheckoutError, ErrorCode};
 
 /// The two shipping methods the shop offers.
 ///
@@ -32,14 +32,23 @@ pub const FREE_SHIPPING_FROM: Cents = 5000;
 /// assert!(parse_shipping_method("overnight").is_err());
 /// ```
 pub fn parse_shipping_method(shipping: &str) -> Result<ShippingMethod, CheckoutError> {
-    let _ = shipping;
-    todo!("parse_shipping_method() is not implemented yet")
+    match shipping {
+        "standard" => Ok(ShippingMethod::Standard),
+        "express" => Ok(ShippingMethod::Express),
+        unknown => Err(CheckoutError::with_message(
+            ErrorCode::UnknownShippingMethod,
+            format!("Unknown shipping method: {unknown}"),
+        )),
+    }
 }
 
 /// The shipping cost in cents for this method and this discounted subtotal.
 pub fn shipping_cost(method: ShippingMethod, discounted_subtotal: Cents) -> Cents {
-    let _ = (method, discounted_subtotal);
-    todo!("shipping_cost() is not implemented yet")
+    match method {
+        ShippingMethod::Express => EXPRESS_COST,
+        ShippingMethod::Standard if discounted_subtotal >= FREE_SHIPPING_FROM => 0,
+        ShippingMethod::Standard => STANDARD_COST,
+    }
 }
 
 // ---------------------------------------------------------------------------

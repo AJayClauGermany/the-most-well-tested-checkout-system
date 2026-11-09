@@ -16,8 +16,7 @@ use crate::Cents;
 /// assert_eq!(round_half_up(120, 8), 10);  // 9.6 rounds up
 /// ```
 pub fn round_half_up(amount: Cents, percent: i64) -> Cents {
-    let _ = (amount, percent);
-    todo!("round_half_up() is not implemented yet")
+    (amount * percent + 50) / 100
 }
 
 // ---------------------------------------------------------------------------

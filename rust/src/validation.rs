@@ -2,7 +2,7 @@
 //! checked by `shipping.rs` and `coupons.rs`, because the coupon check needs the price
 //! after promotions.
 
-use crate::{Basket, Catalog, CheckoutError};
+use crate::{Basket, Catalog, CheckoutError, ErrorCode, merge_items};
 
 /// The smallest quantity a basket line may have (rules §4.1 row 3).
 pub const MIN_QUANTITY: i64 = 1;
@@ -23,16 +23,48 @@ pub const MAX_QUANTITY: i64 = 99;
 /// assert!(!is_valid_quantity(100));
 /// ```
 pub fn is_valid_quantity(quantity: i64) -> bool {
-    let _ = quantity;
-    todo!("is_valid_quantity() is not implemented yet")
+    (MIN_QUANTITY..=MAX_QUANTITY).contains(&quantity)
 }
 
 /// Checks rows 1-4 of rules §4.1, in that order.
 ///
 /// Returns `Ok(())` when the items are fine, or the first `CheckoutError` that applies.
 pub fn validate_items(basket: &Basket, catalog: &Catalog) -> Result<(), CheckoutError> {
-    let _ = (basket, catalog);
-    todo!("validate_items() is not implemented yet")
+    // Row 1: no items at all.
+    if basket.items.is_empty() {
+        return Err(CheckoutError::with_message(
+            ErrorCode::EmptyBasket,
+            "The basket has no items",
+        ));
+    }
+
+    // Row 2: every SKU must exist. All SKUs are checked before any quantity, so an unknown
+    // product on line 3 still wins over a bad quantity on line 1.
+    for item in &basket.items {
+        catalog.require(&item.sku)?;
+    }
+
+    // Row 3: every quantity must be from 1 to 99.
+    for item in &basket.items {
+        if !is_valid_quantity(item.quantity) {
+            return Err(CheckoutError::with_message(
+                ErrorCode::InvalidQuantity,
+                format!("Invalid quantity for {}: {}", item.sku, item.quantity),
+            ));
+        }
+    }
+
+    // Row 4: the lines of one SKU, added together, may not go over 99 either.
+    for line in merge_items(&basket.items) {
+        if line.quantity > MAX_QUANTITY {
+            return Err(CheckoutError::with_message(
+                ErrorCode::InvalidQuantity,
+                format!("Too many {} in total: {}", line.sku, line.quantity),
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------

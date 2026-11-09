@@ -1,12 +1,13 @@
 name: Rust
 
-# Only run on pull requests that touch this language or the shared spec,
-# or when started by hand from the Actions tab.
+# Only run on pull requests that touch this language, the shared spec or the shared e2e
+# runner, or when started by hand from the Actions tab.
 on:
   pull_request:
     paths:
       - "rust/**"
       - "spec/**"
+      - "e2e/**"
       - ".github/workflows/rust.yml"
   workflow_dispatch:
 
@@ -17,42 +18,140 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   test:
+    name: Static checks, tests with coverage, e2e and benchmark
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: rust
-    env:
-      CARGO_TERM_COLOR: always
     steps:
       - name: Check out the code
         uses: actions/checkout@v5
 
       # Rust (rustup, cargo) is preinstalled on GitHub's Ubuntu runners.
-      - name: Install rustfmt and clippy
+      - name: Install rustfmt, clippy and the LLVM tools for coverage
         run: |
-          rustup component add rustfmt clippy
+          rustup component add rustfmt clippy llvm-tools-preview
           rustc --version
           cargo --version
+
+      # Prebuilt binaries of the two cargo tools, at exactly these versions.
+      - name: Install cargo-nextest and cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest@0.9.151,cargo-llvm-cov@0.9.1
 
       # Caches downloaded crates and compiled dependencies between runs.
       - name: Cache Cargo build
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: rust
+          workspaces: |
+            rust
+            rust/fuzz
 
       # --locked: fail if Cargo.lock is out of date instead of silently changing it.
       - name: Download dependencies
         run: cargo fetch --locked
 
+      # Static checks: no code runs, but whole classes of mistakes are caught.
       - name: Check formatting (rustfmt)
         run: cargo fmt --check
-
-      - name: Lint (clippy)
+      - name: Lint (clippy, warnings are errors)
         run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Check the documentation and its links (rustdoc, warnings are errors)
+        run: cargo doc --locked --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
 
-      # Runs unit tests (src/), integration tests (tests/) and doc tests.
-      # Ignored tests (like the not-yet-implemented spec cases) still have to compile.
-      - name: Run tests
-        run: cargo test --locked
+      # Every test (unit, integration, BDD, property, contract, snapshot, e2e), each in its own
+      # process and in parallel (cargo-nextest), while measuring coverage (cargo-llvm-cov).
+      # The `ci` profile in .config/nextest.toml writes a JUnit XML report. The run fails when
+      # line coverage of src/ drops below 100% (the bin/ wrapper is tested end-to-end instead).
+      - name: Tests with coverage (cargo-llvm-cov + cargo-nextest)
+        run: >-
+          cargo llvm-cov nextest --locked --profile ci
+          --ignore-filename-regex 'src/bin/'
+          --fail-under-lines 100
+          --lcov --output-path target/lcov.info
+      - name: Coverage summary
+        run: cargo llvm-cov report --ignore-filename-regex 'src/bin/' --summary-only
+
+      # nextest does not run the examples in /// comments, so cargo test runs them.
+      - name: Doc tests
+        run: cargo test --locked --doc
+
+      - name: Shared end-to-end runner against the CLI (e2e/run.sh)
+        working-directory: .
+        run: |
+          cargo build --locked --manifest-path rust/Cargo.toml --bin checkout
+          e2e/run.sh rust/target/debug/checkout
+
+      # Fuzzing needs a nightly compiler and runs open-ended, so CI does not fuzz. It does make
+      # sure the fuzz target still compiles against the library (see README.md, "Fuzzing").
+      - name: Type-check the fuzz target (cargo-fuzz crate in fuzz/)
+        run: cargo check --locked --manifest-path fuzz/Cargo.toml
+
+      # Not a performance test: only checks that the benchmark still builds and runs.
+      - name: Benchmark smoke run (criterion)
+        run: cargo bench --locked --bench checkout -- --warm-up-time 0.2 --measurement-time 0.5
+
+      - name: Upload reports (JUnit, coverage)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-reports
+          path: |
+            rust/target/nextest/ci/junit.xml
+            rust/target/lcov.info
+          if-no-files-found: ignore
+
+  mutation:
+    # Mutation testing: would the tests notice if the code were wrong?
+    # A full run makes ~215 mutants and takes about 15 minutes (every mutant is a rebuild),
+    # so pull requests only test the mutants on the lines they change (`--in-diff`).
+    # Starting the workflow by hand from the Actions tab runs the full set.
+    name: Mutation testing (cargo-mutants)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - name: Check out the code (with history, to compare against the base branch)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install cargo-mutants
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-mutants@27.1.0
+
+      - name: Cache Cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      # --in-place: mutate the checked-out files instead of a copy of rust/, because the
+      # tests read ../spec/, which a copy would not have. What is excluded, and why, is in
+      # rust/.cargo/mutants.toml. A diff without Rust source changes tests no mutants.
+      - name: Mutants on the lines this pull request changes
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff --relative "origin/${{ github.base_ref }}...HEAD" > ../pr.diff
+          cargo mutants --in-place --in-diff ../pr.diff
+      - name: All mutants
+        if: github.event_name != 'pull_request'
+        run: cargo mutants --in-place
+
+      - name: Upload the mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-mutants
+          path: rust/mutants.out/
+          if-no-files-found: ignore

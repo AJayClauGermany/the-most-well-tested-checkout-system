@@ -1,0 +1,4 @@
+# Verify's snapshot files must look the same on every operating system, or a test that passes
+# on Linux would fail on Windows just because git turned "\n" into "\r\n".
+*.verified.txt text eol=lf working-tree-encoding=UTF-8
+*.verified.json text eol=lf working-tree-encoding=UTF-8

@@ -17,7 +17,27 @@ public sealed record Receipt(
     int CouponDiscount,
     int Shipping,
     int Tax,
-    int Total);
+    int Total)
+{
+    /// <summary>
+    /// Two receipts are equal when all six totals AND all lines are equal.
+    /// </summary>
+    /// <remarks>
+    /// A record compares its fields by value – but a list field is compared by reference
+    /// ("is it the very same list object?"), which is never what we want for a receipt.
+    /// So this record spells out its own equality and compares the lines one by one.
+    /// </remarks>
+    public bool Equals(Receipt? other) =>
+        other is not null
+        && Totals == other.Totals
+        && Lines.SequenceEqual(other.Lines);
+
+    /// <summary>Equal receipts have equal totals, so the totals alone make a valid hash code.</summary>
+    public override int GetHashCode() => Totals.GetHashCode();
+
+    /// <summary>The six amounts as one value, so they can be compared in one go.</summary>
+    private (int, int, int, int, int, int) Totals => (Subtotal, PromotionDiscount, CouponDiscount, Shipping, Tax, Total);
+}
 
 /// <summary>
 /// One priced line of a receipt, after duplicate basket lines were merged.

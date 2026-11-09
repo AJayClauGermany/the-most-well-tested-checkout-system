@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestErrorCodesMatchTheSpecSpelling(t *testing.T) {
@@ -32,6 +34,17 @@ func TestErrorCodesMatchTheSpecSpelling(t *testing.T) {
 	}
 }
 
+func TestErrorCodesListsTheSixCodesInTheOrderOfTheRules(t *testing.T) {
+	want := []ErrorCode{
+		"EMPTY_BASKET", "UNKNOWN_PRODUCT", "INVALID_QUANTITY",
+		"UNKNOWN_SHIPPING_METHOD", "UNKNOWN_COUPON", "COUPON_MINIMUM_NOT_MET",
+	}
+
+	if diff := cmp.Diff(want, ErrorCodes); diff != "" {
+		t.Errorf("ErrorCodes mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestCheckoutErrorCodeCanBeFoundWithErrorsAs(t *testing.T) {
 	// Arrange: wrap the error, like a caller adding context might do.
 	err := fmt.Errorf("pricing basket: %w", &CheckoutError{Code: CodeUnknownCoupon})
@@ -46,5 +59,44 @@ func TestCheckoutErrorCodeCanBeFoundWithErrorsAs(t *testing.T) {
 	}
 	if checkoutErr.Code != CodeUnknownCoupon {
 		t.Errorf("code = %s, want %s", checkoutErr.Code, CodeUnknownCoupon)
+	}
+}
+
+func TestCheckoutErrorReadsWellWhenPrinted(t *testing.T) {
+	tests := []struct {
+		name string
+		err  *CheckoutError
+		want string
+	}{
+		{
+			name: "code only",
+			err:  &CheckoutError{Code: CodeEmptyBasket},
+			want: "checkout failed: EMPTY_BASKET",
+		},
+		{
+			name: "code and message",
+			err:  &CheckoutError{Code: CodeEmptyBasket, Message: "The basket has no items"},
+			want: "checkout failed: EMPTY_BASKET (The basket has no items)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.err.Error(); got != tt.want {
+				t.Errorf("Error() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+// A white-box test of the unexported helper every step uses to build its error.
+func TestNewErrorFormatsTheMessage(t *testing.T) {
+	err := newError(CodeInvalidQuantity, "Invalid quantity for %s: %d", "APPLE", 0)
+
+	if err.Code != CodeInvalidQuantity {
+		t.Errorf("code = %s, want %s", err.Code, CodeInvalidQuantity)
+	}
+	if err.Message != "Invalid quantity for APPLE: 0" {
+		t.Errorf("message = %q, want %q", err.Message, "Invalid quantity for APPLE: 0")
 	}
 }

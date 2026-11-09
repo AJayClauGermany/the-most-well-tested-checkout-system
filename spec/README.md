@@ -25,7 +25,7 @@ one level up, in [`e2e/`](../e2e/).
   and checks its own implementation against it.
 * **Tests before code.** This repository is set up so you can think about the
   behaviour first (TDD / BDD) and implement it afterwards.
-* **One end-to-end suite for everyone.** Because every language will provide the same
+* **One end-to-end suite for everyone.** Because every language provides the same
   command line interface ([rules §8](checkout-rules.md#8-command-line-interface-for-end-to-end-tests)),
   a single black-box test suite can drive all of them.
 

@@ -1,0 +1,46 @@
+<!--
+  Settings shared by every TEST project (everything under tests/). MSBuild reads this file
+  and then the one in the parent folder, which we import on the first line.
+
+  Each kind of test has its own project, and they all need the same basics: xUnit on
+  Microsoft.Testing.Platform, the code coverage extension and the shared test helpers in
+  Checkout.TestSupport. Declaring those once here keeps the test .csproj files down to the
+  packages that make each kind of test special (Reqnroll, FsCheck, Verify, …).
+-->
+<Project>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!-- Checkout.TestSupport is a plain class library of helpers, not a test project. -->
+    <IsTestProject Condition="'$(MSBuildProjectName)' != 'Checkout.TestSupport'">true</IsTestProject>
+    <!--
+      Test method names follow Method_Scenario_ExpectedResult, which the analyzer rule
+      CA1707 ("no underscores in identifiers") would flag. It is the .NET test naming convention,
+      so the rule is switched off for test code only.
+    -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <!-- xUnit v3 test projects are small programs that `dotnet test` starts. -->
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <!-- xUnit v3 for Microsoft.Testing.Platform: [Fact], [Theory], Assert, and the test runner. -->
+    <PackageReference Include="xunit.v3.mtp-v2" Version="4.0.2" />
+    <!-- The code coverage option of `dotnet test` works thanks to this extension. -->
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)Checkout.TestSupport\Checkout.TestSupport.csproj" />
+    <!-- Direct (not only through TestSupport), so Stryker.NET sees which project the tests test. -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\Checkout\Checkout.csproj" />
+    <!-- Every test file can use [Fact], [Theory] and Assert without a `using Xunit;` line. -->
+    <Using Include="Xunit" />
+    <Using Include="CheckoutSystem" />
+    <Using Include="CheckoutSystem.TestSupport" />
+    <!-- One xunit.runner.json for all test projects (parallel settings, see tests/README.md). -->
+    <Content Include="$(MSBuildThisFileDirectory)xunit.runner.json" Link="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

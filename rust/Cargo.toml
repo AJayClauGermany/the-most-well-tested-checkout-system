@@ -2,8 +2,8 @@
 name = "checkout"
 version = "0.1.0"
 edition = "2024"
-# Edition 2024 needs Rust 1.85 or newer.
-rust-version = "1.85"
+# Edition 2024 needs Rust 1.85; rusqlite 0.41 (the SQLite driver) needs 1.89.
+rust-version = "1.89"
 description = "A small checkout system, used to show off many kinds of software testing."
 license = "BSL-1.0"
 publish = false
@@ -13,3 +13,38 @@ publish = false
 [dependencies]
 serde = { version = "1.0.229", features = ["derive"] } # turns JSON into Rust structs (and back)
 serde_json = "1.0.154"                                 # the JSON format for serde
+rusqlite = { version = "0.41.1", features = ["bundled"] } # SQLite; "bundled" compiles SQLite in, nothing to install
+
+# Only used by the tests and benchmarks, never by the real program.
+[dev-dependencies]
+rstest = "0.28.0"                                   # parameterised tests (#[case]) and fixtures
+cucumber = "0.23.0"                                 # runs the Given/When/Then scenarios in ../spec/features
+futures = "0.3.34"                                  # a tiny async executor for the cucumber runner
+mockall = "0.15.0"                                  # mock objects (#[automock]) for the repository and the clock
+tempfile = "3.27.0"                                 # temporary folders for the file and SQLite repositories
+jsonschema = { version = "0.61.0", default-features = false, features = ["resolve-file"] } # contract tests against ../spec/schema
+proptest = "1.12.0"                                 # property-based tests (P1..P14 from ../spec/properties.md)
+insta = { version = "1.49.0", features = ["json"] } # snapshot tests of whole receipts
+pretty_assertions = "1.4.1"                         # coloured diffs when assert_eq! fails
+assert_cmd = "2.2.2"                                # runs the real CLI as a separate process (end-to-end)
+predicates = "3.1.4"                                # readable assertions on the CLI's output
+criterion = "0.8.2"                                 # micro-benchmarks
+libtest-mimic = "0.8.2"                             # one named test per shared spec case
+
+# The cucumber runner and the per-case spec runner have their own main(), not the built-in harness.
+[[test]]
+name = "features"
+harness = false
+
+[[test]]
+name = "spec_cases_named"
+harness = false
+
+# Criterion benchmarks also bring their own main().
+[[bench]]
+name = "checkout"
+harness = false
+
+# fuzz/ is a separate crate (it needs a nightly compiler), not part of this one.
+[workspace]
+exclude = ["fuzz"]

@@ -2,22 +2,35 @@
 
 The Java version of the checkout system described in [`../spec/checkout-rules.md`](../spec/checkout-rules.md).
 
-> **Status: tests first, code later.** The domain types and the test setup are ready, but
-> `Checkout.checkout(...)` only throws `UnsupportedOperationException("not implemented yet")`.
-> The 60 shared spec cases are already wired up and waiting (disabled) for an implementation.
-> That is test-driven development (TDD): write down what "correct" means *before* writing the code.
+> **Status: done.** `Checkout.checkout(...)`, saving orders (in memory, as JSON files and in a
+> SQL database through JDBC) and the command line program are implemented, and every row of the
+> Java column of the [testing matrix](../docs/testing-matrix.md) is covered. It was built strictly
+> test-first: the commit that adds the tests comes before the commit that makes them pass – have
+> a look at the git history.
 
 ## Tools we use, and why
 
 | Tool | What it does | Why this one |
 |------|--------------|--------------|
-| **Java 21** | The language | A long-term-support (LTS) release with *records* and *sealed interfaces*, which make data types short and safe. |
+| **Java 21** | The language | A long-term-support (LTS) release with *records*, *sealed interfaces* and *pattern matching in `switch`*, which make data types short and safe. |
 | **[Maven](https://maven.apache.org/)** | Build tool: downloads libraries, compiles, runs tests | The most widely used Java build tool. Everything is configured in one file, [`pom.xml`](pom.xml). |
-| **[JUnit 6](https://docs.junit.org/) (Jupiter)** | Test framework | The standard Java test framework. `@Test`, `assertEquals`, `@ParameterizedTest`. |
-| **Maven Surefire** | Runs the *unit* tests (`*Test.java`) in `mvn test` | Comes with Maven. |
-| **Maven Failsafe** | Runs the *integration* tests (`*IT.java`) in `mvn verify` | The standard way to keep slow/outside-world tests separate from fast unit tests. |
-| **[Jackson 3](https://github.com/FasterXML/jackson)** | Reads JSON into Java records | The most common Java JSON library. Version 3 no longer forces you to catch `IOException`. |
+| **[JUnit 6](https://docs.junit.org/) (Jupiter)** | Test framework, including `@ParameterizedTest` | The standard Java test framework. JUnit 6 has one version for the platform and Jupiter. |
+| **[AssertJ](https://assertj.github.io/doc/)** | Assertions that read like sentences: `assertThat(receipt.total()).isEqualTo(2441)` | The most popular assertion library; its messages say exactly what differed. |
+| **Maven Surefire / Failsafe** | Run the *unit* tests (`*Test`) in `mvn test` and the *integration* tests (`*IT`) in `mvn verify`, and write JUnit XML reports | Come with Maven. |
+| **[Cucumber-JVM](https://cucumber.io/docs/installation/java/)** 8 | Runs the Given/When/Then scenarios in `spec/features/` | The reference Gherkin implementation for Java. Version 8 is the one built for JUnit Platform 6. |
+| **[Mockito](https://site.mockito.org/)** | Mock objects: "was `save` called?" | The standard Java mocking library. |
+| **[H2](https://h2database.com/)** | An SQL database in one file (or in memory), used through plain JDBC | Runs inside the tests: nothing to install, no server. It plays the role SQLite plays in the other languages. |
+| **[jqwik](https://jqwik.net/) 1.9.3** | Property-based testing | The only mainstream property-based library for Java. Pinned to 1.9.x on purpose: 1.10 added an unusual licence clause (see the matrix footnote). |
+| **[networknt json-schema-validator](https://github.com/networknt/json-schema-validator)** | Checks JSON against `spec/schema/*.json` (contract tests) | Supports JSON Schema draft 2020-12, which the spec uses, and is built on Jackson 3 like our code. |
+| **[ApprovalTests.Java](https://github.com/approvals/ApprovalTests.Java)** | Snapshot ("approval") testing of whole receipts | Saves the approved output as a plain file next to the test, reviewed like code. |
+| **[Jazzer](https://github.com/CodeIntelligenceTesting/jazzer)** | Fuzzing from inside JUnit (`@FuzzTest`) | The coverage-guided fuzzer for the JVM; in normal runs it replays its saved inputs like any test. |
+| **[ArchUnit](https://www.archunit.org/)** | Architecture tests: "the domain never depends on the CLI" | Checks the compiled classes against rules written in plain Java. |
+| **[Jackson 3](https://github.com/FasterXML/jackson)** | Reads and writes JSON (the CLI, the JSON-file store) | The most common Java JSON library. Version 3 no longer forces you to catch `IOException`. |
+| **[JaCoCo](https://www.jacoco.org/jacoco/)** | Code coverage, with a 100% threshold | The standard Java coverage tool; it is a Java agent, so it sees unit and integration tests. |
+| **[PIT](https://pitest.org/)** | Mutation testing | The mutation testing tool for the JVM. `pitest-junit5-plugin` lets it run JUnit Platform tests. |
 | **`javac -Xlint:all -Werror`** | Static check | The compiler itself reports every warning it knows; `-Werror` turns warnings into errors so they cannot pile up. |
+| **[Error Prone](https://errorprone.info/)** | More static checks, inside the compiler | Google's bug-pattern checker: catches mistakes such as ignored return values or locale-dependent `toUpperCase()`. |
+| **[Checkstyle](https://checkstyle.org/)** | Style checks (imports, braces, line length) | Checks without rewriting anything, so it fits next to the compiler checks. Its rules are in [`checkstyle.xml`](checkstyle.xml). (The matrix suggests Checkstyle *or* Spotless – we picked one.) |
 
 Maven has no separate lockfile: every library and plugin version is written out exactly in `pom.xml`.
 
@@ -27,164 +40,244 @@ Maven has no separate lockfile: every library and plugin version is written out 
   Install e.g. [Eclipse Temurin](https://adoptium.net/) or via your package manager / [SDKMAN!](https://sdkman.io/).
 * **Maven 3.9+**. Check with `mvn -v`. Install from [maven.apache.org](https://maven.apache.org/install.html),
   your package manager (`brew install maven`, `sudo apt install maven`, `choco install maven`) or SDKMAN!.
+* For the shared end-to-end runner only: `bash` and [`jq`](https://jqlang.github.io/jq/).
 
 The first build downloads the libraries into `~/.m2/repository`; later builds are fast and work offline.
 
-## Running the tests
+## Running the tests and checks
 
-Run these commands inside the `java/` folder.
+Run these commands inside the `java/` folder. Add `-B` ("batch mode") for plain output without colours, as CI does.
 
 | I want to… | Command |
 |------------|---------|
-| run **everything** (compile + unit tests + integration tests) – this is what CI does | `mvn verify` |
-| run only the **unit tests** | `mvn test` |
-| run **one test class** | `mvn test -Dtest=CatalogTest` |
-| run **one test method** | `mvn test -Dtest='CatalogTest#findsAProductBySku'` |
-| run **one integration test** (skipping unit tests) | `mvn verify -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false -Dit.test=SpecFolderIT` |
-| skip the integration tests | `mvn verify -DskipITs` |
-| only compile (and run the static check) | `mvn test-compile` |
+| run **everything CI runs** except mutation testing: static checks, all tests, the coverage check | `mvn verify` |
+| run only the **unit tests** (everything named `*Test`, including BDD, properties, contracts, snapshots, fuzz seeds) | `mvn test` |
+| run **one test class** | `mvn test -Dtest=CouponsTest` |
+| run **one test method** | `mvn test -Dtest='MoneyTest#givesZeroForZeroPercent'` |
+| run **one kind** of test, by tag | `mvn test -Dgroups=property` (tags: `spec`, `contract`, `snapshot`, `property`, `fuzz`, `architecture`, `mock`) |
+| run the **BDD** scenarios from `spec/features/` | `mvn test -Dtest=RunCucumberTest` → `target/cucumber-reports/cucumber.html` |
+| run only the **integration and end-to-end** tests | `mvn verify -Djacoco.skip -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false` (tags: `integration`, `e2e`) |
+| see the **coverage** report (after `mvn verify`; fails below 100%) | open `target/site/jacoco/index.html` |
+| run **mutation testing** (about five minutes) | `mvn -Pmutation verify` → `target/pit-reports/index.html` |
+| … only mutation testing, when the tests already passed (about three minutes) | `mvn test-compile org.pitest:pitest-maven:mutationCoverage` |
+| **fuzz** for real for 20 seconds (instead of replaying the saved inputs) | `JAZZER_FUZZ=1 mvn test -Djacoco.skip -Dtest='CheckoutFuzzTest#checkoutOnlyEverThrowsCheckoutException'` |
+| only compile, with all static checks (`-Xlint`, Error Prone, Checkstyle) | `mvn test-compile` |
+| run the **shared e2e runner** against our CLI (from the repository root) | `(cd java && mvn package -DskipTests) && e2e/run.sh java -jar java/target/checkout.jar` |
+| try the **command line program** | `echo '{"items":[{"sku":"APPLE","quantity":1}]}' \| java -jar target/checkout.jar` |
 | delete all build output | `mvn clean` |
 
-Add `-B` ("batch mode") for plain output without colours, as CI does.
-Test reports end up in `target/surefire-reports/` and `target/failsafe-reports/`.
+`mvn verify` prints **451 tests** run by Surefire and **105 tests** run by Failsafe, all passing,
+then "All coverage checks have been met". The shared runner prints `60 passed, 0 failed`.
 
-You can also run any test from your IDE (IntelliJ IDEA, VS Code with the Java extensions, Eclipse):
-open `pom.xml` as a project and click the green ▶ next to a test.
-
-Expected result today: **12 unit tests** (11 passed, 1 skipped – the shared spec test) and **1 integration test** passed.
+Test reports end up in `target/surefire-reports/` and `target/failsafe-reports/` (JUnit XML,
+which CI uploads). You can also run any test from your IDE (IntelliJ IDEA, VS Code with the Java
+extensions, Eclipse): open `pom.xml` as a project and click the green ▶ next to a test.
 
 ## Folder layout
 
 ```
 java/
-├── pom.xml                         ← build file: Java version, libraries, plugins
-├── src/main/java/checkout/         ← the real program
-│   ├── Checkout.java               ← checkout(basket, catalog) → Receipt   (not implemented yet)
-│   ├── Basket.java, BasketItem.java
-│   ├── Catalog.java, Product.java, Promotion.java
-│   ├── Receipt.java, ReceiptLine.java
-│   └── ErrorCode.java, CheckoutException.java
-└── src/test/java/checkout/         ← all tests (Maven keeps them apart from the real program)
-    ├── CatalogTest.java            ← example UNIT test – start reading here!
-    ├── BasketTest.java             ← unit test
-    ├── SharedSpecCasesTest.java    ← one test per spec/test-cases case (disabled until implemented)
-    ├── SpecFolderIT.java           ← example INTEGRATION test (name ends in IT)
-    ├── spec/                       ← test helpers that load ../spec/*.json (+ their own tests)
-    ├── bdd/                        ← future home of Cucumber BDD tests (see package-info.java)
-    └── e2e/                        ← future home of end-to-end tests (see package-info.java)
+├── pom.xml                          ← libraries, plugins, coverage threshold, mutation profile
+├── checkstyle.xml                   ← the style rules
+├── .mvn/jvm.config                  ← lets Error Prone into the compiler (see "Static checks")
+├── src/main/java/checkout/          ← the domain: pure calculation, no files, no terminal
+│   ├── Checkout.java                ← checkout(basket, catalog): the pipeline of rules §4
+│   ├── Validation.java              ← rows 1-4 of rules §4.1
+│   ├── Lines.java                   ← merging basket items into receipt lines, pricing a line
+│   ├── Promotions.java              ← buy X get Y free, bulk discount
+│   ├── Coupons.java                 ← SAVE10, WELCOME5
+│   ├── ShippingMethod.java          ← standard / express (an enum)
+│   ├── Tax.java                     ← 8%
+│   ├── Money.java                   ← roundHalfUp, with whole numbers only
+│   ├── Basket, BasketItem, Catalog, Product, Promotion, Receipt, ReceiptLine  ← records
+│   ├── ErrorCode.java, CheckoutException.java
+│   └── orders/                      ← saving orders (rules §6)
+│       ├── OrderRepository.java     ← the interface: save / find
+│       ├── InMemoryOrderRepository.java  ← a list in memory; also the hand-written fake
+│       ├── Orders.java              ← placeOrder = checkout + save
+│       └── Order, PlacedOrder, OrderIds, Timestamps
+├── src/main/java/checkout/store/    ← order stores that touch the outside world
+│   ├── JsonFileOrderRepository.java ← one ORDER-<n>.json file per order
+│   └── JdbcOrderRepository.java     ← one SQL table, through JDBC (H2 in the tests)
+├── src/main/java/checkout/cli/      ← the command line program (rules §8)
+│   ├── CheckoutCommand.java         ← its logic: JSON text in, output + exit code out
+│   ├── Main.java                    ← stdin → CheckoutCommand → stdout, exit code
+│   ├── SpecFolder.java              ← finds ../spec/ by walking up the folder tree
+│   └── StandardCatalog.java         ← loads spec/catalog.json
+└── src/test/java/checkout/          ← all tests; the package says what kind they are
+    ├── *Test.java                   ← unit tests of the domain, one class per step
+    ├── SharedSpecCasesTest.java     ← the 60 shared cases from spec/test-cases/
+    ├── orders/                      ← unit tests + test doubles (fake, stub clock, Mockito)
+    ├── cli/                         ← unit tests of the CLI logic
+    ├── store/                       ← *IT integration tests (temp folder, H2) + mock-JDBC unit test
+    ├── e2e/                         ← CliIT: the real jar, started with ProcessBuilder
+    ├── bdd/                         ← Cucumber runner + step definitions
+    ├── property/                    ← P1…P14 with jqwik
+    ├── contract/                    ← receipts and CLI errors against spec/schema/
+    ├── snapshot/                    ← ApprovalTests + the committed *.approved.json files
+    ├── fuzz/                        ← Jazzer @FuzzTest (+ seeds in src/test/resources)
+    ├── architecture/                ← ArchUnit rules
+    └── spec/                        ← test helpers: SpecFiles, Schemas, Json, Fixtures, Dollars
 ```
 
 **Where does a new test go?** In Java, the *class name* decides how a test is run, not the folder:
 
 | Kind of test | Class name ends in | Run by | Command |
 |--------------|-------------------|--------|---------|
-| Unit test (fast, no files/network/processes) | `Test` | Surefire | `mvn test` |
-| Integration / end-to-end test (files, processes, databases…) | `IT` | Failsafe | `mvn verify` |
-
-Tests usually live in the **same package** as the code they test (`checkout`), mirroring
-`src/main/java`. That lets them use package-private methods too.
+| Fast test: no real files, processes or databases | `Test` | Surefire | `mvn test` |
+| Integration / end-to-end test: files, databases, other processes | `IT` | Failsafe | `mvn verify` |
 
 The shared spec files are **read from the repository's `spec/` folder** at test time, never
-copied. `SpecFiles.specDir()` finds that folder by walking up from the current directory,
-so the tests work from Maven, from your IDE, and from any working directory inside the repo.
+copied. `SpecFiles.specDir()` (tests) and `SpecFolder.find()` (the program) find that folder by
+walking up from the current directory, so everything works from Maven, from your IDE, and from
+any working directory inside the repository. The jar also looks next to itself, so
+`java -jar /path/to/java/target/checkout.jar` works from anywhere.
 
-## The domain types in 30 seconds
+## The kinds of tests, and where to look
 
-* All types are **records**: immutable data classes where Java writes the constructor,
-  getters, `equals`, `hashCode` and `toString` for you.
-* JSON uses `snake_case` (`unit_price`), Java uses `camelCase` (`unitPrice`).
-  `@JsonProperty("unit_price")` connects the two.
-* All money is an `int` number of **cents** (`899` = $8.99). Never `double`!
-* `Promotion` is a **sealed interface** with two records, `Promotion.BuyXGetYFree` and
-  `Promotion.BulkDiscount`. "Sealed" means no other kinds can exist, so a `switch` over a
-  promotion can handle both cases and the compiler checks you did not forget one.
-  (A single record with every field and a `type` string would also work, but then half the
-  fields would be meaningless for each kind – easy to mix up.)
-* `Basket.shipping()` is `"standard"` when the basket does not say otherwise.
-* Errors are reported by throwing `CheckoutException`; `getCode()` returns one of the six
-  `ErrorCode`s from rules §9.
+| Kind of test | Question it answers | Look at |
+|---|---|---|
+| **Unit** | Does this one method do the right thing? | `MoneyTest` is a good first read, then `ValidationTest`, `CouponsTest`, … |
+| **Parameterised** | Does it work for all these examples? | `@ValueSource` in `ValidationTest`, `@CsvSource` in `PromotionsTest` and `TaxTest`, `@MethodSource` in `SharedSpecCasesTest` and `CheckoutCommandTest` |
+| **Shared spec cases** | Does it match the 60 cases every language must pass? | `SharedSpecCasesTest` |
+| **BDD** | Does it behave as the Given/When/Then scenarios say? | `bdd/CheckoutSteps.java` – each sentence from `spec/features/README.md` appears once; `bdd/RunCucumberTest.java` points Cucumber at `../spec/features` |
+| **Test doubles** | How do I test without the real clock, files or database? Was `save()` really never called? | a fake (`InMemoryOrderRepository`), stub clocks (`Clock.fixed`), Mockito mocks in `orders/PlaceOrderMockitoTest` and `store/JdbcOrderRepositoryTest` |
+| **Integration** | Do the repositories really write files and database rows? | `store/JsonFileOrderRepositoryIT`, `store/JdbcOrderRepositoryIT` (each test gets a `@TempDir`) |
+| **Property-based** | Is it true for *every* basket, not just my examples? | `property/CheckoutPropertiesTest` – `p1_…` to `p14_…` |
+| **Contract** | Is the output even the right shape? | `contract/ReceiptContractTest`, helper `spec/Schemas.java` |
+| **Snapshot / approval** | Did the output change since last time? | `snapshot/ReceiptApprovalTest` and its `*.approved.json` files |
+| **End-to-end** | Does the real program work from the outside? | `e2e/CliIT`, then the shared runner `e2e/run.sh` |
+| **Fuzzing** | Can *any* input crash it? (property P10) | `fuzz/CheckoutFuzzTest` |
+| **Architecture** | Does the code respect its own layers? | `architecture/ArchitectureTest` |
+| **Coverage** | Which lines did the tests never run? | `mvn verify` → `target/site/jacoco/index.html` – the threshold is 100% of lines and branches |
+| **Mutation** | Would the tests notice if the code were wrong? | `mvn -Pmutation verify` – see below |
+| **Static checks** | Can we catch mistakes without running anything? | `mvn test-compile`: `-Xlint:all -Werror`, Error Prone, Checkstyle |
+
+All tests run **in parallel** (`src/test/resources/junit-platform.properties`), which proves they
+do not depend on each other: no shared state, no fixed order.
+
+### Mutation testing, and why the code looks the way it does
+
+PIT makes 124 small changes to `src/main` ("mutants": `>=` becomes `>`, `+` becomes `-`, a
+`return` value becomes `0` or `true`, a method call is removed) and runs the tests against each
+one. A mutant that survives means no test noticed the change. The score is currently **100%**
+(124 of 124 killed), and the build fails below 95%. CI runs it on every pull request (about three
+minutes).
+
+Getting there shaped both the tests and the code:
+
+* Boundaries are tested on both sides (`2499` / `2500`, `4999` / `5000`, `9` / `10`, `0` / `1`,
+  `99` / `100`), because `>` vs `>=` is the classic surviving mutant.
+* Error **messages** are tested, not only error codes – otherwise PIT shows that the message
+  could be anything.
+* PIT found one gap: no test noticed when the JSON-file store stopped checking that a file name
+  ends in `.json`, because every other file name in the tests failed a later check too. The test
+  now puts an `ORDER-7.yaml` (an extension of the same length) into the folder.
+* `checkout.cli.Main` is excluded from coverage and mutation testing: it runs in a separate
+  process (see `e2e/`), which an in-process tool cannot observe. Its logic is in
+  `CheckoutCommand`, which *is* measured. The BDD, fuzz and e2e test classes are not used by PIT
+  either (Cucumber and Jazzer have their own runners, and a mutant never reaches the jar); the
+  other tests cover the same code.
+* Some errors are almost impossible to cause for real (an SQL error while *closing* a
+  connection). `JdbcOrderRepository` therefore also accepts a `Connection`, so a test can hand it a
+  Mockito mock that fails on purpose.
+
+### Static checks
+
+* **`-Xlint:all -Werror`**: every compiler warning is an error.
+* **Error Prone** runs inside `javac` as a plugin. It needs access to compiler internals that
+  Java hides by default; [`.mvn/jvm.config`](.mvn/jvm.config) opens them (Maven reads that file
+  automatically), and on JDK 21 it also needs `-XDaddTypeAnnotationsToSymbol=true` (in `pom.xml`).
+* **Checkstyle** runs first in every build (`validate` phase), on the main code and the tests.
+
+Getting the build warning-free with all these libraries took a few JVM options for the tests,
+each explained next to the `test.argLine` property in `pom.xml`: Mockito is loaded as a Java
+agent (JDK 21 warns when a library attaches one to itself), `-Xshare:off` (that agent turns off
+class data sharing anyway), and `-XX:+EnableDynamicAgentLoading` (Jazzer has to attach its agent
+at run time).
 
 ## How to add a new test
 
-Say you want to check that `Catalog.findBySku` finds the *first* product of the standard catalog.
+Say you want to check that `Money.roundHalfUp` rounds 10% of 5 cents (0.5 cents) up to 1 cent.
 
-1. Open (or create) the test class next to the code it tests:
-   `src/test/java/checkout/CatalogTest.java`. The class name must end in `Test`.
-2. Add a method with the `@Test` annotation. Its name says what should happen:
+1. **Pick the kind of test.** It is one method with made-up numbers: a unit test, so open
+   `src/test/java/checkout/MoneyTest.java` (or create a new class whose name ends in `Test`).
+2. **Write the test**, following the *Arrange / Act / Assert* pattern:
 
    ```java
    @Test
-   void findsTheFirstProductOfTheStandardCatalog() {
+   void roundsHalfACentUpToOneCent() {
        // Arrange
-       Catalog catalog = SpecFiles.loadCatalog();   // import checkout.spec.SpecFiles;
+       int amount = 5;
 
        // Act
-       Product apple = catalog.findBySku("APPLE").orElseThrow();
+       int rounded = Money.roundHalfUp(amount, 10);
 
-       // Assert – expected value first, actual value second
-       assertEquals("Apple", apple.name());
-       assertEquals(50, apple.unitPrice());
+       // Assert
+       assertThat(rounded).isEqualTo(1);
    }
    ```
 
-3. Run just that test: `mvn test -Dtest='CatalogTest#findsTheFirstProductOfTheStandardCatalog'`.
-4. Make it fail on purpose once (change `50` to `51`) to see that it really checks something,
-   then change it back.
-5. Run everything with `mvn verify` before you open a pull request.
+3. **Run it:** `mvn test -Dtest='MoneyTest#roundsHalfACentUpToOneCent'`.
+4. **Make sure it can fail.** Change `1` to `0` and check that the test goes red.
+   A test that never fails does not test anything! (Mutation testing automates this idea.)
+5. **Run everything** before you open a pull request: `mvn verify`, and
+   `mvn -Pmutation verify` if you changed `src/main`.
 
-**Starting the implementation?** Delete the `@Disabled(...)` line in `SharedSpecCasesTest.java`.
-You will see 60 failing tests, one per spec case, named after the case id. Make them pass one by one.
-Each step of the rules (validate, merge, promotions, coupon, shipping, tax) deserves its own small
-unit tests too.
+Want to add a case for *every* language instead? Add it to
+[`spec/test-cases/`](../spec/test-cases/) and it is picked up automatically by the shared spec
+cases, contract, e2e and shared-runner tests (and update the count in `SpecFilesTest`).
 
-## Testing ideas we'd love contributions for
+## Things to know about this implementation
 
-This list mirrors the Java column of the [testing matrix](../docs/testing-matrix.md) – the
-project's single list of goals – and adds the practical hints. Tick the matrix when you add
-one. We target **JUnit 6** (one version for platform and Jupiter) with Surefire/Failsafe 3.5+.
+* **Whole numbers only.** `Money.roundHalfUp(amount, percent)` is `(amount × percent + 50) / 100`
+  with integer division, as the hint in rules §7 suggests. No `double` anywhere near money.
+* **Parse, don't validate.** `ShippingMethod.parse` turns the basket's free-form `shipping`
+  text into the enum `STANDARD` or `EXPRESS`, or throws; after that the compiler knows the value is fine.
+  Promotions are a `sealed` interface, so the `switch` in `Promotions.discount` is checked for
+  completeness by the compiler.
+* **The clock is a `java.time.Clock`.** Production uses `Clock.systemUTC()`; tests pass
+  `Clock.fixed(...)`, a Mockito mock, or a tiny hand-written `Clock` they can move forward.
+* **Repositories are an interface** (`save` and `find`), with three implementations. The
+  in-memory one doubles as the test fake. Ids are `ORDER-<n>`; the JSON-file store takes the next
+  number after the highest existing file, the JDBC store uses an identity column.
+* **`placeOrder` = checkout + save.** It cannot save anything when checkout throws, which is
+  what the Mockito tests and property P14 check.
+* **The CLI is strict about the *shape* of its input.** `items` must be a list of objects with a
+  text `sku` and a whole-number `quantity`; anything else is "not a basket": exit code 2 and a
+  message on stderr. Unknown products, quantities out of range, odd shipping methods and coupons
+  are left to `checkout`, which reports the error codes.
+* **A quantity is a `long` (64 bits), not an `int`.** Any whole number that fits in 64 bits is
+  read, so `10000000000` or `-3000000000` reaches `checkout` and gives `INVALID_QUANTITY` (exit
+  code 1), as in the other languages. `1.5` (not a whole number – the spec's test cases README
+  expects this of strongly typed languages) and numbers beyond 64 bits, such as
+  `9223372036854775808`, cannot be a `long`, so they are "not a basket" (exit code 2). Merged
+  quantities are added with `Math.addExact`, which throws instead of overflowing silently; a
+  receipt line keeps an `int`, because after validation it is always 1 to 99.
 
-**Tier 1 – every language does these**
+### Versions that had to fit together
 
-* **Implement `Checkout.checkout`** test-first, with unit tests for each step.
-* **Parameterised tests** with `@ParameterizedTest` + `@MethodSource` / `@CsvSource` – the
-  native table style, shown next to the shared spec cases.
-* **Nicer assertions** – [AssertJ](https://assertj.github.io/doc/): `assertThat(receipt.total()).isEqualTo(2441)`.
-* **BDD** – [Cucumber-JVM](https://cucumber.io/docs/installation/java/) via `cucumber-java` +
-  `cucumber-junit-platform-engine` (the old `cucumber-junit` module is deprecated); step
-  definitions in `checkout.bdd`.
-* **Test doubles** for the order repository and the clock (rules §6) – a hand-written fake
-  first, then [Mockito](https://site.mockito.org/) to check a failed checkout never calls
-  `save`, and `java.time.Clock.fixed(...)` for `created_at`. On Java 21+ Mockito's inline
-  mock maker should be loaded as a `-javaagent` in Surefire's `argLine` – a good lesson in
-  reading warnings.
-* **Integration tests** – a JSON-file repository and a JDBC repository against
-  [H2](https://h2database.com/) (embedded, no server), as `*IT.java` run by Failsafe. Check
-  stored orders against [`spec/schema/order.schema.json`](../spec/schema/order.schema.json).
-* **Property-based testing** – [jqwik](https://jqwik.net/) **pinned to 1.9.x**: 1.10 added an
-  unusual "anti-AI usage" licence clause and the project is in maintenance mode, and Java has
-  no other mainstream option. One test per property in [`spec/properties.md`](../spec/properties.md).
-* **Contract tests** – [networknt json-schema-validator](https://github.com/networknt/json-schema-validator):
-  every receipt must satisfy [`spec/schema/receipt.schema.json`](../spec/schema/receipt.schema.json).
-* **Snapshot / approval testing** – [ApprovalTests.Java](https://github.com/approvals/ApprovalTests.Java)
-  for whole receipts as JSON.
-* **End-to-end tests** – a `main` method implementing the CLI of rules §8, `*IT` tests in
-  `checkout.e2e` that start it with `ProcessBuilder`, then the shared runner:
-  `e2e/run.sh java -jar java/target/checkout.jar`.
-* **Code coverage** – the [JaCoCo](https://www.jacoco.org/jacoco/) Maven plugin, with a report in CI.
-* **Mutation testing** – [PIT](https://pitest.org/) with `pitest-junit5-plugin` (check it against
-  the JUnit Platform version you pin).
-* **More static checks** – [Error Prone](https://errorprone.info/), plus one of
-  [Checkstyle](https://checkstyle.org/) or [Spotless](https://github.com/diffplug/spotless) (not both).
+JUnit 6 is new, so each JUnit Platform engine was checked against it:
 
-**Tier 2 – idiomatic extras**
+* **Cucumber-JVM 8.0.4** is the line built for JUnit 6 (its `cucumber-junit-platform-engine` is
+  compiled against `junit-bom` 6.1.3); the 7.x line targets JUnit 5.
+* **jqwik 1.9.3** was built against JUnit Platform 1.13, but runs unchanged on Platform 6.1.3.
+* **PIT 1.30.2 with `pitest-junit5-plugin` 1.2.3** uses the JUnit Platform launcher found on the
+  test classpath (6.1.3 here) and runs every engine above.
+* **Jazzer 0.30.0** declares JUnit 5.9 but the JUnit BOM lifts it to 6.1.3; both its replay
+  mode and real fuzzing (`JAZZER_FUZZ=1`) work.
+* **AssertJ** is pinned to 3.27.7: 4.0.0-M1 is a milestone, not a release.
 
-* **Fuzzing** – [Jazzer](https://github.com/CodeIntelligenceTesting/jazzer)'s `@FuzzTest` runs
-  inside JUnit: property P10, random JSON must never throw anything but `CheckoutException`.
-* **Architecture tests** – [ArchUnit](https://www.archunit.org/): "the domain does not depend on the CLI".
-* **Benchmarks** – one [JMH](https://github.com/openjdk/jmh) benchmark of `checkout`, optional.
+## Ideas for the next contribution
 
-**Tier 3 – plumbing**
+Tier 1, the Tier 2 rows that name a Java tool, and Tier 3 of the matrix are complete for Java,
+so what is left is polish:
 
-* Surefire already writes JUnit XML to `target/surefire-reports` – publish it in CI;
-  `@Tag` + Surefire `groups` for filtering; `junit.jupiter.execution.parallel.enabled=true`
-  in `junit-platform.properties` to prove tests are independent.
+* Compare with another language – all six are implemented: same spec, same kinds of tests,
+  different idioms. That comparison is the point of the project.
+* A [JMH](https://github.com/openjdk/jmh) micro-benchmark of `checkout` (the matrix marks
+  benchmarks as optional for Java).
+* Run the JaCoCo agent inside the jar started by the e2e tests too, so the coverage report also
+  shows which lines of `Main` the end-to-end tests ran.
+* Cucumber can run scenarios in parallel (`cucumber.execution.parallel.enabled`); the step
+  definitions keep all state per scenario, so it should just work.

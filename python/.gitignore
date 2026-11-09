@@ -23,3 +23,7 @@ mutants/
 .coverage.*
 coverage.xml
 htmlcov/
+
+# Test, coverage and type-check reports and caches
+reports/
+.mypy_cache/

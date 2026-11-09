@@ -22,7 +22,7 @@ from checkout import CheckoutError, ErrorCode
 
 
 # A test name should say what *should* happen, like a sentence.
-def test_a_checkout_error_remembers_its_error_code():
+def test_a_checkout_error_remembers_its_error_code() -> None:
     # Arrange
     code = ErrorCode.UNKNOWN_COUPON
 
@@ -33,7 +33,7 @@ def test_a_checkout_error_remembers_its_error_code():
     assert error.code == ErrorCode.UNKNOWN_COUPON
 
 
-def test_a_checkout_error_can_be_raised_and_caught():
+def test_a_checkout_error_can_be_raised_and_caught() -> None:
     # pytest.raises checks that the code inside the `with` block raises
     # this exception. If nothing is raised, the test fails.
     with pytest.raises(CheckoutError) as caught:
@@ -41,6 +41,19 @@ def test_a_checkout_error_can_be_raised_and_caught():
 
     # `caught.value` is the exception that was raised.
     assert caught.value.code == ErrorCode.EMPTY_BASKET
+
+
+def test_without_a_message_the_code_is_the_message() -> None:
+    error = CheckoutError(ErrorCode.EMPTY_BASKET)
+
+    assert str(error) == "EMPTY_BASKET"
+
+
+def test_with_a_message_the_message_is_kept_and_the_code_too() -> None:
+    error = CheckoutError(ErrorCode.UNKNOWN_PRODUCT, "Unknown product: BANANA")
+
+    assert str(error) == "Unknown product: BANANA"
+    assert error.code == ErrorCode.UNKNOWN_PRODUCT
 
 
 # The spec (spec/checkout-rules.md, section 9) lists the six error codes.
@@ -58,7 +71,7 @@ SPEC_ERROR_CODES = [
 # @pytest.mark.parametrize runs the same test once for each value in the list.
 # The output shows one result per value, e.g. test_...[EMPTY_BASKET].
 @pytest.mark.parametrize("spelling", SPEC_ERROR_CODES)
-def test_each_error_code_is_spelled_exactly_as_in_the_spec(spelling):
+def test_each_error_code_is_spelled_exactly_as_in_the_spec(spelling: str) -> None:
     # ErrorCode("...") looks up the member with that value
     # (it raises ValueError if there is none, which would fail the test).
     code = ErrorCode(spelling)
@@ -67,5 +80,5 @@ def test_each_error_code_is_spelled_exactly_as_in_the_spec(spelling):
     assert str(code) == spelling
 
 
-def test_there_are_exactly_six_error_codes():
+def test_there_are_exactly_six_error_codes() -> None:
     assert len(ErrorCode) == 6

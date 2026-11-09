@@ -210,7 +210,7 @@ cases, contract, e2e and shared-runner tests (and update the count in `spec-load
 
 Tier 1 and Tier 2 of the matrix are complete for TypeScript, so what is left is polish:
 
-* Compare with another language once it is implemented: same spec, same kinds of tests,
+* Compare with another language – all six are implemented now: same spec, same kinds of tests,
   different idioms. That comparison is the point of the project.
 * A second BDD runner inside Vitest ([`@amiceli/vitest-cucumber`](https://github.com/amiceli/vitest-cucumber))
   would show the trade-off against the reference Cucumber runner.

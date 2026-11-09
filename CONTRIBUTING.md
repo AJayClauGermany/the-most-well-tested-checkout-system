@@ -85,12 +85,16 @@ change will not wait for the Java build.
 | Workflow                       | Runs when these change                     |
 |--------------------------------|--------------------------------------------|
 | `spec.yml`                     | `spec/**`, `e2e/**`                        |
-| `<language>.yml`               | `<language>/**` or `spec/**`               |
+| `<language>.yml`               | `<language>/**`, `spec/**` or `e2e/**`     |
 
-## Skipped tests are on purpose
+## Tests first – and the git history shows it
 
 Every language has a test that runs **all** shared spec cases against `checkout(...)`.
-Until the checkout is implemented, that test is skipped (`skip`, `@Disabled`,
-`#[ignore]`, …). When you start implementing, remove the skip and watch the
-tests go from red to green one by one. TypeScript has been through this already – its
-[`README.md`](typescript/README.md) and git history show what "test-first" looked like.
+While a checkout did not exist yet, that test was skipped (`skip`, `@Disabled`,
+`#[ignore]`, …); the first commit of each implementation removed the skip and added the
+whole test suite, red, and the next commit made it green. Run
+`git log --oneline -- <language folder>` to see it.
+
+Keep working that way: when you change behaviour, change the rules and the shared cases
+first, watch the six implementations go red, then fix them. Coverage and mutation testing
+run in every language's CI, so a change that is not tested shows up there.

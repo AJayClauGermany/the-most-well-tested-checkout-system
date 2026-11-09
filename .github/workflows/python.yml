@@ -1,12 +1,13 @@
 name: Python
 
-# Only run on pull requests that touch this language or the shared spec,
-# or when started by hand from the Actions tab.
+# Only run on pull requests that touch this language, the shared spec or the shared e2e
+# runner, or when started by hand from the Actions tab.
 on:
   pull_request:
     paths:
       - "python/**"
       - "spec/**"
+      - "e2e/**"
       - ".github/workflows/python.yml"
   workflow_dispatch:
 
@@ -37,11 +38,47 @@ jobs:
       - name: Install the package and dev tools
         run: python -m pip install -e ".[dev]"
 
+      # Static checks: no code runs, but whole classes of mistakes are caught.
       - name: Lint (ruff check)
         run: ruff check .
-
       - name: Check formatting (ruff format)
         run: ruff format --check .
+      - name: Type-check the code and the tests (mypy --strict)
+        run: mypy
 
-      - name: Run tests (pytest)
-        run: pytest
+      # The whole test pyramid in one pytest run: unit, parameterised, shared spec cases,
+      # BDD (pytest-bdd), test doubles, integration (tmp_path + sqlite3), property-based
+      # (Hypothesis), contract (jsonschema), snapshot (syrupy), e2e (subprocess) and the
+      # doctests in src/. Tests run in parallel (-n auto) and in a random order
+      # (pytest-randomly), which proves they are independent of each other. Coverage must
+      # stay at 100% (fail_under in pyproject.toml); a JUnit XML report is written for CI.
+      - name: Run all tests, in parallel and random order, with coverage (pytest)
+        run: >
+          pytest -n auto
+          --junitxml=reports/junit.xml
+          --cov --cov-report=term-missing
+          --cov-report=xml:reports/coverage.xml
+          --cov-report=html:reports/coverage
+
+      - name: Shared end-to-end runner against the CLI (e2e/run.sh)
+        run: ../e2e/run.sh python -m checkout
+
+      # Mutation testing: would the tests notice if the code were wrong? (About a minute.)
+      # mutmut itself exits with 0 even when mutants survive, so the last line checks the
+      # score from its statistics and fails the build below 95%.
+      - name: Mutation testing (mutmut), failing below a 95% score
+        run: |
+          mkdir -p reports
+          mutmut run
+          mutmut results --all true > reports/mutmut-results.txt
+          mutmut export-cicd-stats
+          cp mutants/mutmut-cicd-stats.json reports/
+          python -c "import json; s = json.load(open('reports/mutmut-cicd-stats.json')); print(f\"{s['killed']} of {s['total']} mutants killed\"); assert s['killed'] * 100 >= s['total'] * 95, 'mutation score below 95%'"
+
+      - name: Upload reports (JUnit, coverage, mutation)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-reports
+          path: python/reports/
+          if-no-files-found: ignore

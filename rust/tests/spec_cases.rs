@@ -1,13 +1,10 @@
 //! The shared, data-driven test cases from `spec/test-cases/*.json`.
 //!
 //! Each case says: "for this basket, the checkout gives these six totals" (or "fails with
-//! this error code"). The same JSON files are used by every language in the repository.
+//! this error code"). The same JSON files are used by every language in the repository,
+//! so these 60 cases are the acceptance tests of the whole project.
 //!
-//! **This test is ignored for now**, because `checkout()` is not implemented yet.
-//! That is test-driven development: the tests are written first and wait, "red",
-//! for the code that will make them pass.
-//!
-//! Run it anyway with: `cargo test --test spec_cases -- --ignored`
+//! Run only this file with: `cargo test --test spec_cases`
 //!
 //! ## Why one test with a loop, and not one test per case?
 //!
@@ -15,8 +12,10 @@
 //! data). So this single test loops over all cases, *collects* every mismatch together
 //! with the case id, and only fails at the very end. That way one run shows you **all**
 //! the broken cases, not just the first one.
-//! (Crates like `rstest`, `libtest-mimic` or `datatest-stable` can turn each case into its
-//! own named test – a nice contribution idea!)
+//!
+//! `tests/spec_cases_named.rs` shows the other way: the `libtest-mimic` crate turns each
+//! case into its own named test, so `cargo test --test spec_cases_named promo-` runs only
+//! the promotion cases.
 
 mod common;
 
@@ -24,7 +23,6 @@ use checkout::{Catalog, checkout};
 use common::{ExpectedTotals, SpecCase};
 
 #[test]
-#[ignore = "checkout() is not implemented yet – remove this line when you start implementing"]
 fn all_shared_spec_cases_pass() {
     let catalog = common::load_catalog();
     let cases = common::load_spec_cases();

@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- The checkout itself: a class library (no Main method). Shared settings live in ../../Directory.Build.props. -->
+  <!--
+    The checkout itself: a class library (no Main method). Shared settings live in
+    ../../Directory.Build.props. It has NO NuGet packages and never touches files or
+    databases – the architecture tests (tests/Checkout.ArchitectureTests) make sure of it.
+  -->
   <PropertyGroup>
     <RootNamespace>CheckoutSystem</RootNamespace>
   </PropertyGroup>

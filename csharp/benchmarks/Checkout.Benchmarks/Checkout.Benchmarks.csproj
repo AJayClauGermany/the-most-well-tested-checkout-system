@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    A micro-benchmark with BenchmarkDotNet (https://benchmarkdotnet.org/). Run it in Release
+    (see the README for the exact command). This is a console program, not a test project,
+    so `dotnet test` leaves it alone.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>CheckoutSystem.Benchmarks</RootNamespace>
+    <!-- BenchmarkDotNet needs instance methods; the analyzer rule CA1822 would ask to make them static. -->
+    <NoWarn>$(NoWarn);CA1822</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Checkout\Checkout.csproj" />
+    <ProjectReference Include="..\..\src\Checkout.Cli\Checkout.Cli.csproj" />
+  </ItemGroup>
+
+</Project>

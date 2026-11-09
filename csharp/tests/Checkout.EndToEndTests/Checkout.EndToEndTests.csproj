@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end tests: start the real command line program (src/Checkout.Cli) as a separate
+    process with System.Diagnostics.Process, exactly as a user or the shared runner e2e/run.sh
+    would, and look only at stdout, stderr and the exit code.
+  -->
+  <PropertyGroup>
+    <RootNamespace>CheckoutSystem.EndToEndTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Tell the tests where the built program is. $(Configuration) is Debug or Release, so this
+      also works for `dotnet test -c Release`. (Checkout.Cli is built first because
+      Checkout.TestSupport references it.)
+    -->
+    <AssemblyMetadata Include="CheckoutCliPath" Value="$(MSBuildThisFileDirectory)../../src/Checkout.Cli/bin/$(Configuration)/$(TargetFramework)/Checkout.Cli.dll" />
+  </ItemGroup>
+
+</Project>

@@ -32,16 +32,15 @@ You only need the tools for the language you pick. Every language folder has a
 
 | Language   | You need          | Run the tests (from the language folder)                         |
 |------------|-------------------|------------------------------------------------------------------|
-| Python     | Python 3.10+      | `pip install -e ".[dev]"` then `pytest`                          |
+| Python     | Python 3.11+      | `pip install -e ".[dev]"` then `pytest`                          |
 | TypeScript | Node.js 22.18+    | `npm install` then `npm test`                                    |
-| Go         | Go 1.24+          | `go test ./...`                                                  |
+| Go         | Go 1.26+          | `go test ./...`                                                  |
 | Java       | JDK 21 + Maven    | `mvn verify`                                                     |
 | C#         | .NET 10 SDK       | `dotnet test`                                                    |
 | Rust       | Rust (via rustup) | `cargo test`                                                     |
 
-You should see some tests **pass** and one group of tests **skipped**. The skipped
-tests are the shared spec cases, waiting for someone to implement the checkout.
-(In TypeScript the checkout is already implemented, so everything passes there.)
+Every test should **pass** – several hundred of them in each language. The 60 shared spec
+cases are among them, run against that language's checkout.
 
 ## 4. Make a test fail on purpose
 

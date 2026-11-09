@@ -1,12 +1,15 @@
 name: Go
 
-# Only run on pull requests that touch this language or the shared spec,
-# or when started by hand from the Actions tab.
+# Only run on pull requests that touch this language, the shared spec or the shared
+# end-to-end runner, or when started by hand from the Actions tab.
 on:
   pull_request:
     paths:
       - "go/**"
+      - "go.work"
+      - "go.work.sum"
       - "spec/**"
+      - "e2e/**"
       - ".github/workflows/go.yml"
   workflow_dispatch:
 
@@ -30,15 +33,20 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
+          # Reads the toolchain line in go.mod: the newest patch release of the oldest Go
+          # version that still gets security fixes.
           go-version-file: go/go.mod
-          # We only use the standard library, so there is no go.sum and no
-          # downloaded modules to cache. When a dependency is added (go.sum
-          # appears), switch this to:  cache-dependency-path: go/go.sum
-          cache: false
+          # Cache downloaded modules and build results, keyed on the exact versions in go.sum.
+          cache-dependency-path: go/go.sum
 
-      - name: Download dependencies
-        run: go mod download
+      - name: Download and verify dependencies
+        run: |
+          go mod download
+          go mod verify
 
+      # Static checks: no code runs, but whole classes of mistakes are caught.
+      - name: Check that go.mod and go.sum are tidy
+        run: go mod tidy -diff
       - name: Check formatting (gofmt)
         # gofmt -l lists files that are not formatted; any output fails the step.
         run: |
@@ -48,12 +56,85 @@ jobs:
             echo "$unformatted"
             exit 1
           fi
-
       - name: Static check (go vet)
-        run: go vet ./...
+        run: go vet -tags integration,e2e ./...
+      - name: Static check (staticcheck)
+        run: go tool staticcheck -tags integration,e2e ./...
+      - name: Check that the generated mocks are up to date (mockgen)
+        run: |
+          go generate ./...
+          git diff --exit-code -- internal/mocks
 
-      - name: Run tests
-        run: go test -v ./...
+      # The tests: unit, table-driven, spec cases, BDD (godog), test doubles (gomock),
+      # property-based (rapid), contract, golden files, examples, the fuzz seed corpus and
+      # integration tests (build tag "integration") – with the race detector, in a random
+      # order, with coverage and a JUnit report.
+      - name: Run all tests with -race and -shuffle, coverage and a JUnit report (gotestsum)
+        run: |
+          mkdir -p reports
+          go tool gotestsum --format testname --junitfile reports/junit.xml -- \
+            -race -shuffle=on -tags integration \
+            -covermode=atomic \
+            -coverpkg=./checkout/...,./cli/...,./jsonstore/...,./sqlitestore/...,./specdir/... \
+            -coverprofile=reports/coverage.out \
+            ./...
+      - name: Check the coverage threshold (100%)
+        # cmd/checkout/main.go (a few lines of wiring) is tested end-to-end instead, and
+        # internal/ is test support, so -coverpkg above leaves them out.
+        run: |
+          go tool cover -html=reports/coverage.out -o reports/coverage.html
+          total="$(go tool cover -func=reports/coverage.out | awk '/^total:/ { sub("%", "", $3); print $3 }')"
+          echo "Total coverage: ${total}%"
+          if ! awk -v total="$total" -v minimum=100 'BEGIN { exit !(total >= minimum) }'; then
+            echo "Coverage is below 100%. See reports/coverage.html in the uploaded artifact."
+            exit 1
+          fi
 
-      - name: Run end-to-end tests (build tag e2e)
-        run: go test -v -tags e2e ./e2e/...
+      - name: End-to-end tests of the CLI (build tag e2e)
+        run: go tool gotestsum --format testname --junitfile reports/junit-e2e.xml -- -tags e2e ./e2e/...
+      - name: Shared end-to-end runner against the CLI (e2e/run.sh)
+        working-directory: .
+        run: e2e/run.sh go run ./go/cmd/checkout
+
+      - name: Fuzzing smoke run (P10, 10 seconds)
+        run: go test -run '^$' -fuzz=FuzzCheckout -fuzztime=10s ./checkout
+      - name: Benchmark smoke run
+        run: go test -run '^$' -bench . -benchmem -benchtime=1000x ./checkout
+
+      # Mutation testing: would the tests notice if the code were wrong? (about a minute)
+      #
+      # gremlins copies go/ into a temporary folder and runs the tests there, where no
+      # spec/ folder is above them; CHECKOUT_SPEC_DIR tells them where it is. gremlins counts
+      # ANY failing test run as a "killed" mutant, so if the tests could not run in the copy
+      # at all, every mutant would look killed. The first step proves they can.
+      - name: Check the tests pass in a copy outside the repository (as gremlins runs them)
+        env:
+          CHECKOUT_SPEC_DIR: ${{ github.workspace }}/spec
+        run: |
+          copy="$RUNNER_TEMP/go-copy"
+          rm -rf "$copy" && cp -r . "$copy"
+          (cd "$copy" && go test -count=1 -tags integration ./...)
+      - name: Mutation testing (gremlins)
+        env:
+          CHECKOUT_SPEC_DIR: ${{ github.workspace }}/spec
+        run: |
+          go run github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0 unleash \
+            --tags integration \
+            --exclude-files 'cmd/' --exclude-files 'internal/mocks/' \
+            --invert-logical --invert-loopctrl --invert-assignments --remove-self-assignments \
+            --threshold-efficacy 95 --threshold-mcover 95 \
+            --output reports/mutation.json
+
+      # Known vulnerabilities in the dependencies and the Go standard library. Reported but
+      # not blocking: a fix may only exist in a newer Go release than the one go.mod pins.
+      - name: Vulnerability check (govulncheck, informational)
+        continue-on-error: true
+        run: go tool govulncheck ./...
+
+      - name: Upload reports (JUnit, coverage, mutation)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-reports
+          path: go/reports/
+          if-no-files-found: ignore

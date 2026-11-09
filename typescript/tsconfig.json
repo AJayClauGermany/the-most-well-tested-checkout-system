@@ -14,7 +14,7 @@
 
     // We import files with their real ".ts" extension (e.g. "./types.ts").
     // That way Node.js can also run our files directly (Node strips the types),
-    // which will be handy for the command line program from rules §8.
+    // which is how the command line program from rules §8 runs: node src/cli.ts
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,

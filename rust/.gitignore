@@ -4,3 +4,10 @@
 # Coverage / profiling output that tools like cargo-llvm-cov or cargo-mutants may create.
 *.profraw
 /mutants.out*/
+
+# Snapshots insta proposes but nobody has reviewed yet (`cargo insta review` accepts them).
+*.snap.new
+*.pending-snap
+
+# Coverage report written by cargo-llvm-cov.
+/lcov.info

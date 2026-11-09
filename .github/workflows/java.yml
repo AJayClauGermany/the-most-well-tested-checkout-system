@@ -7,6 +7,7 @@ on:
     paths:
       - "java/**"
       - "spec/**"
+      - "e2e/**"
       - ".github/workflows/java.yml"
   workflow_dispatch:
 
@@ -35,9 +36,34 @@ jobs:
           cache: maven
           cache-dependency-path: java/pom.xml
 
-      - name: Download dependencies and compile (static check, -Xlint:all -Werror)
-        # Compiles the main and test code. Any compiler warning fails this step.
+      # Static checks: no code runs, but whole classes of mistakes are caught.
+      - name: Compile with all static checks (Checkstyle, -Xlint:all -Werror, Error Prone)
         run: mvn -B test-compile
 
-      - name: Run unit tests (Surefire) and integration tests (Failsafe)
+      # The test pyramid, bottom to top. Surefire runs every *Test class (unit, parameterised,
+      # shared spec cases, BDD, test doubles, properties, contracts, snapshots, fuzz seeds,
+      # architecture); Failsafe runs every *IT class after the jar is built (JSON-file and
+      # H2 repositories, end-to-end through java -jar). JaCoCo then checks 100% coverage.
+      - name: Unit, BDD, property, contract, snapshot, fuzz, architecture, integration and e2e tests, with coverage
         run: mvn -B verify
+
+      - name: Shared end-to-end runner against the CLI (e2e/run.sh)
+        working-directory: .
+        run: e2e/run.sh java -jar java/target/checkout.jar
+
+      # Mutation testing: would the tests notice if the code were wrong? (about three minutes)
+      - name: Mutation testing (PIT)
+        run: mvn -B test-compile org.pitest:pitest-maven:mutationCoverage
+
+      - name: Upload reports (JUnit XML, coverage, Cucumber, mutation)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-reports
+          path: |
+            java/target/surefire-reports/
+            java/target/failsafe-reports/
+            java/target/site/jacoco/
+            java/target/cucumber-reports/
+            java/target/pit-reports/
+          if-no-files-found: ignore

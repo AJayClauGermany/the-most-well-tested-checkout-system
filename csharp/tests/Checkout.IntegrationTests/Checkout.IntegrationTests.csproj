@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Integration tests: real files in a real temporary folder, a real SQLite database file, and
+    the real spec files on disk. Slower than unit tests, and they can fail for reasons outside
+    the code (disk full, no permissions) - that is exactly what they are for.
+  -->
+  <PropertyGroup>
+    <RootNamespace>CheckoutSystem.IntegrationTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Checkout.Storage\Checkout.Storage.csproj" />
+  </ItemGroup>
+
+</Project>

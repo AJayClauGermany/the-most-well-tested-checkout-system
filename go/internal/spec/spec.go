@@ -8,13 +8,13 @@ package spec
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 
 	"github.com/AJayClauGermany/the-most-well-tested-checkout-system/go/checkout"
+	"github.com/AJayClauGermany/the-most-well-tested-checkout-system/go/specdir"
 )
 
 // Totals are the six amounts a spec case expects (all in cents).
@@ -25,6 +25,19 @@ type Totals struct {
 	Shipping          int `json:"shipping"`
 	Tax               int `json:"tax"`
 	Total             int `json:"total"`
+}
+
+// TotalsOf picks the six totals out of a receipt, so a test can compare them with a case's
+// Expected totals in one go.
+func TotalsOf(receipt checkout.Receipt) Totals {
+	return Totals{
+		Subtotal:          receipt.Subtotal,
+		PromotionDiscount: receipt.PromotionDiscount,
+		CouponDiscount:    receipt.CouponDiscount,
+		Shipping:          receipt.Shipping,
+		Tax:               receipt.Tax,
+		Total:             receipt.Total,
+	}
 }
 
 // Case is one shared test case from spec/test-cases/*.json.
@@ -43,23 +56,10 @@ type Case struct {
 // `go test` runs each package's tests inside that package's own folder
 // (for example go/internal/spec), so we cannot rely on a fixed relative path.
 // Instead we start at the current folder and walk up, one parent at a time,
-// until we find a folder that contains spec/catalog.json.
+// until we find a folder that contains spec/catalog.json – or use the folder named by
+// the CHECKOUT_SPEC_DIR environment variable when it is set (see package specdir).
 func Dir() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	for {
-		candidate := filepath.Join(dir, "spec")
-		if _, err := os.Stat(filepath.Join(candidate, "catalog.json")); err == nil {
-			return candidate, nil
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir { // reached the root of the file system
-			return "", errors.New("could not find the spec/ folder in any parent directory")
-		}
-		dir = parent
-	}
+	return specdir.Locate()
 }
 
 // LoadCatalog reads spec/catalog.json.
@@ -69,7 +69,7 @@ func LoadCatalog() (checkout.Catalog, error) {
 	if err != nil {
 		return catalog, err
 	}
-	err = readJSON(filepath.Join(dir, "catalog.json"), &catalog)
+	err = ReadJSON(filepath.Join(dir, "catalog.json"), &catalog)
 	return catalog, err
 }
 
@@ -90,7 +90,7 @@ func LoadCases() ([]Case, error) {
 		var file struct {
 			Cases []Case `json:"cases"`
 		}
-		if err := readJSON(path, &file); err != nil {
+		if err := ReadJSON(path, &file); err != nil {
 			return nil, err
 		}
 		for _, c := range file.Cases {
@@ -101,8 +101,8 @@ func LoadCases() ([]Case, error) {
 	return all, nil
 }
 
-// readJSON decodes the JSON file at path into target.
-func readJSON(path string, target any) error {
+// ReadJSON decodes the JSON file at path into target.
+func ReadJSON(path string, target any) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err

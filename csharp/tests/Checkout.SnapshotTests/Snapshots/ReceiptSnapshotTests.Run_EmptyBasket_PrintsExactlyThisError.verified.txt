@@ -1,0 +1,4 @@
+﻿{
+  Output: {"error":"EMPTY_BASKET"},
+  ExitCode: 1
+}

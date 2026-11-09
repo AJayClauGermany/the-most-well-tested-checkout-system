@@ -7,7 +7,6 @@ import checkout.spec.SpecCase;
 import checkout.spec.SpecFiles;
 import checkout.spec.Totals;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -16,10 +15,14 @@ import org.junit.jupiter.params.provider.MethodSource;
  * A DATA-DRIVEN test: one test method, run once for every case in
  * {@code spec/test-cases/*.json} (the same cases every language uses).
  *
- * <p>This is test-driven development (TDD): the tests exist before the code.
- * They are disabled for now because {@link Checkout#checkout} is not written yet.
- * When you start implementing it, delete the {@code @Disabled} line and watch the
- * tests go from red to green, one case at a time.
+ * <p>This is test-driven development (TDD): the tests existed before the code. They were
+ * disabled while {@link Checkout#checkout} was not written yet; removing the
+ * {@code @Disabled} line was the first step of the implementation, and the 60 cases went
+ * from red to green one by one.
+ *
+ * <p>{@code @MethodSource} is the third way to feed a parameterised test (next to
+ * {@code @ValueSource} and {@code @CsvSource}): a method supplies the arguments, here by
+ * reading the JSON files.
  */
 class SharedSpecCasesTest {
 
@@ -32,7 +35,6 @@ class SharedSpecCasesTest {
                 .map(specCase -> Named.of(specCase.id(), specCase));
     }
 
-    @Disabled("checkout() is not implemented yet - remove this @Disabled line when you start implementing")
     @ParameterizedTest(name = "{0}")
     @MethodSource("specCases")
     void checkoutMatchesTheSharedSpec(SpecCase specCase) {

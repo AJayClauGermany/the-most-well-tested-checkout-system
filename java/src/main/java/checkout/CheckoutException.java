@@ -33,6 +33,20 @@ public class CheckoutException extends RuntimeException {
     }
 
     /**
+     * Creates an exception for the given error code with a message for humans.
+     *
+     * <p>The code is what programs look at; the message explains the problem to the
+     * person reading a log ({@code "Unknown product: BANANA"}).
+     *
+     * @param code    what went wrong
+     * @param message a human-readable explanation
+     */
+    public CheckoutException(ErrorCode code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    /**
      * Returns what went wrong.
      *
      * @return the error code from rules section 9

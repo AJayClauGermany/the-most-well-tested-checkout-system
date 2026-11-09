@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+  Checkstyle rules for the Java checkout: a small, readable set about the *look* of the
+  code (the compiler and Error Prone take care of the *meaning*). Every rule here is one a
+  beginner can understand and fix in seconds. Run: mvn checkstyle:check
+-->
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="warning"/>
+  <property name="fileExtensions" value="java"/>
+
+  <!-- Whole-file checks -->
+  <module name="FileTabCharacter"/>
+  <module name="NewlineAtEndOfFile"/>
+  <module name="LineLength">
+    <property name="max" value="120"/>
+    <!-- Long URLs and import lines cannot be wrapped. -->
+    <property name="ignorePattern" value="^package .*|^import .*|https?://"/>
+  </module>
+  <module name="RegexpSingleline">
+    <property name="format" value="\s+$"/>
+    <property name="message" value="Line has trailing whitespace."/>
+  </module>
+
+  <module name="TreeWalker">
+    <!-- Imports -->
+    <module name="AvoidStarImport"/>
+    <module name="RedundantImport"/>
+    <module name="UnusedImports"/>
+
+    <!-- Naming -->
+    <module name="OuterTypeFilename"/>
+    <module name="PackageName"/>
+    <module name="TypeName"/>
+    <!-- Property tests are named after their id (P1 .. P14), so underscores are allowed. -->
+    <module name="MethodName">
+      <property name="format" value="^[a-z][a-zA-Z0-9_]*$"/>
+    </module>
+    <module name="ConstantName"/>
+    <module name="LocalVariableName"/>
+    <module name="MemberName"/>
+    <module name="ParameterName"/>
+
+    <!-- Blocks and statements -->
+    <module name="NeedBraces"/>
+    <module name="LeftCurly"/>
+    <module name="RightCurly"/>
+    <module name="OneStatementPerLine"/>
+    <module name="EmptyStatement"/>
+    <module name="MissingSwitchDefault">
+      <!-- A switch over a sealed type or an enum that covers every case needs no default. -->
+      <property name="severity" value="ignore"/>
+    </module>
+
+    <!-- Whitespace -->
+    <module name="WhitespaceAfter"/>
+    <module name="WhitespaceAround">
+      <property name="allowEmptyConstructors" value="true"/>
+      <property name="allowEmptyMethods" value="true"/>
+      <property name="allowEmptyTypes" value="true"/>
+      <property name="allowEmptyLambdas" value="true"/>
+    </module>
+    <module name="NoWhitespaceBefore"/>
+    <module name="GenericWhitespace"/>
+    <module name="MethodParamPad"/>
+    <module name="ParenPad"/>
+
+    <!-- Misc -->
+    <module name="ArrayTypeStyle"/>
+    <module name="UpperEll"/>
+    <module name="ModifierOrder"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+  </module>
+</module>

@@ -9,3 +9,6 @@ target/
 .project
 .settings/
 .factorypath
+
+# ApprovalTests writes the actual output here when it differs from the *.approved.* file
+*.received.*

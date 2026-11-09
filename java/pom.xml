@@ -4,9 +4,11 @@
 
   Maven reads this file to know:
     * which libraries we use (the <dependencies> section),
-    * how to compile the code (maven-compiler-plugin),
+    * how to compile the code (maven-compiler-plugin, with Error Prone),
     * how to run the tests (maven-surefire-plugin for unit tests,
-      maven-failsafe-plugin for integration tests).
+      maven-failsafe-plugin for integration tests),
+    * how to measure the tests (JaCoCo for coverage, PIT for mutation testing),
+    * how to build the command line program (maven-shade-plugin -> target/checkout.jar).
 
   Every version is written out exactly (no ranges, no "latest"), so everybody
   who builds this project gets the same libraries. Maven has no separate
@@ -32,6 +34,18 @@
     <!-- Library versions -->
     <jackson.version>3.3.0</jackson.version>
     <junit.version>6.1.3</junit.version>
+    <assertj.version>3.27.7</assertj.version>
+    <cucumber.version>8.0.4</cucumber.version>
+    <mockito.version>5.24.0</mockito.version>
+    <h2.version>2.5.252</h2.version>
+    <!-- jqwik stays on 1.9.x on purpose: 1.10 changed its licence (see docs/testing-matrix.md). -->
+    <jqwik.version>1.9.3</jqwik.version>
+    <json-schema-validator.version>3.0.9</json-schema-validator.version>
+    <approvaltests.version>31.0.0</approvaltests.version>
+    <archunit.version>1.5.1</archunit.version>
+    <jazzer.version>0.30.0</jazzer.version>
+    <error-prone.version>2.52.0</error-prone.version>
+    <checkstyle.version>14.4.0</checkstyle.version>
 
     <!-- Plugin versions (pinned so builds are repeatable) -->
     <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
@@ -40,9 +54,31 @@
     <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>3.6.1</maven-failsafe-plugin.version>
     <maven-jar-plugin.version>3.5.1</maven-jar-plugin.version>
+    <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
+    <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
+    <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <maven-install-plugin.version>3.2.0</maven-install-plugin.version>
     <maven-deploy-plugin.version>3.2.0</maven-deploy-plugin.version>
     <maven-site-plugin.version>3.22.0</maven-site-plugin.version>
+    <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
+    <pitest-maven.version>1.30.2</pitest-maven.version>
+    <pitest-junit5-plugin.version>1.2.3</pitest-junit5-plugin.version>
+
+    <!-- JVM options for the test runs (Surefire and Failsafe), each one fixing a warning:
+           @{jacocoArgLine}       the JaCoCo coverage agent (set by jacoco:prepare-agent).
+           -javaagent:...mockito  Mockito's inline mock maker as a Java agent. Since JDK 21 a
+                                  library that attaches an agent to its own JVM at run time
+                                  gets a warning; loading it up front is the clean way.
+           -Xshare:off            Mockito's agent appends to the boot class path, which turns
+                                  off class data sharing anyway - with a warning unless we say so.
+           -XX:+EnableDynamicAgentLoading
+                                  Jazzer (fuzzing) has to attach its agent at run time; this is
+                                  the JDK's own switch for tools that legitimately do that. -->
+    <test.argLine>@{jacocoArgLine} -javaagent:@{org.mockito:mockito-core:jar} -Xshare:off -XX:+EnableDynamicAgentLoading</test.argLine>
+
+    <!-- Coverage thresholds checked by "jacoco:check" (1.00 = 100%). -->
+    <coverage.line.minimum>1.00</coverage.line.minimum>
+    <coverage.branch.minimum>1.00</coverage.branch.minimum>
   </properties>
 
   <dependencyManagement>
@@ -55,27 +91,128 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <!-- Same idea for Cucumber: one version for all its modules. -->
+      <dependency>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-bom</artifactId>
+        <version>${cucumber.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
   <dependencies>
-    <!-- Jackson turns JSON text into Java objects (and back again). -->
+    <!-- ======================= the real program ======================= -->
+
+    <!-- Jackson turns JSON text into Java objects (and back again). The only library
+         the program itself needs: the CLI reads a basket and prints a receipt, and the
+         JSON-file order store writes one file per order. -->
     <dependency>
       <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
     </dependency>
 
-    <!-- JUnit Jupiter: the test framework (includes @ParameterizedTest).
-         scope "test" means it is only used by the tests, never by the real program. -->
+    <!-- ======================= test libraries ======================= -->
+    <!-- scope "test" means: only used by the tests, never part of the real program. -->
+
+    <!-- JUnit Jupiter: the test framework (includes @ParameterizedTest). -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- JUnit Platform "suite": lets one class (@Suite) run another engine - here Cucumber. -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- AssertJ: fluent assertions, assertThat(receipt.total()).isEqualTo(2441). -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Cucumber: runs the Given/When/Then scenarios in ../spec/features/ (BDD). -->
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-java</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-junit-platform-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Mockito: mock objects, to prove e.g. that save() was never called. -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- H2: an embedded SQL database (a file or in memory), driven through plain JDBC.
+         The program only uses java.sql; the driver is needed at test time. -->
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>${h2.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- jqwik: property-based testing (P1..P14 from ../spec/properties.md). -->
+    <dependency>
+      <groupId>net.jqwik</groupId>
+      <artifactId>jqwik</artifactId>
+      <version>${jqwik.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- networknt json-schema-validator: checks JSON against ../spec/schema/*.json (contract tests). -->
+    <dependency>
+      <groupId>com.networknt</groupId>
+      <artifactId>json-schema-validator</artifactId>
+      <version>${json-schema-validator.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- ApprovalTests: snapshot ("approval") testing of whole receipts. -->
+    <dependency>
+      <groupId>com.approvaltests</groupId>
+      <artifactId>approvaltests</artifactId>
+      <version>${approvaltests.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- ArchUnit: tests about the architecture ("the domain never depends on the CLI"). -->
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit-junit5</artifactId>
+      <version>${archunit.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Jazzer: fuzzing from inside JUnit (@FuzzTest), for property P10. -->
+    <dependency>
+      <groupId>com.code-intelligence</groupId>
+      <artifactId>jazzer-junit</artifactId>
+      <version>${jazzer.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
+    <!-- The jar is target/checkout.jar, so "java -jar java/target/checkout.jar" works
+         from the repository root - exactly what the shared e2e runner expects. -->
+    <finalName>checkout</finalName>
+
     <pluginManagement>
       <plugins>
         <!-- Plugins Maven uses behind the scenes. We only pin their versions. -->
@@ -107,9 +244,28 @@
     </pluginManagement>
 
     <plugins>
-      <!-- The compiler. "-Xlint:all -Werror" is our static check:
-           the Java compiler reports every warning it knows about,
-           and any warning fails the build. -->
+      <!-- Makes the path of the Mockito jar available as ${org.mockito:mockito-core:jar},
+           so Surefire can load it as a Java agent (see argLine below). -->
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>${maven-dependency-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>dependency-paths-as-properties</id>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- The compiler. Two static checks happen here:
+             * "-Xlint:all -Werror": javac reports every warning it knows about, and
+               any warning fails the build.
+             * Error Prone: a javac plugin with hundreds of extra bug patterns
+               (a forgotten return value, equals on the wrong type, ...).
+           Error Prone needs access to javac internals; the flags for that are in
+           .mvn/jvm.config, which Maven passes to its own JVM. -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${maven-compiler-plugin.version}</version>
@@ -118,22 +274,150 @@
           <compilerArgs>
             <arg>-Xlint:all</arg>
             <arg>-Werror</arg>
+            <arg>-XDcompilePolicy=simple</arg>
+            <arg>--should-stop=ifError=FLOW</arg>
+            <!-- Required by Error Prone when compiling on JDK 21 (it says so if missing). -->
+            <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
+            <!-- TEMPORARY, only while the code is stubs: every stub "always throws", which
+                 Error Prone's DoNotCallSuggester reports. Removed with the implementation. -->
+            <arg>-Xplugin:ErrorProne -Xep:DoNotCallSuggester:OFF</arg>
           </compilerArgs>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>com.google.errorprone</groupId>
+              <artifactId>error_prone_core</artifactId>
+              <version>${error-prone.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
 
-      <!-- Surefire runs the UNIT tests (classes named *Test) during "mvn test". -->
+      <!-- Checkstyle: checks the *style* of the code (imports, braces, whitespace,
+           line length), in the main code and the tests. The rules are in checkstyle.xml. -->
+      <plugin>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>${maven-checkstyle-plugin.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>${checkstyle.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <configLocation>checkstyle.xml</configLocation>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <consoleOutput>true</consoleOutput>
+          <failOnViolation>true</failOnViolation>
+          <violationSeverity>warning</violationSeverity>
+        </configuration>
+        <executions>
+          <execution>
+            <id>checkstyle</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- JaCoCo measures code coverage: which lines and branches the tests ran.
+           Both test runs (Surefire and Failsafe) write into the same file, so the
+           report and the threshold check see unit and integration tests together. -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-maven-plugin.version}</version>
+        <configuration>
+          <destFile>${project.build.directory}/jacoco.exec</destFile>
+          <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+          <excludes>
+            <!-- Main only connects stdin/stdout to CheckoutCommand and runs in a separate
+                 process (tested end-to-end), which an in-process agent cannot see. -->
+            <exclude>checkout/cli/Main.class</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+            <configuration>
+              <propertyName>jacocoArgLine</propertyName>
+            </configuration>
+          </execution>
+          <execution>
+            <id>prepare-agent-integration</id>
+            <goals>
+              <goal>prepare-agent-integration</goal>
+            </goals>
+            <configuration>
+              <propertyName>jacocoArgLine</propertyName>
+            </configuration>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${coverage.line.minimum}</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${coverage.branch.minimum}</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Surefire runs the UNIT tests (classes named *Test) during "mvn test".
+           It finds every JUnit Platform engine on the classpath: Jupiter, jqwik,
+           Cucumber (through the @Suite class), ArchUnit and Jazzer (inside Jupiter).
+           The JVM options (argLine) are explained at the "test.argLine" property. -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <argLine>${test.argLine}</argLine>
+        </configuration>
       </plugin>
 
       <!-- Failsafe runs the INTEGRATION tests (classes named *IT) during "mvn verify".
            It runs after the jar is built, and it only fails the build at the very end,
-           so clean-up steps still get a chance to run. -->
+           so clean-up steps still get a chance to run. The e2e tests get the path of
+           the jar as a system property. -->
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${maven-failsafe-plugin.version}</version>
+        <configuration>
+          <argLine>${test.argLine}</argLine>
+          <systemPropertyVariables>
+            <checkout.jar>${project.build.directory}/checkout.jar</checkout.jar>
+          </systemPropertyVariables>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -143,6 +427,113 @@
           </execution>
         </executions>
       </plugin>
+
+      <!-- Shade builds target/checkout.jar: our classes plus Jackson in ONE jar, with a
+           Main-Class in the manifest, so "java -jar target/checkout.jar" just works.
+           (The plain jar without Jackson is kept as target/original-checkout.jar.) -->
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${maven-shade-plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <!-- Signatures and module descriptors of the merged jars do not apply to the combined jar. -->
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                    <exclude>META-INF/versions/**</exclude>
+                    <exclude>module-info.class</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>checkout.cli.Main</mainClass>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- PIT mutation testing: makes small changes to the code and checks the tests notice.
+           Not part of "mvn verify" (it takes a few minutes); run it with
+             mvn -B -Pmutation verify
+           or just "mvn -B org.pitest:pitest-maven:mutationCoverage" after the tests passed.
+           The report is target/pit-reports/index.html. -->
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>${pitest-maven.version}</version>
+        <dependencies>
+          <!-- Lets PIT run JUnit Platform tests (Jupiter, jqwik, ...). -->
+          <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>${pitest-junit5-plugin.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <targetClasses>
+            <param>checkout.*</param>
+          </targetClasses>
+          <excludedClasses>
+            <!-- Runs in another process (see the e2e tests); an in-process tool cannot observe it. -->
+            <param>checkout.cli.Main</param>
+          </excludedClasses>
+          <targetTests>
+            <param>checkout.*</param>
+          </targetTests>
+          <excludedTestClasses>
+            <!-- Cucumber and Jazzer bring their own runners that PIT cannot drive;
+                 the shared spec cases and unit tests cover the same behaviour. -->
+            <param>checkout.bdd.*</param>
+            <param>checkout.fuzz.*</param>
+          </excludedTestClasses>
+          <outputFormats>
+            <param>HTML</param>
+            <param>XML</param>
+          </outputFormats>
+          <timestampedReports>false</timestampedReports>
+          <!-- Fail the build when the score drops below this percentage. -->
+          <mutationThreshold>95</mutationThreshold>
+          <threads>2</threads>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- "mvn -B -Pmutation verify" also runs PIT (after the normal tests). -->
+    <profile>
+      <id>mutation</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <executions>
+              <execution>
+                <id>mutation-testing</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>mutationCoverage</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

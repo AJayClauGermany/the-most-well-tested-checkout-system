@@ -26,4 +26,15 @@ public record Catalog(List<Product> products) {
                 .filter(product -> product.sku().equals(sku))
                 .findFirst();
     }
+
+    /**
+     * Like {@link #findBySku}, but a missing product is an error.
+     *
+     * @param sku the product code to look for
+     * @return the product
+     * @throws CheckoutException UNKNOWN_PRODUCT (rules section 4.1 row 2)
+     */
+    public Product requireBySku(String sku) {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
 }

@@ -18,6 +18,7 @@ import com.code_intelligence.jazzer.junit.FuzzTest;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.Tag;
 
 /**
  * FUZZ tests with Jazzer: property P10 ("validation is total") attacked with random input.
@@ -35,6 +36,7 @@ import java.util.List;
  * guided by which branches of the code the input reaches, which makes it good at finding
  * parsing bugs.
  */
+@Tag("fuzz")
 class CheckoutFuzzTest {
 
     private static final Catalog CATALOG = SpecFiles.loadCatalog();

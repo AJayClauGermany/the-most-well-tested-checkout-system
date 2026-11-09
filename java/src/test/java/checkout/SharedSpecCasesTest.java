@@ -8,6 +8,7 @@ import checkout.spec.SpecFiles;
 import checkout.spec.Totals;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -24,6 +25,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  * {@code @ValueSource} and {@code @CsvSource}): a method supplies the arguments, here by
  * reading the JSON files.
  */
+@Tag("spec")
 class SharedSpecCasesTest {
 
     /**

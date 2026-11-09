@@ -16,6 +16,7 @@ import checkout.spec.SpecCase;
 import checkout.spec.SpecFiles;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -29,6 +30,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  * receipt (lines included, snake_case names, no extra fields) is held to the contract, using
  * networknt's JSON Schema validator.
  */
+@Tag("contract")
 class ReceiptContractTest {
 
     private static final Catalog CATALOG = SpecFiles.loadCatalog();

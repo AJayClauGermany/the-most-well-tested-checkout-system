@@ -7,6 +7,7 @@ import checkout.orders.OrderRepository;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
+import com.tngtech.archunit.junit.ArchTag;
 import com.tngtech.archunit.junit.ArchTest;
 
 /**
@@ -24,6 +25,7 @@ import com.tngtech.archunit.junit.ArchTest;
  * not the tests) once, and hands them to every {@code @ArchTest} method, which is run by
  * ArchUnit's own JUnit Platform engine.
  */
+@ArchTag("architecture")
 @AnalyzeClasses(packages = "checkout", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 

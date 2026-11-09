@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.io.TempDir;
  * {@code spec/schema/order.schema.json} - a contract test inside an integration test.
  * The class name ends in {@code IT}, so Failsafe runs it during {@code mvn verify}.
  */
+@Tag("integration")
 class JsonFileOrderRepositoryIT {
 
     private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-01-15T10:30:00Z"), ZoneOffset.UTC);

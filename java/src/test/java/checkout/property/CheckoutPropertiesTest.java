@@ -35,6 +35,7 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.From;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
+import net.jqwik.api.Tag;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.Size;
 
@@ -49,6 +50,7 @@ import net.jqwik.api.constraints.Size;
  * <p>jqwik is its own JUnit Platform engine: {@code @Property} replaces {@code @Test}, and
  * {@code @ForAll} parameters are filled with generated values ("arbitraries").
  */
+@Tag("property")
 class CheckoutPropertiesTest {
 
     private static final Catalog CATALOG = SpecFiles.loadCatalog();

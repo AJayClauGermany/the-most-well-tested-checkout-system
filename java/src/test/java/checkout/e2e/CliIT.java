@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,6 +31,7 @@ import tools.jackson.databind.JsonNode;
  * {@code checkout.jar}. Because the test only sees stdout, stderr and the exit code, it would
  * pass unchanged for a program written in any language.
  */
+@Tag("e2e")
 class CliIT {
 
     /** What one run of the program produced. */

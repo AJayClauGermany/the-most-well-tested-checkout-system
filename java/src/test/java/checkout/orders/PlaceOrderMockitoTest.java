@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import checkout.CheckoutException;
 import java.time.Clock;
 import java.time.Instant;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.Test;
  * (see {@code argLine} in {@code pom.xml}), otherwise the JVM prints a warning about
  * libraries attaching agents to themselves at run time.
  */
+@Tag("mock")
 class PlaceOrderMockitoTest {
 
     @Test

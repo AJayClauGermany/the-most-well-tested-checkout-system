@@ -12,3 +12,6 @@ target/
 
 # ApprovalTests writes the actual output here when it differs from the *.approved.* file
 *.received.*
+
+# Jazzer keeps the inputs it generates while fuzzing (JAZZER_FUZZ=1) here
+.cifuzz-corpus/

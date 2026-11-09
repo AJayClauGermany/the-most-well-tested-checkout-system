@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.List;
 import org.approvaltests.Approvals;
 import org.approvaltests.core.Options;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.Test;
  * <p>The hand-checked receipt in {@code spec/examples/receipt.json} plays the role of an
  * approved output shared by all six languages, so the first test also compares against it.
  */
+@Tag("snapshot")
 class ReceiptApprovalTest {
 
     private static final Catalog CATALOG = SpecFiles.loadCatalog();

@@ -21,6 +21,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,6 +35,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  * {@code jdbc:h2:file:<path>} makes H2 create the file; {@code jdbc:h2:mem:} is a throw-away
  * database that disappears when the connection closes.
  */
+@Tag("integration")
 class JdbcOrderRepositoryIT {
 
     private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-01-15T10:30:00Z"), ZoneOffset.UTC);

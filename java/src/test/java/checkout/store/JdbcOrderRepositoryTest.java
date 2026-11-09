@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Clock;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
  * simply be told to fail, so we can check that such a failure is reported as a
  * {@link StorageException} with the original error attached, instead of being lost.
  */
+@Tag("mock")
 class JdbcOrderRepositoryTest {
 
     private final Connection connection = mock(Connection.class);

@@ -1,6 +1,8 @@
 // A Go workspace: it tells the go command that the module in go/ belongs to this
 // repository, so Go commands also work from the repository root, e.g. the shared
 // end-to-end runner:  e2e/run.sh go run ./go/cmd/checkout
-go 1.24.0
+go 1.26.0
+
+toolchain go1.26.10
 
 use ./go

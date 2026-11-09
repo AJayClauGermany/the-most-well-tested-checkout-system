@@ -16,7 +16,7 @@ pinned in `go.mod` (exact versions) and `go.sum` (checksums), and is downloaded 
 
 | Tool | What it does | Why this one |
 |------|--------------|--------------|
-| [Go](https://go.dev/) 1.24+ | The language and its `go` command | `go test`, `go vet`, `gofmt`, coverage, fuzzing, benchmarks and the race detector are all built in |
+| [Go](https://go.dev/) 1.26+ | The language and its `go` command | `go test`, `go vet`, `gofmt`, coverage, fuzzing, benchmarks and the race detector are all built in |
 | [`testing`](https://pkg.go.dev/testing) (standard library) | Tests, table-driven subtests, examples, fuzz tests, benchmarks | Every Go project uses it. Our tests are plain `if got != want { t.Errorf(...) }` |
 | [go-cmp](https://pkg.go.dev/github.com/google/go-cmp/cmp) | `cmp.Diff(want, got)` for whole receipts | Prints exactly which field differs, instead of two long dumps. Keeps the stdlib style (it is not an assertion library) |
 | [godog](https://github.com/cucumber/godog) | Runs the Given/When/Then scenarios in `spec/features/` | The official Cucumber for Go. Runs inside `go test`, so no extra binary |
@@ -26,17 +26,22 @@ pinned in `go.mod` (exact versions) and `go.sum` (checksums), and is downloaded 
 | [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite) | SQLite through Go's `database/sql` | Pure Go: no C compiler needed, works the same on every laptop and in CI |
 | [staticcheck](https://staticcheck.dev/) | Static checks beyond `go vet` | The most widely used Go linter that needs no configuration |
 | [gotestsum](https://github.com/gotestyourself/gotestsum) | Readable test output and a JUnit XML report | CI dashboards read JUnit XML; `go test -json` alone is hard to read |
-| [gremlins](https://github.com/go-gremlins/gremlins) | Mutation testing | The only maintained mutation tool for Go. Pinned to v0.5.1, the last one that runs on Go 1.24 |
+| [gremlins](https://github.com/go-gremlins/gremlins) | Mutation testing | The only maintained mutation tool for Go |
 | [govulncheck](https://go.dev/blog/govulncheck) | Known vulnerabilities in dependencies and the standard library | The Go team's own tool; only reports vulnerable code that is actually called |
 
 `mockgen`, `staticcheck`, `gotestsum` and `govulncheck` are listed in the `tool` block of
 `go.mod` (a Go 1.24 feature), so `go tool staticcheck ./...` runs exactly the pinned version.
-gremlins is run with `go run …@v0.5.1` instead, so its many dependencies stay out of our
+gremlins is run with `go run …@v0.6.0` instead, so its many dependencies stay out of our
 `go.mod`.
 
 ## Getting started
 
-You need **Go 1.24 or newer**. Check with `go version`.
+You need **Go 1.26 or newer**. Check with `go version`.
+
+Why 1.26? Go supports its two newest releases with security fixes (1.27 and 1.26 today), and
+we pick the older one so more people can run it. `go.mod` also names a `toolchain`: the newest
+1.26 patch release, which CI uses. If your Go is older than that patch, the `go` command
+downloads the right one by itself the first time.
 
 ```bash
 cd go
@@ -175,7 +180,7 @@ tests against each one. A mutant that survives means no test noticed the change.
 
 ```bash
 CHECKOUT_SPEC_DIR="$(cd .. && pwd)/spec" \
-go run github.com/go-gremlins/gremlins/cmd/gremlins@v0.5.1 unleash \
+go run github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0 unleash \
   --tags integration \
   --exclude-files 'cmd/' --exclude-files 'internal/mocks/' \
   --invert-logical --invert-loopctrl --invert-assignments --remove-self-assignments \
@@ -211,8 +216,8 @@ mutator coverage**, in about a minute, so CI runs it on every pull request and f
   `INSERT … RETURNING` instead of a second call with its own error.
 * `cmd/checkout/main.go` is excluded: it runs in a separate process (see `e2e/`), which an
   in-process tool cannot observe. Its logic is in package `cli`, which *is* mutated.
-* gremlins moves slowly (see the matrix); v0.6.0 needs Go 1.25, so we pin v0.5.1. It also
-  mutates the test-support package `internal/spec`, which is fine – those mutants are killed too.
+* gremlins moves slowly (see the matrix). It also mutates the test-support package
+  `internal/spec`, which is fine – those mutants are killed too.
 
 ## How to add a new test
 

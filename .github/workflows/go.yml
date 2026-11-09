@@ -33,6 +33,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
+          # Reads the toolchain line in go.mod: the newest patch release of the oldest Go
+          # version that still gets security fixes.
           go-version-file: go/go.mod
           # Cache downloaded modules and build results, keyed on the exact versions in go.sum.
           cache-dependency-path: go/go.sum
@@ -116,7 +118,7 @@ jobs:
         env:
           CHECKOUT_SPEC_DIR: ${{ github.workspace }}/spec
         run: |
-          go run github.com/go-gremlins/gremlins/cmd/gremlins@v0.5.1 unleash \
+          go run github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0 unleash \
             --tags integration \
             --exclude-files 'cmd/' --exclude-files 'internal/mocks/' \
             --invert-logical --invert-loopctrl --invert-assignments --remove-self-assignments \

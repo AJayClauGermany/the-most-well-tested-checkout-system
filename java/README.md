@@ -66,7 +66,7 @@ Run these commands inside the `java/` folder. Add `-B` ("batch mode") for plain 
 | try the **command line program** | `echo '{"items":[{"sku":"APPLE","quantity":1}]}' \| java -jar target/checkout.jar` |
 | delete all build output | `mvn clean` |
 
-`mvn verify` prints **434 tests** run by Surefire and **102 tests** run by Failsafe, all passing,
+`mvn verify` prints **451 tests** run by Surefire and **105 tests** run by Failsafe, all passing,
 then "All coverage checks have been met". The shared runner prints `60 passed, 0 failed`.
 
 Test reports end up in `target/surefire-reports/` and `target/failsafe-reports/` (JUnit XML,
@@ -158,10 +158,10 @@ do not depend on each other: no shared state, no fixed order.
 
 ### Mutation testing, and why the code looks the way it does
 
-PIT makes 123 small changes to `src/main` ("mutants": `>=` becomes `>`, `+` becomes `-`, a
+PIT makes 124 small changes to `src/main` ("mutants": `>=` becomes `>`, `+` becomes `-`, a
 `return` value becomes `0` or `true`, a method call is removed) and runs the tests against each
 one. A mutant that survives means no test noticed the change. The score is currently **100%**
-(123 of 123 killed), and the build fails below 95%. CI runs it on every pull request (about three
+(124 of 124 killed), and the build fails below 95%. CI runs it on every pull request (about three
 minutes).
 
 Getting there shaped both the tests and the code:
@@ -244,10 +244,16 @@ cases, contract, e2e and shared-runner tests (and update the count in `SpecFiles
 * **`placeOrder` = checkout + save.** It cannot save anything when checkout throws, which is
   what the Mockito tests and property P14 check.
 * **The CLI is strict about the *shape* of its input.** `items` must be a list of objects with a
-  text `sku` and a whole-number `quantity`; anything else (including `1.5`, which an `int` cannot
-  hold – the spec's test cases README expects this of strongly typed languages) is "not a basket":
-  exit code 2 and a message on stderr. Unknown products, quantities out of range, odd shipping
-  methods and coupons are left to `checkout`, which reports the error codes.
+  text `sku` and a whole-number `quantity`; anything else is "not a basket": exit code 2 and a
+  message on stderr. Unknown products, quantities out of range, odd shipping methods and coupons
+  are left to `checkout`, which reports the error codes.
+* **A quantity is a `long` (64 bits), not an `int`.** Any whole number that fits in 64 bits is
+  read, so `10000000000` or `-3000000000` reaches `checkout` and gives `INVALID_QUANTITY` (exit
+  code 1), as in the other languages. `1.5` (not a whole number – the spec's test cases README
+  expects this of strongly typed languages) and numbers beyond 64 bits, such as
+  `9223372036854775808`, cannot be a `long`, so they are "not a basket" (exit code 2). Merged
+  quantities are added with `Math.addExact`, which throws instead of overflowing silently; a
+  receipt line keeps an `int`, because after validation it is always 1 to 99.
 
 ### Versions that had to fit together
 

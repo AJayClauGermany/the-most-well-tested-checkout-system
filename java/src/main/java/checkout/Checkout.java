@@ -28,8 +28,10 @@ public final class Checkout {
         Validation.validateItems(basket, catalog); // rules section 4.1 rows 1-4
         ShippingMethod method = ShippingMethod.parse(basket.shipping()); // row 5
 
+        // After validation every merged quantity is 1..99, so it fits the int of a receipt line.
+        // Math.toIntExact would throw (instead of cutting the number off) if it ever did not.
         List<ReceiptLine> lines = Lines.mergeItems(basket.items()).stream()
-                .map(item -> Lines.priceLine(catalog.requireBySku(item.sku()), item.quantity()))
+                .map(item -> Lines.priceLine(catalog.requireBySku(item.sku()), Math.toIntExact(item.quantity())))
                 .toList();
         int subtotal = lines.stream().mapToInt(ReceiptLine::lineTotal).sum();
         int promotionDiscount = lines.stream().mapToInt(ReceiptLine::lineDiscount).sum();

@@ -22,9 +22,11 @@ public final class Lines {
     public static List<BasketItem> mergeItems(List<BasketItem> items) {
         // A LinkedHashMap remembers the order keys were first added - exactly the order the
         // rules want. (A plain HashMap would give the SKUs back in an unpredictable order.)
-        Map<String, Integer> quantities = new LinkedHashMap<>();
+        Map<String, Long> quantities = new LinkedHashMap<>();
         for (BasketItem item : items) {
-            quantities.merge(item.sku(), item.quantity(), Integer::sum);
+            // Math::addExact throws an ArithmeticException instead of silently wrapping around
+            // to a wrong (negative) number when the sum does not fit a long.
+            quantities.merge(item.sku(), item.quantity(), Math::addExact);
         }
         return quantities.entrySet().stream()
                 .map(entry -> new BasketItem(entry.getKey(), entry.getValue()))

@@ -17,14 +17,14 @@ public final class Validation {
     /**
      * Returns whether a quantity is a whole number from 1 to 99 (rules section 4.1 row 3).
      *
-     * <p>In Java a quantity is an {@code int}, so "a whole number" is guaranteed by the type:
+     * <p>In Java a quantity is a {@code long}, so "a whole number" is guaranteed by the type:
      * {@code 1.5} cannot even get this far (the JSON reader rejects it, see
      * {@code checkout.cli.CheckoutCommand}). Only the range is left to check.
      *
      * @param quantity the quantity of one basket line
      * @return {@code true} when it is allowed
      */
-    public static boolean isValidQuantity(int quantity) {
+    public static boolean isValidQuantity(long quantity) {
         return quantity >= MIN_QUANTITY && quantity <= MAX_QUANTITY;
     }
 
@@ -48,7 +48,8 @@ public final class Validation {
             catalog.requireBySku(item.sku());
         }
 
-        // Row 3: every quantity must be from 1 to 99.
+        // Row 3: every quantity must be from 1 to 99. This runs before row 4 on purpose: after
+        // it, no line is bigger than 99, so adding the lines up below cannot overflow.
         for (BasketItem item : basket.items()) {
             if (!isValidQuantity(item.quantity())) {
                 throw new CheckoutException(
@@ -57,7 +58,6 @@ public final class Validation {
         }
 
         // Row 4: the lines of one SKU, added together, may not go over 99 either.
-        // (Each line is at most 99 by now, so the sum cannot overflow an int.)
         for (BasketItem line : Lines.mergeItems(basket.items())) {
             if (line.quantity() > MAX_QUANTITY) {
                 throw new CheckoutException(

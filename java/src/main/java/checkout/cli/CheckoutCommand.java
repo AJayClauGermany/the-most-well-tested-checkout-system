@@ -81,11 +81,13 @@ public final class CheckoutCommand {
             if (!item.path("sku").isString()) {
                 throw notABasket("every item needs a text 'sku'");
             }
-            // isInt(): a whole number that fits into a Java int. 1.5, "3" and 9999999999 do not.
-            if (!item.path("quantity").isInt()) {
+            // A whole number that fits into a Java long (64 bits), like 10000000000 or -3. Not 1.5,
+            // not "3", and not 9223372036854775808 (one more than Long.MAX_VALUE).
+            JsonNode quantity = item.path("quantity");
+            if (!quantity.isIntegralNumber() || !quantity.canConvertToLong()) {
                 throw notABasket("every item needs a whole-number 'quantity'");
             }
-            basketItems.add(new BasketItem(item.path("sku").stringValue(), item.path("quantity").intValue()));
+            basketItems.add(new BasketItem(item.path("sku").stringValue(), quantity.longValue()));
         }
         return new Basket(basketItems, optionalText(root, "coupon"), optionalText(root, "shipping"));
     }

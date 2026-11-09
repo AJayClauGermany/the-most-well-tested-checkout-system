@@ -8,13 +8,13 @@ package spec
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 
 	"github.com/AJayClauGermany/the-most-well-tested-checkout-system/go/checkout"
+	"github.com/AJayClauGermany/the-most-well-tested-checkout-system/go/specdir"
 )
 
 // Totals are the six amounts a spec case expects (all in cents).
@@ -56,23 +56,13 @@ type Case struct {
 // `go test` runs each package's tests inside that package's own folder
 // (for example go/internal/spec), so we cannot rely on a fixed relative path.
 // Instead we start at the current folder and walk up, one parent at a time,
-// until we find a folder that contains spec/catalog.json.
+// until we find a folder that contains spec/catalog.json (see package specdir).
 func Dir() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
-	for {
-		candidate := filepath.Join(dir, "spec")
-		if _, err := os.Stat(filepath.Join(candidate, "catalog.json")); err == nil {
-			return candidate, nil
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir { // reached the root of the file system
-			return "", errors.New("could not find the spec/ folder in any parent directory")
-		}
-		dir = parent
-	}
+	return specdir.Find(dir)
 }
 
 // LoadCatalog reads spec/catalog.json.

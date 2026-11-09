@@ -1,9 +1,6 @@
 package checkout
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
 // ErrorCode is one of the six error codes from the rules (§9).
 // It is a string type, so the value is exactly the spelling used in the spec.
@@ -60,7 +57,3 @@ func (e *CheckoutError) Error() string {
 func newError(code ErrorCode, format string, args ...any) *CheckoutError {
 	return &CheckoutError{Code: code, Message: fmt.Sprintf(format, args...)}
 }
-
-// ErrNotImplemented is returned by the functions that are not implemented yet.
-// A "sentinel error" like this is compared with errors.Is(err, ErrNotImplemented).
-var ErrNotImplemented = errors.New("checkout: not implemented yet")

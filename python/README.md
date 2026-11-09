@@ -12,7 +12,7 @@ The Python version of the checkout described in [`spec/checkout-rules.md`](../sp
 
 | Tool | What it does | Why this one |
 |------|--------------|--------------|
-| [Python](https://www.python.org/) 3.10+ | The language | CI uses 3.12. The checkout itself uses only the standard library (`json`, `sqlite3`, `re`, `datetime`) |
+| [Python](https://www.python.org/) 3.11+ | The language | CI uses 3.12. The checkout itself uses only the standard library (`json`, `sqlite3`, `re`, `datetime`) |
 | [venv](https://docs.python.org/3/library/venv.html) + [pip](https://pip.pypa.io/) | A private folder of packages; installs the project and its tools | Built into Python. Every tool is pinned with `==` in `pyproject.toml`, so everybody gets the same versions |
 | [pytest](https://docs.pytest.org/) | Finds and runs the tests; fixtures, `parametrize`, `tmp_path`, `monkeypatch`, `capsys`, doctests | The most popular Python test runner; tests are plain functions using plain `assert` |
 | [pytest-bdd](https://pytest-bdd.readthedocs.io/) | Runs the Given/When/Then scenarios in `spec/features/` | Each scenario becomes an ordinary pytest test, so fixtures and `-k` just work. ([behave](https://behave.readthedocs.io/) is the alternative with its own runner) |
@@ -28,7 +28,7 @@ The Python version of the checkout described in [`spec/checkout-rules.md`](../sp
 
 ## Getting started
 
-You need **Python 3.10 or newer** (`python3 --version`). From this `python/` folder:
+You need **Python 3.11 or newer** (`python3 --version`). From this `python/` folder:
 
 ```bash
 # 1. Create a virtual environment (once)
@@ -45,7 +45,7 @@ python -m pip install -e ".[dev]"
 pytest
 ```
 
-You should see **572 passed** in a few seconds.
+You should see **577 passed** in a few seconds.
 
 ## Running the tests and checks
 
@@ -161,7 +161,7 @@ Python conventions worth knowing:
 mutmut makes ~550 small changes to `src/checkout/` ("mutants": `>=` becomes `>`, `+` becomes
 `-`, `"standard"` becomes `"XXstandardXX"`, an argument disappears) and runs the tests against
 each one. A mutant that *survives* means no test noticed the change. The score is currently
-**100% (548 of 548 killed)**, and CI fails below 95%. It takes about 30 seconds.
+**100% (550 of 550 killed)**, and CI fails below 95%. It takes about 30 seconds.
 
 The first run killed 562 of 577 – the third commit in the history shows what the 15 survivors
 taught us:
@@ -173,6 +173,11 @@ taught us:
 * **Code that hid a change.** The CLI's error output had its own `json.dumps` for a dict with
   *one* key, so a broken item separator could never show. Both outputs now share
   `compact_json()`.
+* **A kill that was only luck.** A later run reported `+ 51` instead of `+ 50` in
+  `round_half_up` as *survived*. Earlier runs had killed it only because Hypothesis happened
+  to generate an amount ending in exactly 49 hundredths of a cent. `test_money.py` now has
+  that example on purpose (`2249` × 1% = 22.49 → 22). A random test is a great net, but a
+  boundary deserves its own fixed example.
 * **Equivalent mutants** – changes nobody could ever observe: SQL keywords in lower case
   (SQL ignores case), `"UTF-8"` instead of `"utf-8"`. Reading files as bytes removed some;
   the rest are marked `# pragma: no mutate`, with a comment saying why.
@@ -249,7 +254,7 @@ acceptance, contract, e2e and shared-runner tests (and update the count in
 
 Every Tier 1, Tier 2 and Tier 3 row of the Python column is done, so what is left is polish:
 
-* Compare with another language once it is implemented: same spec, same kinds of tests,
+* Compare with another language – all six are implemented: same spec, same kinds of tests,
   different idioms. That comparison is the point of the project.
 * A second BDD runner, [behave](https://behave.readthedocs.io/), on the same feature files
   would show the trade-off against pytest-bdd.

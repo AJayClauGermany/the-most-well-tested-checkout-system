@@ -89,6 +89,25 @@ def test_exits_with_2_on_empty_input() -> None:
     assert result.stdout == ""
 
 
+@pytest.mark.parametrize(
+    "stdin_text",
+    [
+        '{"items":[{"sku":"APPLE","quantity":' + "9" * 5000 + "}]}",
+        "[" * 100_000 + "]" * 100_000,
+    ],
+    ids=["number-with-5000-digits", "nested-100000-deep"],
+)
+def test_exits_with_2_and_no_traceback_on_input_python_cannot_read(stdin_text: str) -> None:
+    # Two inputs that are JSON-ish but too big for Python's JSON reader. They must still give
+    # the documented "not a basket" answer, not a crash with exit code 1 and empty stdout.
+    result = run_cli(stdin_text)
+
+    assert result.exit_code == 2
+    assert result.stdout == ""
+    assert result.stderr.startswith("checkout: ")
+    assert "Traceback" not in result.stderr
+
+
 def test_the_error_output_follows_cli_error_schema_json() -> None:
     result = run_cli('{"items":[{"sku":"APPLE","quantity":1}],"coupon":"NOPE"}')
 

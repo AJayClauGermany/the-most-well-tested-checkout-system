@@ -32,7 +32,7 @@ You only need the tools for the language you pick. Every language folder has a
 
 | Language   | You need          | Run the tests (from the language folder)                         |
 |------------|-------------------|------------------------------------------------------------------|
-| Python     | Python 3.10+      | `pip install -e ".[dev]"` then `pytest`                          |
+| Python     | Python 3.11+      | `pip install -e ".[dev]"` then `pytest`                          |
 | TypeScript | Node.js 22.18+    | `npm install` then `npm test`                                    |
 | Go         | Go 1.24+          | `go test ./...`                                                  |
 | Java       | JDK 21 + Maven    | `mvn verify`                                                     |

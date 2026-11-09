@@ -11,7 +11,7 @@ version = "0.1.0"
 description = "A small checkout system, built to show many kinds of software testing."
 readme = "README.md"
 license = "BSL-1.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 # The checkout itself only uses the Python standard library (json, sqlite3, re, datetime, ...).
 dependencies = []
 
@@ -114,7 +114,7 @@ pytest_add_cli_args = ["-p", "no:cov", "-p", "no:xdist", "-p", "no:randomly", "-
 # ---------------------------------------------------------------------------
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 # mutmut's working copy is generated code; never lint or format it.
 extend-exclude = ["mutants"]
 
@@ -129,7 +129,7 @@ select = ["E", "W", "F", "I", "B", "UP"]
 # mypy – static type checking, in strict mode, for the code AND the tests
 # ---------------------------------------------------------------------------
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 warn_unreachable = true
 pretty = true

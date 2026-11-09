@@ -10,7 +10,7 @@ for the duration of one test, and puts the original back afterwards.
 """
 
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from unittest.mock import MagicMock, Mock, create_autospec
 
 import pytest
@@ -43,7 +43,7 @@ def test_writes_utc_with_whole_seconds_and_a_trailing_z() -> None:
 
 
 def test_drops_the_microseconds_instead_of_rounding_them() -> None:
-    almost_next_second = datetime(2026, 1, 15, 10, 30, 0, 999_999, tzinfo=timezone.utc)
+    almost_next_second = datetime(2026, 1, 15, 10, 30, 0, 999_999, tzinfo=UTC)
 
     assert format_timestamp(almost_next_second) == "2026-01-15T10:30:00Z"
 
@@ -119,12 +119,12 @@ def test_does_not_recognise_anything_that_is_not_an_order_id(identifier: str) ->
 
 
 def test_the_real_clock_answers_the_current_time_in_utc() -> None:
-    before = datetime.now(timezone.utc)
+    before = datetime.now(UTC)
 
     now = system_clock()
 
-    assert now.tzinfo == timezone.utc
-    assert before <= now <= datetime.now(timezone.utc)
+    assert now.tzinfo == UTC
+    assert before <= now <= datetime.now(UTC)
 
 
 # --- Order -----------------------------------------------------------------------------
@@ -215,7 +215,7 @@ def test_answers_not_found_for_ids_that_were_never_handed_out(identifier: str) -
 def test_uses_the_real_clock_when_none_is_given(monkeypatch: pytest.MonkeyPatch) -> None:
     # monkeypatch swaps the module's real clock for a stub, for this test only.
     monkeypatch.setattr(
-        orders_module, "system_clock", lambda: datetime(2031, 2, 3, 4, 5, 6, 789, timezone.utc)
+        orders_module, "system_clock", lambda: datetime(2031, 2, 3, 4, 5, 6, 789, UTC)
     )
     repository = InMemoryOrderRepository()
 
@@ -235,7 +235,7 @@ def test_without_monkeypatch_the_default_clock_is_roughly_now() -> None:
     assert found is not None
     # Checking the year is enough: this test must never be flaky (rules §6 explains why
     # the fixed clock exists); the exact format is checked with the stub above.
-    assert found.created_at.startswith(str(datetime.now(timezone.utc).year))
+    assert found.created_at.startswith(str(datetime.now(UTC).year))
     assert found.created_at.endswith("Z")
 
 

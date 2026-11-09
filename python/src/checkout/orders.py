@@ -8,7 +8,7 @@ import copy
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 from checkout.engine import checkout
@@ -23,19 +23,19 @@ Clock = Callable[[], datetime]
 
 def system_clock() -> datetime:
     """The real clock: the current time, in UTC."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def format_timestamp(moment: datetime) -> str:
     """Formats a datetime the way ``created_at`` must look: whole seconds, UTC, trailing Z.
 
-    >>> format_timestamp(datetime(2026, 1, 15, 10, 30, 0, 999_999, tzinfo=timezone.utc))
+    >>> format_timestamp(datetime(2026, 1, 15, 10, 30, 0, 999_999, tzinfo=UTC))
     '2026-01-15T10:30:00Z'
     """
     if moment.tzinfo is None:
         raise ValueError(f"{moment!r} has no time zone, so it cannot be converted to UTC")
     # astimezone() converts to UTC; strftime() leaves out the microseconds (no rounding).
-    return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return moment.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 ORDER_ID_PREFIX = "ORDER-"

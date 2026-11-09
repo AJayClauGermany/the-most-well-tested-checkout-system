@@ -9,7 +9,7 @@ all six languages in spec/properties.md; each test here is named after its id (P
 away examples that do not apply (an invalid basket for a property about valid ones).
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from hypothesis import assume, given, settings
@@ -113,7 +113,7 @@ any_baskets = st.builds(
 moments = st.datetimes(
     min_value=datetime(2000, 1, 1),
     max_value=datetime(2099, 12, 31, 23, 59, 59),
-    timezones=st.just(timezone.utc),
+    timezones=st.just(UTC),
 )
 
 
@@ -283,7 +283,7 @@ def test_p11_round_half_up_is_within_half_a_cent_and_exact_when_the_value_is_who
 
 
 def fixed_clock() -> datetime:
-    return datetime(2026, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+    return datetime(2026, 1, 15, 10, 30, 0, tzinfo=UTC)
 
 
 @given(baskets_to_save=st.lists(valid_baskets, max_size=12))

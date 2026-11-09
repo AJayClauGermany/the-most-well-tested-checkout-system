@@ -45,9 +45,15 @@ def parse_basket(text: str) -> Basket:
     Only the *shape* is checked here (the types that basket.schema.json describes), so that
     ``checkout()`` can do the real validation: a quantity of 0 is a basket, just not a valid
     one. Raises ``json.JSONDecodeError`` when the text is not JSON, and ``NotABasketError``
-    when the JSON is not a basket.
+    when the JSON is not a basket - or is more than Python's JSON reader can handle (a number
+    with more than 4300 digits, or lists nested thousands of levels deep).
     """
-    parsed = json.loads(text)
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        raise
+    except (ValueError, RecursionError) as error:
+        raise NotABasketError(str(error)) from error
     if not isinstance(parsed, dict):
         raise NotABasketError("expected a JSON object")
     items = parsed.get("items")

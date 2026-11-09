@@ -6,7 +6,7 @@ file in pytest's temporary folder (`tmp_path`) and closes the database afterward
 
 import sqlite3
 from collections.abc import Iterator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -131,10 +131,10 @@ def test_answers_not_found_without_raising(
 def test_stamps_each_order_with_the_clock_s_time_at_the_moment_of_saving(
     database: Path,
 ) -> None:
-    now = datetime(2026, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 1, 15, 10, 30, 0, tzinfo=UTC)
     with SqliteOrderRepository(database, lambda: now) as repository:
         first = repository.save(ONE_APPLE_RECEIPT)
-        now = datetime(2026, 1, 16, 9, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 16, 9, 0, 0, tzinfo=UTC)
         second = repository.save(ONE_APPLE_RECEIPT)
 
         first_order = repository.find(first)
@@ -149,7 +149,7 @@ def test_uses_the_real_clock_when_none_is_given(database: Path) -> None:
         found = repository.find(repository.save(ONE_APPLE_RECEIPT))
 
     assert found is not None
-    assert found.created_at.startswith(str(datetime.now(timezone.utc).year))
+    assert found.created_at.startswith(str(datetime.now(UTC).year))
 
 
 def test_the_with_block_closes_the_database_even_when_the_body_fails(database: Path) -> None:

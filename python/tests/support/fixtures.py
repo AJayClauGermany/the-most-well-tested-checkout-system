@@ -4,7 +4,7 @@ Unit tests prefer tiny made-up data over the real catalog: when a test fails you
 work out the right answer in your head. The shared spec cases use the real catalog.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from checkout import BulkDiscount, BuyXGetYFree, Catalog, Product, Receipt, ReceiptLine
 
@@ -44,7 +44,7 @@ ONE_APPLE_RECEIPT = Receipt(
 )
 
 # 10:30 on 15 January 2026, UTC - the timestamp used throughout the spec's examples.
-FIXED_TIME = datetime(2026, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+FIXED_TIME = datetime(2026, 1, 15, 10, 30, 0, tzinfo=UTC)
 
 
 def fixed_clock() -> datetime:

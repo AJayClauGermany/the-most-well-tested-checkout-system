@@ -6,7 +6,7 @@ spec/schema/order.schema.json - a contract test inside an integration test.
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -156,11 +156,11 @@ def test_does_not_let_an_id_escape_the_folder_no_path_tricks(tmp_path: Path) -> 
 
 def test_stamps_each_order_with_the_clock_s_time_at_the_moment_of_saving(tmp_path: Path) -> None:
     # A clock that can be moved forward from the test: it reads whatever `now` holds.
-    now = datetime(2026, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 1, 15, 10, 30, 0, tzinfo=UTC)
     repository = JsonFileOrderRepository(tmp_path, lambda: now)
 
     first = repository.save(ONE_APPLE_RECEIPT)
-    now = datetime(2026, 1, 16, 9, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 1, 16, 9, 0, 0, tzinfo=UTC)
     second = repository.save(ONE_APPLE_RECEIPT)
 
     first_order = repository.find(first)
@@ -189,4 +189,4 @@ def test_uses_the_real_clock_when_none_is_given(tmp_path: Path) -> None:
     found = repository.find(repository.save(ONE_APPLE_RECEIPT))
 
     assert found is not None
-    assert found.created_at.startswith(str(datetime.now(timezone.utc).year))
+    assert found.created_at.startswith(str(datetime.now(UTC).year))

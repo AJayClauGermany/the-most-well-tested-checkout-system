@@ -27,6 +27,14 @@ def test_rounds_like_the_table_in_the_rules(amount: int, percent: int, expected:
     assert round_half_up(amount, percent) == expected
 
 
+def test_rounds_just_under_a_half_down() -> None:
+    # 2249 x 1% is 22.49 cents: one hundredth of a cent below the half, so it rounds DOWN.
+    # Without this example, "+ 51" instead of "+ 50" in round_half_up would go unnoticed
+    # (mutation testing found that only a random property test happened to catch it).
+    assert round_half_up(2249, 1) == 22
+    assert round_half_up(2250, 1) == 23
+
+
 def test_rounds_an_exact_half_up_where_bankers_rounding_would_go_to_the_even_number() -> None:
     # Python's built-in round() uses "round half to even": round(22.5) == 22.
     # The rules say halves go UP. Both examples together pin the rule down.

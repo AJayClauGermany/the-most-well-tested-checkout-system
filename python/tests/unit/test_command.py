@@ -243,8 +243,16 @@ def test_main_prints_the_error_and_returns_1(
         ("this is not json", "Expecting value"),
         ("", "Expecting value"),
         ('{"hello": "world"}', "The input is not a basket: 'items' must be a list"),
+        # Python refuses to turn more than 4300 digits into an int (a guard against very
+        # slow conversions), so this quantity is not a number Python can read at all.
+        (
+            '{"items":[{"sku":"APPLE","quantity":' + "9" * 5000 + "}]}",
+            "Exceeds the limit (4300 digits) for integer string conversion",
+        ),
+        # JSON nested this deeply is more than Python's JSON reader can follow.
+        ("[" * 100_000 + "]" * 100_000, "maximum recursion depth exceeded"),
     ],
-    ids=["not-json", "empty", "not-a-basket"],
+    ids=["not-json", "empty", "not-a-basket", "number-with-5000-digits", "nested-100000-deep"],
 )
 def test_main_returns_2_with_nothing_on_stdout_and_a_message_on_stderr_for_bad_input(
     stdin_text: str,

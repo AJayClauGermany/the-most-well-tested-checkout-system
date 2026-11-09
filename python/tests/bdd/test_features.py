@@ -12,7 +12,7 @@ carries state from step to step.
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pytest_bdd import given, parsers, scenarios, then, when
@@ -47,7 +47,7 @@ class CheckoutWorld:
     receipt: Receipt | None = None
     error: CheckoutError | None = None
     # What the repository's clock answers. "Given the clock is fixed at ..." changes it.
-    now: datetime = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    now: datetime = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
     repository: InMemoryOrderRepository | None = None
     last_order_id: str | None = None
 

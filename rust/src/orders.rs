@@ -398,6 +398,11 @@ mod tests {
     #[case::the_year_2000(946_684_800, "2000-01-01T00:00:00Z")]
     #[case::the_fixed_test_time(1_768_473_000, "2026-01-15T10:30:00Z")]
     #[case::a_leap_day(1_709_208_000, "2024-02-29T12:00:00Z")]
+    // The last second of a month and the first of the next: off-by-one mistakes in the
+    // month counting show up exactly here (cargo-mutants found that these were missing).
+    #[case::the_last_second_of_january(1_769_903_999, "2026-01-31T23:59:59Z")]
+    #[case::the_first_of_march(1_772_323_200, "2026-03-01T00:00:00Z")]
+    #[case::the_first_of_march_in_a_leap_year(1_709_251_200, "2024-03-01T00:00:00Z")]
     #[case::the_last_second_of_2099(4_102_444_799, "2099-12-31T23:59:59Z")]
     fn format_timestamp_writes_utc_with_whole_seconds_and_a_trailing_z(
         #[case] unix_seconds: u64,
@@ -418,6 +423,9 @@ mod tests {
     #[case("2000-01-01T00:00:00Z", 946_684_800)]
     #[case("2026-01-15T10:30:00Z", 1_768_473_000)]
     #[case("2024-02-29T12:00:00Z", 1_709_208_000)]
+    #[case("2026-01-31T23:59:59Z", 1_769_903_999)]
+    #[case("2026-03-01T00:00:00Z", 1_772_323_200)]
+    #[case("2024-03-01T00:00:00Z", 1_709_251_200)]
     #[case("2099-12-31T23:59:59Z", 4_102_444_799)]
     fn parse_timestamp_reads_what_format_timestamp_writes(
         #[case] text: &str,

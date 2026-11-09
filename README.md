@@ -14,13 +14,15 @@ production-ready.
 📖 **Documentation website:** <https://ajayclaugermany.github.io/the-most-well-tested-checkout-system/>
 (built from [`docs/`](docs/) by GitHub Pages)
 
-## Status: tests first
+## Status: all six languages are done
 
-The rules and the shared tests exist, and the project is built test-first (TDD / BDD).
-**TypeScript is the first language with a finished checkout**: every row of the testing
-matrix is ticked for it, so it is the point of comparison for the other five. In Python,
-Go, Java, C# and Rust the project is set up and the tests run in CI, but the 60 shared
-test cases are still skipped, waiting to go from red to green.
+The rules and the shared tests came first, and every language was then built test-first
+(TDD / BDD): in each language folder's git history, the commit that adds the tests comes
+before the commit that makes them pass. **All six checkouts are finished**: each one passes
+the 60 shared test cases, the Gherkin scenarios and the properties, ships the same command
+line program, and has every Tier 1 row of the [testing matrix](docs/testing-matrix.md)
+ticked – with 100% line coverage and a 100% mutation score in every language.
+That makes it possible to compare the *same* kind of test, written six different ways.
 
 ## What's in here
 
@@ -28,12 +30,12 @@ test cases are still skipped, waiting to go from red to green.
 |---------------------------------|--------------------------------------------------------------------------------|
 | [`spec/`](spec/)                | The **language-agnostic** rules, catalog, shared test cases, BDD scenarios, properties and schemas |
 | [`e2e/`](e2e/)                  | One end-to-end runner that drives every language's command line program          |
-| [`python/`](python/)            | Python – pytest                                                                |
-| [`typescript/`](typescript/)    | TypeScript on Node.js – Vitest                                                  |
-| [`go/`](go/)                    | Go – the built-in `testing` package                                            |
-| [`java/`](java/)                | Java – JUnit with Maven                                                         |
-| [`csharp/`](csharp/)            | C# on .NET – xUnit                                                              |
-| [`rust/`](rust/)                | Rust – the built-in test harness with Cargo                                     |
+| [`python/`](python/)            | Python – pytest, pytest-bdd, Hypothesis, syrupy, mutmut                        |
+| [`typescript/`](typescript/)    | TypeScript on Node.js – Vitest, Cucumber, fast-check, StrykerJS                 |
+| [`go/`](go/)                    | Go – the built-in `testing` package, godog, rapid, gremlins                    |
+| [`java/`](java/)                | Java – JUnit 6 with Maven, Cucumber-JVM, jqwik, PIT                             |
+| [`csharp/`](csharp/)            | C# on .NET – xUnit v3, Reqnroll, FsCheck, Verify, Stryker.NET                   |
+| [`rust/`](rust/)                | Rust – the built-in test harness with Cargo, cucumber, proptest, insta, cargo-mutants |
 | [`docs/`](docs/)                | The documentation website (Jekyll, published by GitHub Pages)                 |
 | [`.github/workflows/`](.github/workflows/) | CI: one workflow per language, plus one for the spec              |
 
@@ -51,8 +53,17 @@ test cases are still skipped, waiting to go from red to green.
    | C#         | .NET 10 SDK      | `dotnet test`                                   |
    | Rust       | Rust (rustup)    | `cargo test`                                    |
 
-3. In TypeScript every test passes. In the other languages expect passing tests **and**
-   skipped tests: the skipped ones are the shared spec cases, waiting for an implementation.
+3. Every test passes in every language. Each language README lists the other commands CI
+   runs: BDD, end-to-end, coverage, mutation testing and static checks.
+4. Try the command line program that all six languages share. With Node.js, from the
+   `typescript/` folder:
+
+   ```bash
+   echo '{"items":[{"sku":"COFFEE","quantity":3}],"coupon":"SAVE10"}' | node src/cli.ts
+   ```
+
+   Every language prints the same receipt; [`e2e/README.md`](e2e/README.md) lists the command
+   for each one, and the shared runner there checks all 60 cases against any of them.
 
 ## How the shared spec works
 

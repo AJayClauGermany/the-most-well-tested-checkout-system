@@ -10,8 +10,8 @@
 # The program can be written in any language. Examples:
 #
 #   e2e/run.sh python -m checkout               (run from the python/ folder)
-#   e2e/run.sh node dist/cli.js
-#   e2e/run.sh ./go/bin/checkout
+#   e2e/run.sh node src/cli.ts                  (run from the typescript/ folder)
+#   e2e/run.sh go run ./go/cmd/checkout
 #   e2e/run.sh java -jar java/target/checkout.jar
 #   e2e/run.sh dotnet csharp/src/Checkout.Cli/bin/Debug/net10.0/Checkout.Cli.dll
 #   e2e/run.sh rust/target/debug/checkout

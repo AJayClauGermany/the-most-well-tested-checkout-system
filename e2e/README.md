@@ -17,17 +17,21 @@ It feeds all 60 shared cases from [`spec/test-cases/`](../spec/test-cases/) to t
 program, one at a time, prints `ok` or `FAIL` per case, and exits non-zero if any failed.
 It needs only `bash` and [`jq`](https://jqlang.github.io/jq/).
 
-| Language   | Once its CLI exists, run (from the repository root)                          |
+| Language   | Run (from the repository root)                                               |
 |------------|------------------------------------------------------------------------------|
 | Python     | `(cd python && ../e2e/run.sh python -m checkout)`                            |
 | TypeScript | `(cd typescript && ../e2e/run.sh node src/cli.ts)` – or `npm run test:e2e:shared` |
 | Go         | `e2e/run.sh go run ./go/cmd/checkout`                                        |
-| Java       | `e2e/run.sh java -jar java/target/checkout.jar`                              |
+| Java       | `e2e/run.sh java -jar java/target/checkout.jar` (after `mvn -f java package`)  |
 | C#         | `e2e/run.sh dotnet run --project csharp/src/Checkout.Cli`                    |
 | Rust       | `e2e/run.sh cargo run --quiet --manifest-path rust/Cargo.toml --bin checkout` |
 
-The TypeScript command works today (Node.js 22.18+ runs `.ts` files directly); the others
-will be confirmed in each language's README when its CLI lands.
+All six pass all 60 cases, and every language's CI workflow runs its own line of this table
+on each pull request. Python needs its virtual environment active (see `python/README.md`).
+The Go command works from the root thanks to the small `go.work` file there. The C# and Rust
+`run` commands rebuild on every case, which is slow; after a build, the faster
+`e2e/run.sh dotnet csharp/src/Checkout.Cli/bin/Debug/net10.0/Checkout.Cli.dll` and
+`e2e/run.sh rust/target/debug/checkout` do the same.
 
 ## What it checks – and what it leaves to the languages
 

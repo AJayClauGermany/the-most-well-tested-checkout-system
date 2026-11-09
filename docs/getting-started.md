@@ -39,9 +39,8 @@ You only need the tools for the language you pick. Every language folder has a
 | C#         | .NET 10 SDK       | `dotnet test`                                                    |
 | Rust       | Rust (via rustup) | `cargo test`                                                     |
 
-You should see some tests **pass** and one group of tests **skipped**. The skipped
-tests are the shared spec cases, waiting for someone to implement the checkout.
-(In TypeScript the checkout is already implemented, so everything passes there.)
+Every test should **pass** – several hundred of them in each language. The 60 shared spec
+cases are among them, run against that language's checkout.
 
 ## 4. Make a test fail on purpose
 

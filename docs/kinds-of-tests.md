@@ -129,7 +129,7 @@ compare against it. Great for big outputs that are tedious to assert line by lin
 E2E tests run the real program from the outside. Here, every language will provide the
 same command line interface (basket JSON in, receipt JSON out – see
 [rules §8]({{ site.repository_files }}/spec/checkout-rules.md#8-command-line-interface-for-end-to-end-tests)),
-so a single E2E suite could test all six.
+so a single E2E suite tests all six: [`e2e/run.sh`]({{ site.repository_files }}/e2e/run.sh).
 
 ## Mutation testing
 

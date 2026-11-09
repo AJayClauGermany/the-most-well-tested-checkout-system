@@ -30,6 +30,23 @@ public class ReceiptLinesTests
     }
 
     [Fact]
+    public void Merge_QuantitiesBeyondAnInt_AddsThemUpWithoutWrappingAround()
+    {
+        // 3 billion + 3 billion does not fit in an int; quantities are longs, so it is fine.
+        var merged = ReceiptLines.Merge([new BasketItem("PEN", 3_000_000_000), new BasketItem("PEN", 3_000_000_000)]);
+
+        Assert.Equal([new BasketItem("PEN", 6_000_000_000)], merged);
+    }
+
+    [Fact]
+    public void Merge_SumBeyondTheLargestLong_ThrowsInsteadOfWrappingAround()
+    {
+        // The checkout never gets here (rows 3 and 4 of rules §4.1 stop it first), but if it
+        // did, a sum that is too big must fail loudly rather than turn into a negative number.
+        Assert.Throws<OverflowException>(() => ReceiptLines.Merge([new BasketItem("PEN", long.MaxValue), new BasketItem("PEN", 1)]));
+    }
+
+    [Fact]
     public void Merge_NoItems_GivesNoLines()
     {
         Assert.Empty(ReceiptLines.Merge([]));

@@ -36,6 +36,6 @@ public static class Fixtures
         Shipping: "standard");
 
     /// <summary>A basket with one line. Saves a few keystrokes in tests.</summary>
-    public static Basket BasketOf(string sku, int quantity, string? coupon = null, string shipping = "standard") =>
+    public static Basket BasketOf(string sku, long quantity, string? coupon = null, string shipping = "standard") =>
         new([new BasketItem(sku, quantity)], coupon, shipping);
 }

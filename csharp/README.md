@@ -44,7 +44,7 @@ dotnet tool restore   # installs ReportGenerator and Stryker.NET from .config/do
 dotnet test           # builds and runs every test project
 ```
 
-You should see `total: 532`, `failed: 0`. Any editor works; Visual Studio, JetBrains Rider and
+You should see `total: 552`, `failed: 0`. Any editor works; Visual Studio, JetBrains Rider and
 VS Code with the *C# Dev Kit* extension can also run and debug single tests with one click.
 
 ## Running the tests and checks
@@ -57,9 +57,9 @@ solution file that lists every project) and runs every test project in it.
 | run all tests | `dotnet test` |
 | see every test name | `dotnet test --output detailed` |
 | run one kind of test (one test project) | `dotnet test --project tests/Checkout.UnitTests` |
-| run one test class | `dotnet test --filter-class "*.CouponsTests"` |
-| run one test method | `dotnet test --filter-method "*.Discount_Welcome5OneCentBelowTheMinimum_ThrowsCouponMinimumNotMet"` |
-| run one shared spec case | `dotnet test --filter "DisplayName~promo-coffee-three-bags-one-free"` |
+| run one test class | `dotnet test --project tests/Checkout.UnitTests --filter-class "*.CouponsTests"` |
+| run one test method | `dotnet test --project tests/Checkout.UnitTests --filter-method "*.Discount_Welcome5OneCentBelowTheMinimum_ThrowsCouponMinimumNotMet"` |
+| run one shared spec case | `dotnet test --project tests/Checkout.UnitTests --filter "DisplayName~promo-coffee-three-bags-one-free"` |
 | run the **BDD** scenarios from `spec/features/` | `dotnet test --project tests/Checkout.Specs` |
 | run the **property-based** tests (P1–P14) | `dotnet test --project tests/Checkout.PropertyTests` |
 | run the tests with **coverage** and JUnit/TRX **reports** | see [Coverage](#coverage) below |
@@ -77,7 +77,11 @@ what CI uses. Both run the same program.
 
 ### How filtering works
 
-xUnit gives `dotnet test` a few ways to pick tests. Use **one kind** of filter per command.
+xUnit gives `dotnet test` a few ways to pick tests. Use **one kind** of filter per command,
+and name the test project that holds the tests with `--project`: without it, the filter runs in
+every test project, and each project where it matches nothing ends with exit code 8 ("zero tests
+ran"), so the whole run says `Failed!` although nothing failed (add `--ignore-exit-code 8` if you
+really want to filter across all projects).
 
 * **Simple filters** (xUnit's own): `--filter-class`, `--filter-method`, `--filter-namespace`,
   `--filter-trait`. They take full names, and `*` is a wildcard at the start or end:
@@ -89,9 +93,9 @@ xUnit gives `dotnet test` a few ways to pick tests. Use **one kind** of filter p
   `=` (equals), `!=`, `~` (contains) or `!~`. Combine with `&` (and) and `|` (or):
 
   ```bash
-  dotnet test --filter "FullyQualifiedName~CouponsTests"
-  dotnet test --filter "DisplayName~validation-"         # every validation spec case
-  dotnet test --filter "DisplayName~P10"                 # one property
+  dotnet test --project tests/Checkout.UnitTests --filter "FullyQualifiedName~CouponsTests"
+  dotnet test --project tests/Checkout.UnitTests --filter "DisplayName~validation-"   # every validation spec case
+  dotnet test --project tests/Checkout.PropertyTests --filter "DisplayName~P10"       # one property
   ```
 
 **One file?** .NET runs tests by *name*, not by file. By convention one file holds one
@@ -220,7 +224,7 @@ same time.
 
 Stryker.NET makes ~120 small changes to `src/Checkout` ("mutants": `>=` becomes `>`, `+`
 becomes `-`, a string becomes `""`) and runs the tests against each one. A mutant that survives
-means no test noticed the change. The score is currently **100%** (93 mutants tested, all
+means no test noticed the change. The score is currently **100%** (94 mutants tested, all
 killed; 10 more do not compile and 18 are skipped by Stryker because their code is already
 covered by another mutant); CI fails below 95%. A run takes about five minutes.
 
@@ -292,6 +296,9 @@ A snapshot test fails the first time it runs, because nothing is approved yet: V
   `decimal` anywhere near money.
 * **Parse, don't validate.** `Shipping.Parse` turns the basket's free-form `shipping` text into
   the enum `ShippingMethod` or throws; after that the compiler knows the value is fine.
+* **A basket quantity is a `long`.** The basket schema allows any JSON integer, so
+  `10000000000` must give `INVALID_QUANTITY` like `100` does, not "not a basket". After
+  validation every quantity is from 1 to 99, so `ReceiptLine.Quantity` is an `int` again.
 * **Records compare by value – except lists.** `Receipt` writes its own `Equals` so that two
   receipts with equal lines are equal, which the tests (and property P5) rely on.
 * **The clock is .NET's `TimeProvider`.** Production code uses `TimeProvider.System`; tests pass

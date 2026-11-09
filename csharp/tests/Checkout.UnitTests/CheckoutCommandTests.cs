@@ -109,10 +109,42 @@ public class CheckoutCommandTests
     [InlineData("""{"items": ["APPLE"]}""")]
     [InlineData("""{"items": [{"sku": 5}]}""")]
     [InlineData("""{"items": [{"sku": "APPLE"}]}""")]
-    [InlineData("""{"items": [{"sku": "APPLE", "quantity": 1.5}]}""")]
     [InlineData("""{"items": [{"sku": "APPLE", "quantity": "1"}]}""")]
     public void Run_JsonThatIsNotABasket_ThrowsInsteadOfInventingAnErrorCode(string input)
     {
         Assert.Throws<JsonException>(() => CheckoutCommand.Run(input, Catalog));
+    }
+
+    // The basket schema allows any JSON integer as a quantity, so a quantity that does not fit
+    // in an int is still a basket: it is INVALID_QUANTITY (exit 1), not "not a basket" (exit 2).
+    [Theory]
+    [InlineData("10000000000")]
+    [InlineData("-3000000000")]
+    [InlineData("9223372036854775807")]
+    [InlineData("-9223372036854775808")]
+    public void Run_QuantityTooBigForAnInt_PrintsInvalidQuantityAndExitsWithOne(string quantity)
+    {
+        var result = CheckoutCommand.Run($$"""{"items":[{"sku":"APPLE","quantity":{{quantity}}}]}""", Catalog);
+
+        Assert.Equal(new CommandResult("""{"error":"INVALID_QUANTITY"}""", 1), result);
+    }
+
+    [Fact]
+    public void Run_UnknownProductAndAHugeQuantity_ReportsTheUnknownProductFirst()
+    {
+        var result = CheckoutCommand.Run("""{"items":[{"sku":"APPLE","quantity":10000000000},{"sku":"BANANA","quantity":1}]}""", Catalog);
+
+        Assert.Equal(new CommandResult("""{"error":"UNKNOWN_PRODUCT"}""", 1), result);
+    }
+
+    // Quantities are read as 64-bit whole numbers (a C# `long`). A fraction, or a number beyond
+    // the 64-bit range (about ±9.2 × 10^18), cannot be read at all, so the input is "not a basket" (exit 2).
+    [Theory]
+    [InlineData("1.5")]
+    [InlineData("99999999999999999999")]
+    [InlineData("-99999999999999999999")]
+    public void Run_QuantityThatIsNotA64BitWholeNumber_ThrowsBecauseItIsNotABasket(string quantity)
+    {
+        Assert.Throws<JsonException>(() => CheckoutCommand.Run($$"""{"items":[{"sku":"APPLE","quantity":{{quantity}}}]}""", Catalog));
     }
 }

@@ -28,13 +28,19 @@ public class BasketValidatorTests
         Assert.True(BasketValidator.IsValidQuantity(quantity));
     }
 
+    // A quantity is a `long`: the basket schema allows any JSON integer, so numbers far
+    // outside the range of an `int` (about ±2.1 billion) must still give INVALID_QUANTITY.
     [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(100)]
-    [InlineData(101)]
-    [InlineData(1000)]
-    public void IsValidQuantity_OutsideOneToNinetyNine_IsFalse(int quantity)
+    [InlineData(0L)]
+    [InlineData(-1L)]
+    [InlineData(100L)]
+    [InlineData(101L)]
+    [InlineData(1000L)]
+    [InlineData(10_000_000_000L)]
+    [InlineData(-3_000_000_000L)]
+    [InlineData(long.MaxValue)]
+    [InlineData(long.MinValue)]
+    public void IsValidQuantity_OutsideOneToNinetyNine_IsFalse(long quantity)
     {
         Assert.False(BasketValidator.IsValidQuantity(quantity));
     }
@@ -79,10 +85,14 @@ public class BasketValidatorTests
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(100)]
-    public void Validate_QuantityOutOfRange_ThrowsInvalidQuantity(int quantity)
+    [InlineData(0L)]
+    [InlineData(-1L)]
+    [InlineData(100L)]
+    [InlineData(10_000_000_000L)]
+    [InlineData(-3_000_000_000L)]
+    [InlineData(long.MaxValue)]
+    [InlineData(long.MinValue)]
+    public void Validate_QuantityOutOfRange_ThrowsInvalidQuantity(long quantity)
     {
         var basket = Fixtures.BasketOf("APPLE", quantity);
 
@@ -142,6 +152,18 @@ public class BasketValidatorTests
         var exception = Assert.Throws<CheckoutException>(() => BasketValidator.Validate(basket, Catalog));
 
         Assert.Equal("Invalid quantity for APPLE: 100", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_TwoHugeLinesOfOneSku_ReportsTheSingleLineBeforeAddingThemUp()
+    {
+        // Row 3 rejects each line before row 4 adds them up, so the sum can never overflow.
+        var basket = new Basket([new BasketItem("APPLE", long.MaxValue), new BasketItem("APPLE", long.MaxValue)]);
+
+        var exception = Assert.Throws<CheckoutException>(() => BasketValidator.Validate(basket, Catalog));
+
+        Assert.Equal(ErrorCode.InvalidQuantity, exception.Code);
+        Assert.Equal("Invalid quantity for APPLE: 9223372036854775807", exception.Message);
     }
 
     [Fact]

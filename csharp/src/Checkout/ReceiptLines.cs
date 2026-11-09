@@ -19,7 +19,9 @@ public static class ReceiptLines
         {
             if (positions.TryGetValue(item.Sku, out var position))
             {
-                merged[position] = merged[position] with { Quantity = merged[position].Quantity + item.Quantity };
+                // `checked` throws an OverflowException instead of silently wrapping around
+                // to a negative number if the sum does not fit in a long.
+                merged[position] = merged[position] with { Quantity = checked(merged[position].Quantity + item.Quantity) };
             }
             else
             {

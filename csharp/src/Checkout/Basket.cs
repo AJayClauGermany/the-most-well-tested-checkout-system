@@ -15,4 +15,8 @@ public sealed record Basket(
 /// One line of a basket. The quantity is NOT checked here: the checkout validates it,
 /// so tests can create invalid baskets (0, -1, 100) on purpose.
 /// </summary>
-public sealed record BasketItem(string Sku, int Quantity);
+/// <remarks>
+/// The quantity is a <c>long</c> (a 64-bit whole number), not an <c>int</c>: the basket schema
+/// allows any JSON integer, and 10000000000 must give INVALID_QUANTITY like 100 does.
+/// </remarks>
+public sealed record BasketItem(string Sku, long Quantity);

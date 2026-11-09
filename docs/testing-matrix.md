@@ -47,10 +47,11 @@ compiler API. typescript-eslint needs that API, so the one-binary alternative Bi
 linting and formatting instead.
 ⁵ Pinned to Verify 32.x: from 33.0 Verify fails the build unless a yearly sponsorship (or
 exemption) property is set.
-⁶ A full cargo-mutants run takes about ten minutes, so pull requests mutate only the lines they
+⁶ A full cargo-mutants run takes about fifteen minutes, so pull requests mutate only the lines they
 change (`--in-diff`); starting the Rust workflow by hand runs the full set.
 ⁷ govulncheck runs in CI as an informational step: a new advisory against the pinned Go
-toolchain should not turn an unrelated pull request red.
+toolchain should not turn an unrelated pull request red. It is the one small exception to
+"security scanning" being out of scope (see below): Go ships it, and it costs one line.
 
 ## Tier 2 – where the language has an idiomatic story
 
@@ -95,7 +96,8 @@ kinds of testing have nothing real to test here, so they would only add noise:
 * UI / browser testing (Playwright, Selenium)
 * Load and performance testing beyond a single micro-benchmark
 * Contract testing between services (Pact) – there is only one program
-* Security scanning and penetration testing
+* Security scanning and penetration testing (Go's built-in, informational `govulncheck` is the
+  one exception – footnote ⁷)
 * Flaky-test retries – a test here that is flaky is simply a bug
 * A real database server behind Docker (Testcontainers) – SQLite shows the same idea
   and runs on any laptop
@@ -123,7 +125,8 @@ shows the same idea and runs on any laptop.
 
 Every language got here the same way, and its git history shows it: first one commit with
 the **whole test suite** (red – the code was only stubs), then the commit that makes it green,
-then the commits where coverage and mutation testing found gaps in the tests.
+and, in several languages, later commits where coverage or mutation testing found gaps in
+the tests.
 
 1. Implement the checkout, test-first, until the shared spec cases are ✅ (they unblock
    almost every other row).

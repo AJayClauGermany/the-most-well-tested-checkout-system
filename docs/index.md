@@ -30,6 +30,6 @@ real shop. If you can write a function and a loop, you can follow along.
 
 The rules and the shared test cases came first; the checkout came after – in all six
 languages. Each language folder's git history shows the commit with the whole test suite
-(red) before the commit that makes it pass (green), followed by the commits where coverage
-and mutation testing found gaps in the tests. Write a failing test, make it pass, tidy up,
-repeat.
+(red) before the commit that makes it pass (green); several also have later commits where
+coverage or mutation testing found gaps in the tests. Write a failing test, make it pass,
+tidy up, repeat.

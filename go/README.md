@@ -60,6 +60,7 @@ All commands are run from this `go/` folder. `./...` means "this folder and ever
 | also run the **integration** tests (JSON files, SQLite) | `go test -tags integration ./...` |
 | run the **end-to-end** tests (builds and runs the real CLI) | `go test -tags e2e ./e2e/...` |
 | run the **shared e2e runner** (from the repository root) | `e2e/run.sh go run ./go/cmd/checkout` |
+| see the program's real exit code (`go run` turns every failure into 1) | `go build -o bin/checkout ./cmd/checkout`, then `echo 'not json' \| bin/checkout; echo $?` → `2` |
 | run the **BDD** scenarios only | `go test ./bdd -v` |
 | run one **property** with more cases | `go test ./checkout -run TestP5 -rapid.checks=2000` |
 | check for **data races** | `go test -race -tags integration ./...` |

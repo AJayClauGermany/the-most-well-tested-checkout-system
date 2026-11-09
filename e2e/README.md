@@ -26,12 +26,23 @@ It needs only `bash` and [`jq`](https://jqlang.github.io/jq/).
 | C#         | `e2e/run.sh dotnet run --project csharp/src/Checkout.Cli`                    |
 | Rust       | `e2e/run.sh cargo run --quiet --manifest-path rust/Cargo.toml --bin checkout` |
 
-All six pass all 60 cases, and every language's CI workflow runs its own line of this table
-on each pull request. Python needs its virtual environment active (see `python/README.md`).
-The Go command works from the root thanks to the small `go.work` file there. The C# and Rust
-`run` commands rebuild on every case, which is slow; after a build, the faster
-`e2e/run.sh dotnet csharp/src/Checkout.Cli/bin/Debug/net10.0/Checkout.Cli.dll` and
-`e2e/run.sh rust/target/debug/checkout` do the same.
+All six pass all 60 cases, and every language's CI workflow runs the shared runner against
+its own CLI on each pull request. Python needs its virtual environment active (see
+`python/README.md`). The Go command works from the root thanks to the small `go.work` file
+there. The C# and Rust `run` commands rebuild on every case, which is slow; after a build, the
+faster `e2e/run.sh dotnet csharp/src/Checkout.Cli/bin/Debug/net10.0/Checkout.Cli.dll` and
+`e2e/run.sh rust/target/debug/checkout` do the same – and that is what their CI workflows run.
+
+Two things to know when you look at exit codes yourself:
+
+* `go run` reports any non-zero exit of the program as exit code 1, so "not a basket" (exit
+  code 2) shows up as 1 through `go run`. Build the program (`go build -o go/bin/checkout
+  ./go/cmd/checkout`) to see the real code. The runner only ever expects 0 or 1, so it works
+  either way.
+* A quantity is any whole number, however large, and anything outside 1–99 is
+  `INVALID_QUANTITY`. TypeScript reads every whole number and Python every one up to 4300
+  digits; Go, Java, C# and Rust read the ones that fit in 64 bits. Beyond that, a quantity is
+  "not a basket" (exit code 2), the same way `1.5` is. No shared case uses such numbers.
 
 ## What it checks – and what it leaves to the languages
 

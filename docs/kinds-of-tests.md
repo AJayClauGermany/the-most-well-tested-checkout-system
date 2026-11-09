@@ -126,7 +126,7 @@ compare against it. Great for big outputs that are tedious to assert line by lin
 
 **Question:** *Does the whole program work the way a user would use it?*
 
-E2E tests run the real program from the outside. Here, every language will provide the
+E2E tests run the real program from the outside. Here, every language provides the
 same command line interface (basket JSON in, receipt JSON out – see
 [rules §8]({{ site.repository_files }}/spec/checkout-rules.md#8-command-line-interface-for-end-to-end-tests)),
 so a single E2E suite tests all six: [`e2e/run.sh`]({{ site.repository_files }}/e2e/run.sh).

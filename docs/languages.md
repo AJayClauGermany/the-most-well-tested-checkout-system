@@ -58,7 +58,8 @@ each one has since removed its skip:
 | Rust       | `#[ignore = "..."]` (run anyway with `cargo test -- --ignored`) |
 
 Run `git log --oneline -- <language folder>` to see the order: the tests, then the
-implementation, then the commits where coverage and mutation testing found gaps.
+implementation – and, in several languages, later commits where coverage or mutation testing
+found gaps in the tests (Python, Go and Rust have good examples).
 
 ## Which kinds of tests exist in which language?
 

@@ -201,6 +201,23 @@ func TestFilesThatAreNotOrdersAreIgnored(t *testing.T) {
 	}
 }
 
+func TestFilesAndFoldersThatComeBeforeTheOrdersDoNotStopTheCount(t *testing.T) {
+	t.Parallel()
+	folder := t.TempDir()
+	// The folder is read in name order, and these two names sort before "ORDER-…". Skipping
+	// them must not end the search, or the ORDER-5.json after them would be missed.
+	writeFile(t, filepath.Join(folder, "AAA-notes.txt"), "not an order")
+	if err := os.Mkdir(filepath.Join(folder, "ARCHIVE"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(folder, "ORDER-5.json"), `{}`)
+	repository := open(t, folder)
+
+	if id := save(t, repository); id != "ORDER-6" {
+		t.Errorf("id = %q, want ORDER-6", id)
+	}
+}
+
 func TestOpenCreatesTheFolderIfItDoesNotExistYet(t *testing.T) {
 	t.Parallel()
 	nested := filepath.Join(t.TempDir(), "orders", "2026")

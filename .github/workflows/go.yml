@@ -7,6 +7,7 @@ on:
     paths:
       - "go/**"
       - "go.work"
+      - "go.work.sum"
       - "spec/**"
       - "e2e/**"
       - ".github/workflows/go.yml"
@@ -99,7 +100,21 @@ jobs:
         run: go test -run '^$' -bench . -benchmem -benchtime=1000x ./checkout
 
       # Mutation testing: would the tests notice if the code were wrong? (about a minute)
+      #
+      # gremlins copies go/ into a temporary folder and runs the tests there, where no
+      # spec/ folder is above them; CHECKOUT_SPEC_DIR tells them where it is. gremlins counts
+      # ANY failing test run as a "killed" mutant, so if the tests could not run in the copy
+      # at all, every mutant would look killed. The first step proves they can.
+      - name: Check the tests pass in a copy outside the repository (as gremlins runs them)
+        env:
+          CHECKOUT_SPEC_DIR: ${{ github.workspace }}/spec
+        run: |
+          copy="$RUNNER_TEMP/go-copy"
+          rm -rf "$copy" && cp -r . "$copy"
+          (cd "$copy" && go test -count=1 -tags integration ./...)
       - name: Mutation testing (gremlins)
+        env:
+          CHECKOUT_SPEC_DIR: ${{ github.workspace }}/spec
         run: |
           go run github.com/go-gremlins/gremlins/cmd/gremlins@v0.5.1 unleash \
             --tags integration \

@@ -102,8 +102,8 @@ func (r *Repository) highestOrderNumber() (int, error) {
 		if entry.IsDir() || !strings.HasSuffix(name, ".json") {
 			continue
 		}
-		if n, ok := checkout.OrderNumber(strings.TrimSuffix(name, ".json")); ok && n > highest {
-			highest = n
+		if n, ok := checkout.OrderNumber(strings.TrimSuffix(name, ".json")); ok {
+			highest = max(highest, n)
 		}
 	}
 	return highest, nil

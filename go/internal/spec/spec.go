@@ -56,13 +56,10 @@ type Case struct {
 // `go test` runs each package's tests inside that package's own folder
 // (for example go/internal/spec), so we cannot rely on a fixed relative path.
 // Instead we start at the current folder and walk up, one parent at a time,
-// until we find a folder that contains spec/catalog.json (see package specdir).
+// until we find a folder that contains spec/catalog.json – or use the folder named by
+// the CHECKOUT_SPEC_DIR environment variable when it is set (see package specdir).
 func Dir() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return specdir.Find(dir)
+	return specdir.Locate()
 }
 
 // LoadCatalog reads spec/catalog.json.

@@ -173,6 +173,7 @@ a condition is negated, `&&` becomes `||`, `break` becomes `continue`, …) and 
 tests against each one. A mutant that survives means no test noticed the change.
 
 ```bash
+CHECKOUT_SPEC_DIR="$(cd .. && pwd)/spec" \
 go run github.com/go-gremlins/gremlins/cmd/gremlins@v0.5.1 unleash \
   --tags integration \
   --exclude-files 'cmd/' --exclude-files 'internal/mocks/' \
@@ -180,13 +181,30 @@ go run github.com/go-gremlins/gremlins/cmd/gremlins@v0.5.1 unleash \
   --threshold-efficacy 95 --threshold-mcover 95 --output reports/mutation.json
 ```
 
-The current result is **120 mutants, 120 killed, 0 lived: 100% test efficacy and 100%
+Why `CHECKOUT_SPEC_DIR`? gremlins copies `go/` into a temporary folder and runs the tests
+there – and from there, no `spec/` folder can be found by looking up the folder tree. The
+variable names it directly (see package `specdir`).
+
+This is worth a story, because it fooled us once. Without the variable, **every** test run in
+the copy failed – and gremlins counts any failing test run as a "killed" mutant. So the first
+report said "120 killed, 0 lived, 100%" while the tests had not checked a single mutant. A
+review caught it: a line that no test looks at was reported as killed too. Now CI first runs
+the whole suite in a copy outside the repository, and only then gremlins. The lesson: a tool
+that can only ever say "all good" is not testing anything – check that it can fail.
+
+The real result is **118 mutants, 118 killed, 0 lived: 100% test efficacy and 100%
 mutator coverage**, in about a minute, so CI runs it on every pull request and fails below
 95%. Getting there shaped both the tests and the code:
 
 * Boundaries are tested on both sides (`2499` / `2500`, `4999` / `5000`, `9` / `10`,
   `99` / `100`, `0` / `1`), because `>` versus `>=` is the classic surviving mutant.
 * Error **messages** are tested, not only error codes.
+* The first real run found three survivors. Turning `continue` into `break` in the JSON-file
+  store went unnoticed, because no test put a file *before* the orders in the folder (now
+  `AAA-notes.txt` and an `ARCHIVE` folder do). `n > highest` versus `n >= highest` can never be
+  told apart, so the line became `highest = max(highest, n)`. And nothing checked that a
+  program started through a symlink looks for `spec/` next to the real program, so that is
+  now its own small function, `programFolder`, tested with a real symlink.
 * Branches that cannot happen were removed instead of left untested: `json.Marshal` of a
   receipt cannot fail, so its error is ignored with a comment; the SQLite store uses
   `INSERT … RETURNING` instead of a second call with its own error.

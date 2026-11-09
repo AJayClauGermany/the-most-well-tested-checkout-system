@@ -15,6 +15,7 @@ import (
 	"github.com/AJayClauGermany/the-most-well-tested-checkout-system/go/checkout"
 	"github.com/AJayClauGermany/the-most-well-tested-checkout-system/go/cli"
 	"github.com/AJayClauGermany/the-most-well-tested-checkout-system/go/internal/fixtures"
+	"github.com/AJayClauGermany/the-most-well-tested-checkout-system/go/specdir"
 )
 
 // mustRun runs the command and stops the test if the input was not even a basket.
@@ -83,9 +84,10 @@ func TestLoadCatalogReportsAFileThatIsNotACatalog(t *testing.T) {
 	}
 }
 
-// Not parallel: it changes the working directory of the whole test process.
+// Not parallel: t.Setenv and t.Chdir change the whole test process.
 func TestLoadStandardCatalogFailsClearlyOutsideTheRepository(t *testing.T) {
-	t.Chdir(t.TempDir()) // no spec/ above here, nor above the test binary
+	t.Setenv(specdir.EnvVar, "") // no shortcut to the spec folder either
+	t.Chdir(t.TempDir())         // no spec/ above here, nor above the test binary
 
 	if _, err := cli.LoadStandardCatalog(); err == nil {
 		t.Error("LoadStandardCatalog() found a catalog outside the repository")

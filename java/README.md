@@ -273,7 +273,7 @@ JUnit 6 is new, so each JUnit Platform engine was checked against it:
 Tier 1, the Tier 2 rows that name a Java tool, and Tier 3 of the matrix are complete for Java,
 so what is left is polish:
 
-* Compare with another language once it is implemented: same spec, same kinds of tests,
+* Compare with another language – all six are implemented: same spec, same kinds of tests,
   different idioms. That comparison is the point of the project.
 * A [JMH](https://github.com/openjdk/jmh) micro-benchmark of `checkout` (the matrix marks
   benchmarks as optional for Java).

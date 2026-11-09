@@ -1,30 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Unit tests for src/Checkout. Shared settings live in ../../Directory.Build.props.
-    xUnit v3 test projects are small programs (OutputType Exe) that
-    `dotnet test` starts through Microsoft.Testing.Platform.
+    Unit tests for src/Checkout and the CLI's logic, plus the shared spec cases.
+    xUnit, coverage and the Checkout.TestSupport reference come from ../Directory.Build.props.
   -->
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <RootNamespace>CheckoutSystem.UnitTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Every test file can use [Fact], [Theory] and Assert without a `using Xunit;` line. -->
-    <Using Include="Xunit" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="xunit.v3.mtp-v2" Version="4.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Checkout\Checkout.csproj" />
+    <!-- NSubstitute creates MOCKS: stand-ins for an interface that record how they were called. -->
+    <PackageReference Include="NSubstitute" Version="6.2.0" />
   </ItemGroup>
 
 </Project>

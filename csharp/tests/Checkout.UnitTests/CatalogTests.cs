@@ -1,11 +1,11 @@
-
 namespace CheckoutSystem.UnitTests;
 
 /// <summary>
 /// EXAMPLE UNIT TESTS – start reading here!
 ///
 /// A unit test checks one small piece of code (a "unit") on its own, without files,
-/// networks or databases. These tests check <see cref="Catalog.FindBySku"/>.
+/// networks or databases. These tests check <see cref="Catalog.FindBySku"/> and
+/// <see cref="Catalog.RequireProduct"/>.
 ///
 /// xUnit basics:
 /// * A test is a public method marked with [Fact]. xUnit finds and runs it for you.
@@ -55,5 +55,33 @@ public class CatalogTests
         var product = _catalog.FindBySku("apple");
 
         Assert.Null(product);
+    }
+
+    [Fact]
+    public void RequireProduct_KnownSku_ReturnsTheProduct()
+    {
+        var product = _catalog.RequireProduct("APPLE");
+
+        // Assert.Same checks it is the very same object, not just an equal one.
+        Assert.Same(_catalog.Products[0], product);
+    }
+
+    [Fact]
+    public void RequireProduct_UnknownSku_ThrowsUnknownProduct()
+    {
+        // Assert.Throws checks that the code inside the lambda (() => ...) throws
+        // this exact exception type, and hands the exception back for more checks.
+        var exception = Assert.Throws<CheckoutException>(() => _catalog.RequireProduct("BANANA"));
+
+        Assert.Equal(ErrorCode.UnknownProduct, exception.Code);
+    }
+
+    [Fact]
+    public void RequireProduct_UnknownSku_MentionsTheSkuInTheMessage()
+    {
+        // The code is for programs; the message is for people, so it must name the culprit.
+        var exception = Assert.Throws<CheckoutException>(() => _catalog.RequireProduct("BANANA"));
+
+        Assert.Equal("Unknown product: BANANA", exception.Message);
     }
 }

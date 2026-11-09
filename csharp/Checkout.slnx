@@ -1,8 +1,21 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Checkout/Checkout.csproj" />
+    <Project Path="src/Checkout.Storage/Checkout.Storage.csproj" />
+    <Project Path="src/Checkout.Cli/Checkout.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Checkout.TestSupport/Checkout.TestSupport.csproj" />
     <Project Path="tests/Checkout.UnitTests/Checkout.UnitTests.csproj" />
+    <Project Path="tests/Checkout.IntegrationTests/Checkout.IntegrationTests.csproj" />
+    <Project Path="tests/Checkout.Specs/Checkout.Specs.csproj" />
+    <Project Path="tests/Checkout.PropertyTests/Checkout.PropertyTests.csproj" />
+    <Project Path="tests/Checkout.ContractTests/Checkout.ContractTests.csproj" />
+    <Project Path="tests/Checkout.SnapshotTests/Checkout.SnapshotTests.csproj" />
+    <Project Path="tests/Checkout.ArchitectureTests/Checkout.ArchitectureTests.csproj" />
+    <Project Path="tests/Checkout.EndToEndTests/Checkout.EndToEndTests.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Checkout.Benchmarks/Checkout.Benchmarks.csproj" />
   </Folder>
 </Solution>

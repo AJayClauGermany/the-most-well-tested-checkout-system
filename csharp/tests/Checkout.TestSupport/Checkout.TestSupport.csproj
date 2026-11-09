@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Helpers shared by every test project: the spec loader, JSON Schema validation, fixtures,
+    "$12.39" -> cents. It is a class library, not a test project (no [Fact]s in here), so
+    tests/Directory.Build.props leaves it alone.
+  -->
+  <PropertyGroup>
+    <RootNamespace>CheckoutSystem.TestSupport</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- JSON Schema (draft 2020-12) validation for the contract tests. -->
+    <PackageReference Include="JsonSchema.Net" Version="9.6.0" />
+    <!-- FakeTimeProvider: a TimeProvider whose GetUtcNow() answers whatever the test says. -->
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Checkout\Checkout.csproj" />
+    <!-- The CLI project holds SpecFolder (finding ../spec/) and the command logic the unit tests call. -->
+    <ProjectReference Include="..\..\src\Checkout.Cli\Checkout.Cli.csproj" />
+  </ItemGroup>
+
+</Project>

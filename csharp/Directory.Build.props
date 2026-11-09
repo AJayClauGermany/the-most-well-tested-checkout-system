@@ -15,6 +15,14 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <!--
+      Static analysis (a "linter" for C#): the newest set of recommended code analysis rules,
+      plus the code style rules from .editorconfig checked at build time (not only by
+      `dotnet format`). With warnings as errors, a style slip fails the build.
+    -->
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!--
       Write packages.lock.json next to each project, so every machine (and CI)
       restores exactly the same package versions.
     -->

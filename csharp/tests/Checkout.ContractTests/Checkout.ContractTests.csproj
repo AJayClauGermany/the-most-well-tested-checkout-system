@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Contract (schema) tests: is the output even the right shape? Real receipts and CLI errors
+    are checked against the JSON Schemas in ../../../spec/schema/ with JsonSchema.Net (the
+    package comes in through Checkout.TestSupport, which holds the validation helper).
+  -->
+  <PropertyGroup>
+    <RootNamespace>CheckoutSystem.ContractTests</RootNamespace>
+  </PropertyGroup>
+
+</Project>

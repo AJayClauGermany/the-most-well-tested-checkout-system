@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Snapshot / approval tests with Verify (https://github.com/VerifyTests/Verify): whole
+    receipts are compared with the "approved" text committed in Snapshots/*.verified.txt.
+  -->
+  <PropertyGroup>
+    <RootNamespace>CheckoutSystem.SnapshotTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      32.0.1 is the last Verify release without the "SponsorCheck" build gate (from 33.0 the build
+      fails unless a sponsorship or exemption property is set and renewed every year).
+    -->
+    <PackageReference Include="Verify.XunitV3" Version="32.0.1" />
+  </ItemGroup>
+
+</Project>

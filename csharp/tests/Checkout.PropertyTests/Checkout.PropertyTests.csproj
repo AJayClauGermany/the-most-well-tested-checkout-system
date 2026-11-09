@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Property-based tests with FsCheck (https://fscheck.github.io/FsCheck/): one test per
+    property in ../../../spec/properties.md. FsCheck.Xunit.v3 adds the [Property] attribute,
+    which runs a test method 100 times with generated input.
+  -->
+  <PropertyGroup>
+    <RootNamespace>CheckoutSystem.PropertyTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FsCheck.Xunit.v3" Version="3.6.0" />
+  </ItemGroup>
+
+</Project>

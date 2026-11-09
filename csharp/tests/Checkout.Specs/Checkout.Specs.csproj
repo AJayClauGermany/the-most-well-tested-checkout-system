@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    BDD: the Given/When/Then scenarios in ../../../spec/features/*.feature, run with Reqnroll
+    (https://reqnroll.net/, the open-source successor of SpecFlow). At build time Reqnroll turns
+    every scenario into an xUnit test; the step definitions in StepDefinitions.cs are the glue.
+  -->
+  <PropertyGroup>
+    <RootNamespace>CheckoutSystem.Specs</RootNamespace>
+    <!--
+      The feature files live outside this project, in the shared spec/ folder. Generated
+      code-behind files (*.feature.cs) must therefore go to obj/, not next to the features.
+    -->
+    <ReqnrollUseIntermediateOutputPathForCodeBehind>true</ReqnrollUseIntermediateOutputPathForCodeBehind>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Reqnroll.xunit.v3" Version="3.3.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Read the feature files straight from spec/features/ - never copied - so this project is
+      held to exactly the same scenarios as every other language. "Link" is where they show up
+      in the IDE's solution explorer.
+    -->
+    <ReqnrollFeatureFiles Include="..\..\..\spec\features\*.feature" Link="Features\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

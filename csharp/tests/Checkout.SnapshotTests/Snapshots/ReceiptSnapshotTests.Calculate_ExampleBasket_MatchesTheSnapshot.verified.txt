@@ -1,0 +1,26 @@
+﻿{
+  Lines: [
+    {
+      Sku: COFFEE,
+      Name: Bag of Coffee Beans,
+      Quantity: 3,
+      UnitPrice: 899,
+      LineTotal: 2697,
+      LineDiscount: 899
+    },
+    {
+      Sku: APPLE,
+      Name: Apple,
+      Quantity: 2,
+      UnitPrice: 50,
+      LineTotal: 100,
+      LineDiscount: 0
+    }
+  ],
+  Subtotal: 2797,
+  PromotionDiscount: 899,
+  CouponDiscount: 190,
+  Shipping: 499,
+  Tax: 137,
+  Total: 2344
+}

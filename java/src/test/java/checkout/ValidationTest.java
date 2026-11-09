@@ -51,6 +51,13 @@ class ValidationTest {
         void rejectsEverythingOutsideOneToNinetyNine(int quantity) {
             assertThat(Validation.isValidQuantity(quantity)).isFalse();
         }
+
+        // A quantity is a 64-bit long, so numbers too big for an int are rejected the same way.
+        @ParameterizedTest(name = "rejects {0}")
+        @ValueSource(longs = {10_000_000_000L, -3_000_000_000L, Long.MAX_VALUE, Long.MIN_VALUE})
+        void rejectsQuantitiesOutsideTheIntRange(long quantity) {
+            assertThat(Validation.isValidQuantity(quantity)).isFalse();
+        }
     }
 
     @Nested
@@ -91,6 +98,12 @@ class ValidationTest {
             assertFailsWith(basketOf("APPLE", quantity), ErrorCode.INVALID_QUANTITY);
         }
 
+        @ParameterizedTest(name = "row 3: a quantity of {0}")
+        @ValueSource(longs = {10_000_000_000L, -3_000_000_000L, Long.MAX_VALUE, Long.MIN_VALUE})
+        void row3AQuantityOutsideTheIntRange(long quantity) {
+            assertFailsWith(basketOf("APPLE", quantity), ErrorCode.INVALID_QUANTITY);
+        }
+
         @Test
         void row3ABadQuantityOnALaterLine() {
             assertFailsWith(basketOf(item("APPLE", 1), item("PEN", 0)), ErrorCode.INVALID_QUANTITY);
@@ -128,6 +141,8 @@ class ValidationTest {
                     .hasMessage("Unknown product: BANANA");
             assertThatThrownBy(() -> Validation.validateItems(basketOf("APPLE", 0), TINY_CATALOG))
                     .hasMessage("Invalid quantity for APPLE: 0");
+            assertThatThrownBy(() -> Validation.validateItems(basketOf("APPLE", 10_000_000_000L), TINY_CATALOG))
+                    .hasMessage("Invalid quantity for APPLE: 10000000000");
             assertThatThrownBy(() -> Validation.validateItems(
                             basketOf(item("APPLE", 60), item("APPLE", 40)), TINY_CATALOG))
                     .hasMessage("Too many APPLE in total: 100");
@@ -146,6 +161,13 @@ class ValidationTest {
         void aBadSingleQuantityBeatsABadMergedQuantity() {
             // Both rows 3 and 4 apply; either way the code is INVALID_QUANTITY.
             assertFailsWith(basketOf(item("APPLE", 100), item("APPLE", 1)), ErrorCode.INVALID_QUANTITY);
+        }
+
+        @Test
+        void row3RejectsAHugeQuantityBeforeRow4AddsTheLinesUpSoTheSumCannotOverflow() {
+            // Long.MAX_VALUE + 1 does not fit a long. Row 3 must say INVALID_QUANTITY before
+            // row 4 ever tries to add these two lines together.
+            assertFailsWith(basketOf(item("APPLE", Long.MAX_VALUE), item("APPLE", 1)), ErrorCode.INVALID_QUANTITY);
         }
 
         @Test

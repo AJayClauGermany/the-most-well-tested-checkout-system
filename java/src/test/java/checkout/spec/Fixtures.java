@@ -40,10 +40,10 @@ public final class Fixtures {
      * A basket line.
      *
      * @param sku      the product code
-     * @param quantity how many
+     * @param quantity how many (a long, like {@link BasketItem#quantity()})
      * @return the item
      */
-    public static BasketItem item(String sku, int quantity) {
+    public static BasketItem item(String sku, long quantity) {
         return new BasketItem(sku, quantity);
     }
 
@@ -64,7 +64,7 @@ public final class Fixtures {
      * @param quantity how many
      * @return the basket
      */
-    public static Basket basketOf(String sku, int quantity) {
+    public static Basket basketOf(String sku, long quantity) {
         return basketOf(item(sku, quantity));
     }
 }

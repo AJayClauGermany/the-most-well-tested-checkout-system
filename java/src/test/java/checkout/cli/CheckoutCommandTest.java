@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * UNIT tests for the command line program's logic (rules section 8), run in-process.
@@ -80,6 +81,21 @@ class CheckoutCommandTest {
             assertThat(Json.parse(result.output()).get("shipping").asInt()).isEqualTo(999);
         }
 
+        /**
+         * The basket schema allows any whole number as a quantity, and rules section 4.1 says
+         * every quantity outside 1..99 is INVALID_QUANTITY - also the ones too big for an
+         * {@code int}. Quantities are read as 64-bit {@code long} numbers, as in Go and Rust.
+         */
+        @ParameterizedTest(name = "quantity {0}")
+        @ValueSource(strings = {"10000000000", "-3000000000", "9223372036854775807", "-9223372036854775808"})
+        void reportsAQuantityOutsideTheIntRangeAsInvalidQuantity(String quantity) {
+            CommandResult result = CheckoutCommand.run(
+                    "{\"items\":[{\"sku\":\"APPLE\",\"quantity\":" + quantity + "}]}", TINY_CATALOG);
+
+            assertThat(result)
+                    .isEqualTo(new CommandResult("{\"error\":\"INVALID_QUANTITY\"}", CommandResult.CHECKOUT_FAILED));
+        }
+
         @Test
         void neverHidesABugBehindAnErrorCodeOtherExceptionsPassStraightThrough() {
             // A broken catalog makes checkout throw a NullPointerException, not a CheckoutException.
@@ -130,6 +146,14 @@ class CheckoutCommandTest {
             assertThat(basket).isEqualTo(new Basket(List.of(new BasketItem("BANANA", -5)), null, "overnight"));
         }
 
+        @Test
+        void readsAQuantityThatNeedsSixtyFourBits() {
+            // Too big for an int, so it is read as a long; checkout then reports INVALID_QUANTITY.
+            Basket basket = CheckoutCommand.parseBasket("{\"items\":[{\"sku\":\"APPLE\",\"quantity\":10000000000}]}");
+
+            assertThat(basket).isEqualTo(new Basket(List.of(new BasketItem("APPLE", 10_000_000_000L))));
+        }
+
         /**
          * JSON that is not a basket, and why. A {@code @MethodSource} instead of {@code @CsvSource}
          * because JSON is full of quotes and commas, which CSV would try to interpret.
@@ -154,7 +178,12 @@ class CheckoutCommandTest {
                     Arguments.of("{\"items\": [{\"sku\": \"APPLE\"}]}", wholeQuantity),
                     Arguments.of("{\"items\": [{\"sku\": \"APPLE\", \"quantity\": 1.5}]}", wholeQuantity),
                     Arguments.of("{\"items\": [{\"sku\": \"APPLE\", \"quantity\": \"3\"}]}", wholeQuantity),
-                    Arguments.of("{\"items\": [{\"sku\": \"APPLE\", \"quantity\": 9999999999}]}", wholeQuantity),
+                    // Numbers beyond the 64-bit range (one past the largest and smallest long) do not
+                    // fit a Java long, so they are not a basket either - exactly like 1.5.
+                    Arguments.of(
+                            "{\"items\": [{\"sku\": \"APPLE\", \"quantity\": 9223372036854775808}]}", wholeQuantity),
+                    Arguments.of(
+                            "{\"items\": [{\"sku\": \"APPLE\", \"quantity\": -9223372036854775809}]}", wholeQuantity),
                     Arguments.of("{\"items\": [], \"coupon\": 10}", "'coupon' must be text or null"),
                     Arguments.of("{\"items\": [], \"shipping\": [\"express\"]}", "'shipping' must be text or null"));
         }

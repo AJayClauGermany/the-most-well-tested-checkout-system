@@ -17,6 +17,6 @@ public final class Tax {
      * @return the tax in cents
      */
     public static int taxOn(int discountedSubtotal) {
-        throw new UnsupportedOperationException("not implemented yet");
+        return Money.roundHalfUp(discountedSubtotal, TAX_PERCENT);
     }
 }

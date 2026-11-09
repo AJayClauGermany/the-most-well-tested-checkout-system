@@ -77,4 +77,26 @@ class SpecFolderTest {
     void findWithoutArgumentsUsesTheWorkingDirectoryOrTheProgramLocation() {
         assertThat(SpecFolder.find()).isEqualTo(SpecFiles.specDir());
     }
+
+    @Test
+    void prefersTheWorkingDirectory(@TempDir Path root) throws IOException {
+        Files.createDirectories(root.resolve("spec"));
+        Files.writeString(root.resolve("spec/catalog.json"), "{}");
+
+        assertThat(SpecFolder.find(root, SpecFolder.programLocation())).isEqualTo(root.resolve("spec"));
+    }
+
+    @Test
+    void fallsBackToTheProgramLocationWhenStartedOutsideTheRepository(@TempDir Path elsewhere) {
+        // This is what happens when someone runs "java -jar .../checkout.jar" from their home folder.
+        assertThat(SpecFolder.find(elsewhere, SpecFolder.programLocation())).isEqualTo(SpecFiles.specDir());
+    }
+
+    @Test
+    void namesBothPlacesWhenNeitherIsInsideTheRepository(@TempDir Path one, @TempDir Path two) {
+        assertThatThrownBy(() -> SpecFolder.find(one.resolve("a"), two.resolve("b")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(one.resolve("a").toString())
+                .hasMessageContaining(two.resolve("b").toString());
+    }
 }

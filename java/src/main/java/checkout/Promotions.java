@@ -16,6 +16,20 @@ public final class Promotions {
      * @return the line discount in cents
      */
     public static int discount(Promotion promotion, int quantity, int unitPrice) {
-        throw new UnsupportedOperationException("not implemented yet");
+        // A "switch with patterns": because Promotion is sealed, the compiler knows these are
+        // the only two kinds, and would refuse to compile if a third kind were added and
+        // forgotten here. "case null" handles products without a promotion.
+        return switch (promotion) {
+            case null -> 0;
+            case Promotion.BuyXGetYFree buyXGetYFree -> {
+                // For every complete group of `buy + free` items, `free` of them cost nothing.
+                int groupSize = buyXGetYFree.buy() + buyXGetYFree.free();
+                int freeItems = quantity / groupSize * buyXGetYFree.free();
+                yield freeItems * unitPrice;
+            }
+            case Promotion.BulkDiscount bulk ->
+                // `percent`% off the whole line, but only from `minQuantity` items.
+                quantity < bulk.minQuantity() ? 0 : Money.roundHalfUp(unitPrice * quantity, bulk.percent());
+        };
     }
 }

@@ -29,14 +29,20 @@ public final class InMemoryOrderRepository implements OrderRepository {
         this(Clock.systemUTC());
     }
 
+    // "synchronized": only one thread at a time may save, so two saves can never get the same id.
+    // (The tests run in parallel; a repository shared between threads must not break.)
     @Override
-    public String save(Receipt receipt) {
-        throw new UnsupportedOperationException("not implemented yet");
+    public synchronized String save(Receipt receipt) {
+        String id = OrderIds.of(orders.size() + 1);
+        // Receipt is an immutable record (with an unmodifiable list of lines), so keeping the
+        // very same object is safe: nobody can change the saved order afterwards.
+        orders.add(new Order(id, Timestamps.now(clock), receipt));
+        return id;
     }
 
     @Override
-    public Optional<Order> find(String id) {
-        throw new UnsupportedOperationException("not implemented yet");
+    public synchronized Optional<Order> find(String id) {
+        return orders.stream().filter(order -> order.id().equals(id)).findFirst();
     }
 
     /**
@@ -44,7 +50,7 @@ public final class InMemoryOrderRepository implements OrderRepository {
      *
      * @return the number of saved orders
      */
-    public int count() {
-        throw new UnsupportedOperationException("not implemented yet " + orders + clock);
+    public synchronized int count() {
+        return orders.size();
     }
 }

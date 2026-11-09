@@ -17,11 +17,15 @@ public final class Validation {
     /**
      * Returns whether a quantity is a whole number from 1 to 99 (rules section 4.1 row 3).
      *
+     * <p>In Java a quantity is an {@code int}, so "a whole number" is guaranteed by the type:
+     * {@code 1.5} cannot even get this far (the JSON reader rejects it, see
+     * {@code checkout.cli.CheckoutCommand}). Only the range is left to check.
+     *
      * @param quantity the quantity of one basket line
      * @return {@code true} when it is allowed
      */
     public static boolean isValidQuantity(int quantity) {
-        throw new UnsupportedOperationException("not implemented yet");
+        return quantity >= MIN_QUANTITY && quantity <= MAX_QUANTITY;
     }
 
     /**
@@ -33,6 +37,32 @@ public final class Validation {
      * @throws CheckoutException EMPTY_BASKET, UNKNOWN_PRODUCT or INVALID_QUANTITY
      */
     public static void validateItems(Basket basket, Catalog catalog) {
-        throw new UnsupportedOperationException("not implemented yet");
+        // Row 1: no items at all.
+        if (basket.items().isEmpty()) {
+            throw new CheckoutException(ErrorCode.EMPTY_BASKET, "The basket has no items");
+        }
+
+        // Row 2: every SKU must exist. All SKUs are checked before any quantity, so an unknown
+        // product on line 3 still wins over a bad quantity on line 1.
+        for (BasketItem item : basket.items()) {
+            catalog.requireBySku(item.sku());
+        }
+
+        // Row 3: every quantity must be from 1 to 99.
+        for (BasketItem item : basket.items()) {
+            if (!isValidQuantity(item.quantity())) {
+                throw new CheckoutException(
+                        ErrorCode.INVALID_QUANTITY, "Invalid quantity for " + item.sku() + ": " + item.quantity());
+            }
+        }
+
+        // Row 4: the lines of one SKU, added together, may not go over 99 either.
+        // (Each line is at most 99 by now, so the sum cannot overflow an int.)
+        for (BasketItem line : Lines.mergeItems(basket.items())) {
+            if (line.quantity() > MAX_QUANTITY) {
+                throw new CheckoutException(
+                        ErrorCode.INVALID_QUANTITY, "Too many " + line.sku() + " in total: " + line.quantity());
+            }
+        }
     }
 }

@@ -30,7 +30,17 @@ public enum ShippingMethod {
      * @throws CheckoutException UNKNOWN_SHIPPING_METHOD for anything else (rules section 4.1 row 5)
      */
     public static ShippingMethod parse(String shipping) {
-        throw new UnsupportedOperationException("not implemented yet");
+        // Exact, lower-case names only (rules section 4.5): "Express" is not "express".
+        // (A switch on a null String would throw, so null is handled first.)
+        if (shipping == null) {
+            return STANDARD;
+        }
+        return switch (shipping) {
+            case "standard" -> STANDARD;
+            case "express" -> EXPRESS;
+            default -> throw new CheckoutException(
+                    ErrorCode.UNKNOWN_SHIPPING_METHOD, "Unknown shipping method: " + shipping);
+        };
     }
 
     /**
@@ -40,7 +50,10 @@ public enum ShippingMethod {
      * @return {@code 0}, {@code 499} or {@code 999}
      */
     public int cost(int discountedSubtotal) {
-        throw new UnsupportedOperationException("not implemented yet");
+        if (this == STANDARD && discountedSubtotal >= FREE_STANDARD_SHIPPING_FROM) {
+            return 0;
+        }
+        return baseCost;
     }
 
     /**

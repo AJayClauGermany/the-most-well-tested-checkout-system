@@ -154,7 +154,9 @@ class CheckoutCommandTest {
                     Arguments.of("{\"items\": [{\"sku\": \"APPLE\"}]}", wholeQuantity),
                     Arguments.of("{\"items\": [{\"sku\": \"APPLE\", \"quantity\": 1.5}]}", wholeQuantity),
                     Arguments.of("{\"items\": [{\"sku\": \"APPLE\", \"quantity\": \"3\"}]}", wholeQuantity),
-                    Arguments.of("{\"items\": [{\"sku\": \"APPLE\", \"quantity\": 9999999999}]}", wholeQuantity));
+                    Arguments.of("{\"items\": [{\"sku\": \"APPLE\", \"quantity\": 9999999999}]}", wholeQuantity),
+                    Arguments.of("{\"items\": [], \"coupon\": 10}", "'coupon' must be text or null"),
+                    Arguments.of("{\"items\": [], \"shipping\": [\"express\"]}", "'shipping' must be text or null"));
         }
 
         @ParameterizedTest(name = "rejects {0} ({1})")

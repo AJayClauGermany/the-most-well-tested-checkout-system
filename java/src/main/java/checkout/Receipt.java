@@ -24,4 +24,13 @@ public record Receipt(
         @JsonProperty("coupon_discount") int couponDiscount,
         int shipping,
         int tax,
-        int total) {}
+        int total) {
+
+    /**
+     * A compact constructor: it keeps an unmodifiable copy of the lines, so a receipt can
+     * never change after it was made (a saved order stays exactly as it was saved).
+     */
+    public Receipt {
+        lines = List.copyOf(lines);
+    }
+}

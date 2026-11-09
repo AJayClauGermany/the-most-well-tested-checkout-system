@@ -1,6 +1,9 @@
 package checkout.cli;
 
+import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Finds the repository's shared {@code spec/} folder, which holds the standard catalog.
@@ -24,7 +27,7 @@ public final class SpecFolder {
      * @throws IllegalStateException when no folder above {@code start} contains {@code spec/catalog.json}
      */
     public static Path find(Path start) {
-        throw new UnsupportedOperationException("not implemented yet");
+        return search(start).orElseThrow(() -> notFound(start.toString()));
     }
 
     /**
@@ -35,7 +38,21 @@ public final class SpecFolder {
      * @throws IllegalStateException when neither place is inside the repository
      */
     public static Path find() {
-        throw new UnsupportedOperationException("not implemented yet");
+        return find(Path.of("").toAbsolutePath(), programLocation());
+    }
+
+    /**
+     * Looks above the working directory first, then above the program's location.
+     *
+     * @param workingDirectory where the program was started
+     * @param programLocation  where the program's classes are (see {@link #programLocation()})
+     * @return the {@code spec/} folder
+     * @throws IllegalStateException when neither place is inside the repository
+     */
+    static Path find(Path workingDirectory, Path programLocation) {
+        return search(workingDirectory)
+                .or(() -> search(programLocation))
+                .orElseThrow(() -> notFound(workingDirectory + " or " + programLocation));
     }
 
     /**
@@ -45,6 +62,22 @@ public final class SpecFolder {
      * @return the jar or classes folder
      */
     public static Path programLocation() {
-        throw new UnsupportedOperationException("not implemented yet");
+        // A "file:/..." URL. URI.create + Path.of turn it into a path, decoding e.g. %20 into a space.
+        String location = SpecFolder.class.getProtectionDomain().getCodeSource().getLocation().toString();
+        return Path.of(URI.create(location));
+    }
+
+    private static Optional<Path> search(Path start) {
+        for (Path folder = start.toAbsolutePath().normalize(); folder != null; folder = folder.getParent()) {
+            Path spec = folder.resolve("spec");
+            if (Files.isRegularFile(spec.resolve(MARKER_FILE))) {
+                return Optional.of(spec);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static IllegalStateException notFound(String where) {
+        return new IllegalStateException("No spec/" + MARKER_FILE + " found in any folder above " + where);
     }
 }

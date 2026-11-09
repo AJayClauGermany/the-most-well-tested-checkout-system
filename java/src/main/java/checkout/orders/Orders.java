@@ -2,7 +2,9 @@ package checkout.orders;
 
 import checkout.Basket;
 import checkout.Catalog;
+import checkout.Checkout;
 import checkout.CheckoutException;
+import checkout.Receipt;
 
 /**
  * Checkout plus saving (rules section 6).
@@ -22,6 +24,7 @@ public final class Orders {
      * @throws CheckoutException when the basket is invalid - and then nothing was saved
      */
     public static PlacedOrder placeOrder(Basket basket, Catalog catalog, OrderRepository repository) {
-        throw new UnsupportedOperationException("not implemented yet");
+        Receipt receipt = Checkout.checkout(basket, catalog); // throws before anything is saved
+        return new PlacedOrder(receipt, repository.save(receipt));
     }
 }

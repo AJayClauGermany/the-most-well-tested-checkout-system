@@ -121,6 +121,9 @@ class JsonFileOrderRepositoryIT {
         Files.writeString(folder.resolve("README.txt"), "not an order");
         Files.writeString(folder.resolve("ORDER-9.json.bak"), "not an order either");
         Files.writeString(folder.resolve("ORDER-9"), "no .json extension, so not an order");
+        // ".yaml" is exactly as long as ".json": proves the extension is really checked
+        // (mutation testing found that no test did).
+        Files.writeString(folder.resolve("ORDER-7.yaml"), "another extension, so not an order");
         Files.writeString(folder.resolve("ORDER-09.json"), "a leading zero is not an order id");
         Files.createDirectory(folder.resolve("ORDER-8.json"));
         JsonFileOrderRepository repository = new JsonFileOrderRepository(folder, FIXED_CLOCK);
@@ -205,6 +208,31 @@ class JsonFileOrderRepositoryIT {
         assertThatThrownBy(() -> new JsonFileOrderRepository(file.resolve("orders"), FIXED_CLOCK))
                 .isInstanceOf(StorageException.class)
                 .hasMessageContaining("orders");
+    }
+
+    @Test
+    void reportsAFolderThatDisappearedAsAStorageException() throws IOException {
+        Path orders = folder.resolve("orders");
+        JsonFileOrderRepository repository = new JsonFileOrderRepository(orders, FIXED_CLOCK);
+        Files.delete(orders);
+
+        assertThatThrownBy(() -> repository.save(ONE_APPLE_RECEIPT))
+                .isInstanceOf(StorageException.class)
+                .hasMessageContaining("Could not list the order folder");
+    }
+
+    @Test
+    void neverOverwritesWhatIsInTheWayOfTheNextOrderFile() throws IOException {
+        // A folder called ORDER-1.json is not an order (so the next id is ORDER-1),
+        // but it is in the way: saving must fail loudly, not replace or lose anything.
+        Files.createDirectory(folder.resolve("ORDER-1.json"));
+        JsonFileOrderRepository repository = new JsonFileOrderRepository(folder, FIXED_CLOCK);
+
+        assertThatThrownBy(() -> repository.save(ONE_APPLE_RECEIPT))
+                .isInstanceOf(StorageException.class)
+                .hasMessageContaining("Could not write")
+                .hasMessageContaining("ORDER-1.json");
+        assertThat(folder.resolve("ORDER-1.json")).isDirectory();
     }
 
     @Test

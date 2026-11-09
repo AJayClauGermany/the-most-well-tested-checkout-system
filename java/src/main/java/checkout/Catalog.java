@@ -35,6 +35,7 @@ public record Catalog(List<Product> products) {
      * @throws CheckoutException UNKNOWN_PRODUCT (rules section 4.1 row 2)
      */
     public Product requireBySku(String sku) {
-        throw new UnsupportedOperationException("not implemented yet");
+        return findBySku(sku)
+                .orElseThrow(() -> new CheckoutException(ErrorCode.UNKNOWN_PRODUCT, "Unknown product: " + sku));
     }
 }

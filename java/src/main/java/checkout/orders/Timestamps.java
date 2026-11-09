@@ -2,6 +2,7 @@ package checkout.orders;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 /**
  * The {@code created_at} format of a saved order (rules section 6):
@@ -22,7 +23,9 @@ public final class Timestamps {
      * @return e.g. {@code "2026-01-15T10:30:00Z"} (milliseconds are cut off, not rounded)
      */
     public static String format(Instant instant) {
-        throw new UnsupportedOperationException("not implemented yet");
+        // Instant.toString() is already ISO 8601 in UTC with a Z; it only adds fractions of a
+        // second when there are some, so cut those off first.
+        return instant.truncatedTo(ChronoUnit.SECONDS).toString();
     }
 
     /**
@@ -32,6 +35,6 @@ public final class Timestamps {
      * @return the current time as {@code created_at} text
      */
     public static String now(Clock clock) {
-        throw new UnsupportedOperationException("not implemented yet");
+        return format(clock.instant());
     }
 }

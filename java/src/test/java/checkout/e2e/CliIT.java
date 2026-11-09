@@ -46,9 +46,13 @@ class CliIT {
 
     /** Runs the program once, with {@code input} on standard input, in the given working directory. */
     private static CliResult run(String input, Path workingDirectory) throws IOException, InterruptedException {
-        Process process = new ProcessBuilder(java(), "-jar", jar().toString())
-                .directory(workingDirectory.toFile())
-                .start();
+        ProcessBuilder builder = new ProcessBuilder(java(), "-jar", jar().toString())
+                .directory(workingDirectory.toFile());
+        // If these are set (some CI machines and proxies do), every JVM announces them on stderr
+        // ("Picked up JAVA_TOOL_OPTIONS: ..."), which is not the program's output.
+        builder.environment().remove("JAVA_TOOL_OPTIONS");
+        builder.environment().remove("JDK_JAVA_OPTIONS");
+        Process process = builder.start();
         try (var stdin = process.getOutputStream()) {
             stdin.write(input.getBytes(StandardCharsets.UTF_8));
         }

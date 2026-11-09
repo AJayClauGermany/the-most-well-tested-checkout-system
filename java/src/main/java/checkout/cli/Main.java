@@ -1,5 +1,8 @@
 package checkout.cli;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 /**
  * The command line program (rules section 8): basket JSON in on standard input, receipt
  * JSON out on standard output.
@@ -20,9 +23,28 @@ public final class Main {
     /**
      * Reads one basket from standard input and prints the result.
      *
+     * <p>Exit codes: 0 receipt printed, 1 checkout failed (error code printed),
+     * 2 the input was not a basket at all (a message on standard error, nothing on standard output).
+     *
      * @param args ignored
+     * @throws IOException when standard input cannot be read
      */
-    public static void main(String[] args) {
-        throw new UnsupportedOperationException("not implemented yet");
+    public static void main(String[] args) throws IOException {
+        String input = new String(System.in.readAllBytes(), StandardCharsets.UTF_8);
+        int exitCode;
+        try {
+            CommandResult result = CheckoutCommand.run(input, StandardCatalog.load());
+            // "\n" rather than println, so the output is the same on every operating system.
+            System.out.print(result.output() + "\n");
+            exitCode = result.exitCode();
+        } catch (RuntimeException e) {
+            // Not a CheckoutException (those became exit code 1 above): the input was not a
+            // basket at all, or the catalog could not be read.
+            System.err.print("checkout: " + e.getMessage() + "\n");
+            exitCode = CommandResult.BAD_INPUT;
+        }
+        System.out.flush();
+        System.err.flush();
+        System.exit(exitCode);
     }
 }

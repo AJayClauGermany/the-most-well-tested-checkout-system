@@ -75,6 +75,8 @@
                                   Jazzer (fuzzing) has to attach its agent at run time; this is
                                   the JDK's own switch for tools that legitimately do that. -->
     <test.argLine>@{jacocoArgLine} -javaagent:@{org.mockito:mockito-core:jar} -Xshare:off -XX:+EnableDynamicAgentLoading</test.argLine>
+    <!-- Empty unless jacoco:prepare-agent fills it in, so the tests also run with -Djacoco.skip. -->
+    <jacocoArgLine></jacocoArgLine>
 
     <!-- Coverage thresholds checked by "jacoco:check" (1.00 = 100%). -->
     <coverage.line.minimum>1.00</coverage.line.minimum>
@@ -278,9 +280,7 @@
             <arg>--should-stop=ifError=FLOW</arg>
             <!-- Required by Error Prone when compiling on JDK 21 (it says so if missing). -->
             <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
-            <!-- TEMPORARY, only while the code is stubs: every stub "always throws", which
-                 Error Prone's DoNotCallSuggester reports. Removed with the implementation. -->
-            <arg>-Xplugin:ErrorProne -Xep:DoNotCallSuggester:OFF</arg>
+            <arg>-Xplugin:ErrorProne</arg>
           </compilerArgs>
           <annotationProcessorPaths>
             <path>
@@ -467,9 +467,11 @@
       </plugin>
 
       <!-- PIT mutation testing: makes small changes to the code and checks the tests notice.
-           Not part of "mvn verify" (it takes a few minutes); run it with
-             mvn -B -Pmutation verify
-           or just "mvn -B org.pitest:pitest-maven:mutationCoverage" after the tests passed.
+           Not part of "mvn verify" (it takes about five minutes); run it with
+             mvn -B -Pmutation verify                                   (all tests, then PIT)
+           or, when the tests already passed,
+             mvn -B test-compile org.pitest:pitest-maven:mutationCoverage
+           ("test-compile" makes sure the classes are there and sets the Mockito property).
            The report is target/pit-reports/index.html. -->
       <plugin>
         <groupId>org.pitest</groupId>
@@ -496,10 +498,16 @@
           </targetTests>
           <excludedTestClasses>
             <!-- Cucumber and Jazzer bring their own runners that PIT cannot drive;
-                 the shared spec cases and unit tests cover the same behaviour. -->
+                 the shared spec cases and unit tests cover the same behaviour.
+                 The e2e tests run the jar in another process, which a mutant never reaches. -->
             <param>checkout.bdd.*</param>
             <param>checkout.fuzz.*</param>
+            <param>checkout.e2e.*</param>
           </excludedTestClasses>
+          <!-- PIT starts its own JVMs ("minions"). They get Mockito as an agent like Surefire
+               does, but not Surefire's argLine, which also expects the JaCoCo agent. -->
+          <parseSurefireConfig>false</parseSurefireConfig>
+          <argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
           <outputFormats>
             <param>HTML</param>
             <param>XML</param>
@@ -507,7 +515,7 @@
           <timestampedReports>false</timestampedReports>
           <!-- Fail the build when the score drops below this percentage. -->
           <mutationThreshold>95</mutationThreshold>
-          <threads>2</threads>
+          <threads>4</threads>
         </configuration>
       </plugin>
     </plugins>

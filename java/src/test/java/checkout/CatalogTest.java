@@ -2,6 +2,7 @@ package checkout;
 
 // "import static" lets us write assertEquals(...) instead of Assertions.assertEquals(...).
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -57,5 +58,27 @@ class CatalogTest {
         Optional<Product> found = catalog.findBySku("apple");
 
         assertTrue(found.isEmpty(), "'apple' must not find 'APPLE'");
+    }
+
+    @Test
+    void requireBySkuReturnsTheProductWhenItExists() {
+        Product found = catalog.requireBySku("APPLE");
+
+        assertEquals(new Product("APPLE", "Apple", 50), found);
+    }
+
+    @Test
+    void requireBySkuThrowsUnknownProductWhenItDoesNot() {
+        // assertThrows runs the code and hands back the exception, so we can look at its code.
+        CheckoutException error = assertThrows(CheckoutException.class, () -> catalog.requireBySku("BANANA"));
+
+        assertEquals(ErrorCode.UNKNOWN_PRODUCT, error.getCode());
+    }
+
+    @Test
+    void requireBySkuMentionsTheSkuInTheMessageSoTheMessageIsUsefulToAHuman() {
+        CheckoutException error = assertThrows(CheckoutException.class, () -> catalog.requireBySku("BANANA"));
+
+        assertEquals("Unknown product: BANANA", error.getMessage());
     }
 }

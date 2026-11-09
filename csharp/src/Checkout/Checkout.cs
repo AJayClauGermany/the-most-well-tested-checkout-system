@@ -21,8 +21,9 @@ public static class Checkout
         BasketValidator.Validate(basket, catalog); // rules §4.1 rows 1-4
         var method = Shipping.Parse(basket.Shipping); // row 5
 
+        // After validation every merged quantity is from 1 to 99, so it fits in an int.
         var lines = ReceiptLines.Merge(basket.Items)
-            .Select(item => ReceiptLines.Price(catalog.RequireProduct(item.Sku), item.Quantity))
+            .Select(item => ReceiptLines.Price(catalog.RequireProduct(item.Sku), (int)item.Quantity))
             .ToList();
         var subtotal = lines.Sum(line => line.LineTotal);
         var promotionDiscount = lines.Sum(line => line.LineDiscount);

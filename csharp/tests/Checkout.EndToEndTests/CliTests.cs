@@ -88,6 +88,29 @@ public class CliTests
     }
 
     [Fact]
+    public void Cli_QuantityTooBigForAnInt_ExitsWith1AndInvalidQuantity()
+    {
+        // Any JSON integer is a valid quantity in the basket schema, so this is a basket with
+        // a bad quantity (exit 1), not text that is not a basket (exit 2).
+        var result = RunCli("""{"items":[{"sku":"APPLE","quantity":10000000000}]}""");
+
+        Assert.Equal(1, result.ExitCode);
+        Assert.Equal("""{"error":"INVALID_QUANTITY"}""", result.Stdout.Trim());
+        Assert.Equal("", result.Stderr);
+    }
+
+    [Fact]
+    public void Cli_QuantityBeyondThe64BitRange_ExitsWith2BecauseItIsNotABasket()
+    {
+        // Quantities are read as 64-bit whole numbers; a bigger number cannot be read at all.
+        var result = RunCli("""{"items":[{"sku":"APPLE","quantity":99999999999999999999}]}""");
+
+        Assert.Equal(2, result.ExitCode);
+        Assert.Equal("", result.Stdout);
+        Assert.StartsWith("checkout: ", result.Stderr, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Cli_EmptyInput_ExitsWith2()
     {
         var result = RunCli("");

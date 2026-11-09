@@ -11,7 +11,7 @@ public static class BasketValidator
     public const int MaxQuantity = 99;
 
     /// <summary>True when <paramref name="quantity"/> is from 1 to 99 (rules §4.1 row 3).</summary>
-    public static bool IsValidQuantity(int quantity) =>
+    public static bool IsValidQuantity(long quantity) =>
         quantity is >= MinQuantity and <= MaxQuantity;
 
     /// <summary>
@@ -43,6 +43,7 @@ public static class BasketValidator
         }
 
         // Row 4: the lines of one SKU, added together, may not go over 99 either.
+        // Row 3 has already checked that every line is from 1 to 99, so the sums are small.
         foreach (var line in ReceiptLines.Merge(basket.Items))
         {
             if (line.Quantity > MaxQuantity)
